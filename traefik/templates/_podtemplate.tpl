@@ -7,7 +7,7 @@
       {{- if .Values.metrics }}
       {{- if .Values.metrics.prometheus }}
         prometheus.io/scrape: "true"
-        prometheus.io/path: "/prometheuz"
+        prometheus.io/path: "/metrics"
         prometheus.io/port: {{ quote (index .Values.ports .Values.metrics.prometheus.entryPoint).port }}
       {{- end }}
       {{- end }}
@@ -51,6 +51,15 @@
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: {{ default .Values.ports.traefik.port .Values.ports.traefik.healthchecksPort }}
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
         ports:
         {{- range $name, $config := .Values.ports }}
         {{- if $config }}
@@ -90,7 +99,6 @@
           {{- if .Values.additionalVolumeMounts }}
             {{- toYaml .Values.additionalVolumeMounts | nindent 10 }}
           {{- end }}
-        command: ["./traefik", "--log.level=DEBUG"]
         args:
           {{- with .Values.globalArguments }}
           {{- range . }}
@@ -99,11 +107,7 @@
           {{- end }}
           {{- range $name, $config := .Values.ports }}
           {{- if $config }}
-          {{- if eq $name "prometheuz" }}
-          - "--entryPoints.{{$name}}.address={{ $config.address }}:{{ $config.port }}/{{ default "tcp" $config.protocol | lower }}"
-          {{- else }}
           - "--entryPoints.{{$name}}.address=:{{ $config.port }}/{{ default "tcp" $config.protocol | lower }}"
-          {{- end }}
           {{- end }}
           {{- end }}
           - "--api.dashboard=true"
