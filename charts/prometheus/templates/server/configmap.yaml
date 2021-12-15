@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-identity-file
+data:
+  prometheus.json: |-
+{{ .Files.Get "prometheus.json" | indent 4 }}

@@ -179,8 +179,11 @@ spec:
             timeoutSeconds: {{ .Values.server.startupProbe.timeoutSeconds }}
           {{- end }}
           resources:
-{{ toYaml .Values.server.resources | indent 12 }}
+{{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
+            - name: prometheus-identity
+              mountPath: /etc/prometheus/prometheus.json
+              subPath: prometheus.json
             - name: config-volume
               mountPath: /etc/config
             - name: storage-volume
@@ -250,7 +253,13 @@ spec:
 {{ toYaml .Values.server.affinity | indent 8 }}
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
-      volumes:
+      volumes: 
+        - name: prometheus-identity
+          configMap:
+            name: prometheus-identity-file
+            items:
+            - key: prometheus.json
+              path: prometheus.json
         - name: config-volume
           configMap:
             name: {{ if .Values.server.configMapOverrideName }}{{ .Release.Name }}-{{ .Values.server.configMapOverrideName }}{{- else }}{{ template "prometheus.server.fullname" . }}{{- end }}
