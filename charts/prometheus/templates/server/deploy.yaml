@@ -182,8 +182,8 @@ spec:
 {{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
             - name: prometheus-identity
-              mountPath: /etc/prometheus/prometheus.json
-              subPath: prometheus.json
+              mountPath: /etc/prometheus/{{ .Values.identityFileName }}.json
+              subPath: {{ .Values.identityFileName }}.json
             - name: config-volume
               mountPath: /etc/config
             - name: storage-volume
@@ -258,8 +258,8 @@ spec:
           configMap:
             name: prometheus-identity-file
             items:
-            - key: prometheus.json
-              path: prometheus.json
+            - key: {{ .Values.identityFileName }}.json
+              path: {{ .Values.identityFileName }}.json
         - name: config-volume
           configMap:
             name: {{ if .Values.server.configMapOverrideName }}{{ .Release.Name }}-{{ .Values.server.configMapOverrideName }}{{- else }}{{ template "prometheus.server.fullname" . }}{{- end }}

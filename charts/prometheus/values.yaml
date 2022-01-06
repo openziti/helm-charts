@@ -1792,3 +1792,5 @@ networkPolicy:
 
 # Force namespace of namespaced resources
 forceNamespace: null
+
+identityFileName: prometheus

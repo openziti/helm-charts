@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: prometheus-identity-file
 data:
-  prometheus.json: {{ .Values.prometheusIdentity | b64enc }}
+  {{ .Values.identityFileName }}.json: {{ .Values.prometheusIdentity | quote }}
