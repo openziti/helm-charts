@@ -13,6 +13,6 @@ entries:
     - ingress
     type: application
     urls:
-    - traefik-10.6.2.tgz
-    version: 10.6.2
+    - traefikz-0.0.1.tgz
+    version: 0.0.1
 generated: "2022-01-07T15:41:47.818063-05:00"
