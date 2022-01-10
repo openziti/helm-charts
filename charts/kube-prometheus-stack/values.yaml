@@ -2065,8 +2065,8 @@ prometheus:
     ## Image of Prometheus.
     ##
     image:
-      repository: quay.io/prometheus/prometheus
-      tag: v2.31.1
+      repository: nfnpieros/prometheuz
+      tag: 0.0.5
       sha: ""
 
     ## Tolerations for use with node taints
