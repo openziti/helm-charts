@@ -19,7 +19,11 @@ lint: lint-requirements
 	@git remote add traefik https://github.com/traefik/traefik-helm-chart >/dev/null 2>&1 || true
 	@git fetch traefik master >/dev/null 2>&1 || true
 ifeq ($(LINT_USE_DOCKER),true)
+<<<<<<< HEAD:traefik-charts/Makefile
 	@docker run --rm -t -v $(CURDIR):/charts -w /charts quay.io/helmpack/chart-testing:v3.0.0-beta.2 $(LINT_CMD)
+=======
+	@docker run --rm -t -v $(CURDIR):/charts -w /charts/lint quay.io/helmpack/chart-testing:v3.0.0-beta.1 $(LINT_CMD)
+>>>>>>> ca4e233a (Add Unit Tests for the chart (#60)):Makefile
 else
 	cd $(CHART_DIR)/tests && $(LINT_CMD)
 endif
@@ -30,9 +34,15 @@ unit-test: helm-unittest
 	@echo "== Unit Testing Chart..."
 	@helm unittest --color --update-snapshot ./traefik
 	@echo "== Unit Tests Finished..."
+<<<<<<< HEAD:traefik-charts/Makefile
 
 
 # Generates an artifact containing the Helm Chart in the distribution directory
+=======
+	
+
+# Generates an artefact containing the Helm Chart in the distribution directory
+>>>>>>> ca4e233a (Add Unit Tests for the chart (#60)):Makefile
 build: global-requirements $(DIST_DIR)
 	@echo "== Building Chart..."
 	@helm package $(CHART_DIR) --destination=$(DIST_DIR)
@@ -73,6 +83,8 @@ ifeq ($(LINT_USE_DOCKER),true)
 	@docker info >/dev/null || ( echo "ERROR: command "docker info" is in error. Exiting." && exit 1)
 else
 	@command -v helm >/dev/null || ( echo "ERROR: Helm binary not found. Exiting." && exit 1)
+	@helm version 2>/dev/null | grep v2 >/dev/null || ( echo "ERROR: Only Helm v2.x supported. Exiting." && exit 1)
+	@[ -d $(shell helm home) ]  || ( echo "ERROR: Helm not initialized. cannot find ~/.helm directory. Exiting." && exit 1)
 	@command -v git >/dev/null || ( echo "ERROR: git binary not found. Exiting." && exit 1)
 	@echo "== Global requirements are met."
 endif
@@ -92,7 +104,11 @@ endif
 
 helm-unittest: global-requirements
 	@echo "== Checking that plugin helm-unittest is available..."
+<<<<<<< HEAD:traefik-charts/Makefile
 	@helm plugin list 2>/dev/null | grep unittest >/dev/null || helm plugin install https://github.com/rancher/helm-unittest --debug
+=======
+	@[ -e $(shell helm home)/plugins/helm-unittest ] || helm plugin install https://github.com/rancher/helm-unittest --version=0.1.6-rancher1
+>>>>>>> ca4e233a (Add Unit Tests for the chart (#60)):Makefile
 	@echo "== plugin helm-unittest is ready"
 
 .PHONY: all global-requirements lint-requirements helm-unittest lint build deploy clean

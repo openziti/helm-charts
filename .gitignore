@@ -20,6 +20,7 @@ gh-pages.zip
 dist/
 repo/
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 # Unit test for helm
 __snapshot__
@@ -28,3 +29,8 @@ __snapshot__
 .idea
 =======
 >>>>>>> 5a7f1d14 (Introducing a "Build workflow" (#45))
+=======
+
+# Unit test for helm
+__snapshot__
+>>>>>>> ca4e233a (Add Unit Tests for the chart (#60))
