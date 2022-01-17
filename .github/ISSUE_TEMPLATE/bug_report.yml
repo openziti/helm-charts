@@ -1,13 +1,19 @@
 name: Bug Report
+<<<<<<< HEAD
 description: Create a report to help us improve
 title: "[name of the chart e.g. prometheus-kube-stack] Issue Title"
 labels: [bug]
 assignees:
   - 
+=======
+description: Create a report to help us improve.
+labels: ['status/0-needs-triage']
+>>>>>>> master-holder
 body:
   - type: markdown
     attributes:
       value: |
+<<<<<<< HEAD
         Thanks for taking the time to fill out this bug report! Please be cautious with the sensitive information/logs while filing the issue.
   - type: textarea
     id: desc
@@ -37,18 +43,56 @@ body:
     attributes:
       label: Which chart?
       description: Enter the name of the chart where you encountered this bug.
+=======
+        ### How to write a good bug report?
+
+        - Respect the issue template as much as possible.
+        - The title should be short and descriptive.
+        - Explain the conditions which led you to report this issue: the context.
+        - The context should lead to something, an idea or a problem that you’re facing.
+        - Remain clear and concise.
+        - Format your messages to help the reader focus on what matters and understand the structure of your message, use [Markdown syntax](https://help.github.com/articles/github-flavored-markdown)
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Welcome!
+      options:
+        - label: Yes, I've searched similar issues on [GitHub](https://github.com/traefik/traefik-helm-chart/issues) and didn't find any.
+          required: true
+        - label: Yes, I've searched similar issues on the [Traefik community forum](https://community.traefik.io) and didn't find any.
+          required: true
+
+  - type: input
+    attributes:
+      label: What version of the Traefik's Helm Chart are you using?
+      description: |
+        `latest` is not considered as a valid version.
+        We need a release number!
+      placeholder: Your version here.
+>>>>>>> master-holder
     validations:
       required: true
 
   - type: input
+<<<<<<< HEAD
     id: chart-version
     attributes:
       label: What's the chart version?
       description: Enter the version of the chart that you encountered this bug.
+=======
+    attributes:
+      label: What version of Traefik are you using?
+      description: |
+        `latest` is not considered as a valid version.
+        We need a release number!
+      placeholder: Your version here.
+>>>>>>> master-holder
     validations:
       required: true
 
   - type: textarea
+<<<<<<< HEAD
     id: what-happened
     attributes:
       label: What happened?
@@ -87,12 +131,45 @@ body:
       label: Enter the command that you execute and failing/misfunctioning.
       description: Enter the command as-is as how you executed.
       placeholder: helm install my-release prometheus-community/name-of-chart --version version --values values.yaml
+=======
+    attributes:
+      label: What did you do?
+      description: Use [Markdown syntax](https://help.github.com/articles/github-flavored-markdown) if needed.
+      placeholder: What did you do?
     validations:
       required: true
 
   - type: textarea
+    attributes:
+      label: What did you see instead?
+      description: Use [Markdown syntax](https://help.github.com/articles/github-flavored-markdown) if needed.
+      placeholder: What did you see instead?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: What is your environment & configuration?
+      description: |
+        platform, arguments, YAML, TOML, platform, etc.
+
+        Use [Markdown syntax](https://help.github.com/articles/github-flavored-markdown) if needed.
+      placeholder: Add information here.
+>>>>>>> master-holder
+    validations:
+      required: true
+
+  - type: textarea
+<<<<<<< HEAD
     id: anything-else
     attributes:
       label: Anything else we need to know?
+=======
+    attributes:
+      label: Additional Information
+      description: Use [Markdown syntax](https://help.github.com/articles/github-flavored-markdown) if needed.
+      placeholder: Add information here.
+      render: shell
+>>>>>>> master-holder
     validations:
       required: false
