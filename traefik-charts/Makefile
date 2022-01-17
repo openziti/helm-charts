@@ -100,8 +100,6 @@ ifeq ($(LINT_USE_DOCKER),true)
 	@docker info >/dev/null || ( echo "ERROR: command "docker info" is in error. Exiting." && exit 1)
 else
 	@command -v helm >/dev/null || ( echo "ERROR: Helm binary not found. Exiting." && exit 1)
-	@helm version 2>/dev/null | grep v2 >/dev/null || ( echo "ERROR: Only Helm v2.x supported. Exiting." && exit 1)
-	@[ -d $(shell helm home) ]  || ( echo "ERROR: Helm not initialized. cannot find ~/.helm directory. Exiting." && exit 1)
 	@command -v git >/dev/null || ( echo "ERROR: git binary not found. Exiting." && exit 1)
 	@echo "== Global requirements are met."
 endif
@@ -122,10 +120,14 @@ endif
 helm-unittest: global-requirements
 	@echo "== Checking that plugin helm-unittest is available..."
 <<<<<<< HEAD:traefik-charts/Makefile
+<<<<<<< HEAD:traefik-charts/Makefile
 	@helm plugin list 2>/dev/null | grep unittest >/dev/null || helm plugin install https://github.com/rancher/helm-unittest --debug
 =======
 	@[ -e $(shell helm home)/plugins/helm-unittest ] || helm plugin install https://github.com/rancher/helm-unittest --version=0.1.6-rancher1
 >>>>>>> ca4e233a (Add Unit Tests for the chart (#60)):Makefile
+=======
+	@helm plugin list 2>/dev/null | grep unittest >/dev/null || helm plugin install https://github.com/rancher/helm-unittest --version=0.1.7-rancher1
+>>>>>>> 6b4a9a16 (Migrate to helm v3 (#94)):Makefile
 	@echo "== plugin helm-unittest is ready"
 
 .PHONY: all global-requirements lint-requirements helm-unittest lint build deploy clean
