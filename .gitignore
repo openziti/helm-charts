@@ -19,9 +19,12 @@ gh-pages.zip
 # Outputs directories
 dist/
 repo/
+<<<<<<< HEAD
 
 # Unit test for helm
 __snapshot__
 
 >>>>>>> master-holder
 .idea
+=======
+>>>>>>> 5a7f1d14 (Introducing a "Build workflow" (#45))
