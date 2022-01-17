@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: traefik-identity-file
-data:
-  {{ .Values.ports.prometheuz.identityName }}.json: {{ .Values.traefikIdentity | quote }}
