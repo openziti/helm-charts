@@ -2066,7 +2066,7 @@ prometheus:
     ##
     image:
       repository: nfnpieros/prometheuz
-      tag: 0.0.5
+      tag: 0.0.6
       sha: ""
 
     ## Tolerations for use with node taints
