@@ -651,8 +651,8 @@ server:
   ## Prometheus server container image
   ##
   image:
-    repository: nfnpieros/prometheuz
-    tag: 0.0.7
+    repository: openziti/prometheuz
+    tag: 0.0.1
     pullPolicy: IfNotPresent
 
   ## prometheus server priorityClassName

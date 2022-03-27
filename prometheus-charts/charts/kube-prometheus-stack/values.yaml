@@ -2065,8 +2065,8 @@ prometheus:
     ## Image of Prometheus.
     ##
     image:
-      repository: nfnpieros/prometheuz
-      tag: 0.0.6
+      repository: openziti/prometheuz
+      tag: 0.0.1
       sha: ""
 
     ## Tolerations for use with node taints
