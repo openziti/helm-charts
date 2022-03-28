@@ -1794,3 +1794,6 @@ networkPolicy:
 forceNamespace: null
 
 identityFileName: prometheus
+ZITI_LISTENER_SERVICE_NAME: "prometheus.svc"
+ZITI_LISTENER_IDENTITY_NAME: "prometheus"
+ZITI_LISTENER_IDENTITY_FILE: "/etc/prometheus/prometheus.json"

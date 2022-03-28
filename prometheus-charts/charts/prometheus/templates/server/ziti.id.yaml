@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prometheus-identity
+type: Opaque
+data:
+  prometheusIdentity: {{ .Values.prometheusIdentity | b64enc | quote }}

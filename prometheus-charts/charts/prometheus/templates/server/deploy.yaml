@@ -84,6 +84,12 @@ spec:
           imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           {{- if .Values.server.env }}
           env:
+            - name: "ZITI_LISTENER_SERVICE_NAME"
+              value: "{{ .Values.ZITI_LISTENER_SERVICE_NAME }}"
+            - name: "ZITI_LISTENER_IDENTITY_NAME"
+              value: "{{ .Values.ZITI_LISTENER_IDENTITY_NAME }}"
+            - name: "ZITI_LISTENER_IDENTITY_FILE"
+              value: "{{ .Values.ZITI_LISTENER_IDENTITY_FILE }}"
 {{ toYaml .Values.server.env | indent 12}}
           {{- end }}
           args:
@@ -182,7 +188,7 @@ spec:
 {{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
             - name: prometheus-identity
-              mountPath: /etc/prometheus/{{ .Values.identityFileName }}.json
+              mountPath: /etc/prometheus
               subPath: {{ .Values.identityFileName }}.json
             - name: config-volume
               mountPath: /etc/config
@@ -255,10 +261,11 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
       volumes: 
         - name: prometheus-identity
-          configMap:
-            name: prometheus-identity-file
+          secret:
+            secretName: prometheus-identity
+            defaultMode: 0400
             items:
-            - key: {{ .Values.identityFileName }}.json
+            - key: prometheusIdentity
               path: {{ .Values.identityFileName }}.json
         - name: config-volume
           configMap:
