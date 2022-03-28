@@ -1008,6 +1008,10 @@ server:
     periodSeconds: 5
     failureThreshold: 30
     timeoutSeconds: 10
+  # if using zitified listener - ensure this is set to false
+  readinessProbe:
+    enabled: false
+    
 
   ## Prometheus server resource requests and limits
   ## Ref: http://kubernetes.io/docs/user-guide/compute-resources/

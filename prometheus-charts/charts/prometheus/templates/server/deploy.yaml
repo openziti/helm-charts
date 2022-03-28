@@ -82,7 +82,6 @@ spec:
         - name: {{ template "prometheus.name" . }}-{{ .Values.server.name }}
           image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
           imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
-          {{- if .Values.server.env }}
           env:
             - name: "ZITI_LISTENER_SERVICE_NAME"
               value: "{{ .Values.ZITI_LISTENER_SERVICE_NAME }}"
@@ -90,6 +89,7 @@ spec:
               value: "{{ .Values.ZITI_LISTENER_IDENTITY_NAME }}"
             - name: "ZITI_LISTENER_IDENTITY_FILE"
               value: "{{ .Values.ZITI_LISTENER_IDENTITY_FILE }}"
+          {{- if .Values.server.env }}
 {{ toYaml .Values.server.env | indent 12}}
           {{- end }}
           args:
@@ -118,6 +118,7 @@ spec:
           {{- end }}
           ports:
             - containerPort: 9090
+          {{- if .Values.server.readinessProbe.enabled }}
           readinessProbe:
             {{- if not .Values.server.tcpSocketProbeEnabled }}
             httpGet:
@@ -162,6 +163,7 @@ spec:
             timeoutSeconds: {{ .Values.server.livenessProbeTimeout }}
             failureThreshold: {{ .Values.server.livenessProbeFailureThreshold }}
             successThreshold: {{ .Values.server.livenessProbeSuccessThreshold }}
+          {{- end }}
           {{- if .Values.server.startupProbe.enabled }}
           startupProbe:
             {{- if not .Values.server.tcpSocketProbeEnabled }}
