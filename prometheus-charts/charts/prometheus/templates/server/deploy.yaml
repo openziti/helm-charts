@@ -188,7 +188,7 @@ spec:
 {{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
             - name: prometheus-identity
-              mountPath: /etc/prometheus
+              mountPath: /etc/prometheus/{{ .Values.identityFileName }}.json
               subPath: {{ .Values.identityFileName }}.json
             - name: config-volume
               mountPath: /etc/config
