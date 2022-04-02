@@ -164,3 +164,4 @@ kubectl scale deployment prometheus-server --replicas=0
 kubectl scale deployment prometheus-server --replicas=1
 
 by scaling the deployment down and then up this will force a restart so that the new scrapes get picked up
+
