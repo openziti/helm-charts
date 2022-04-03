@@ -4,6 +4,19 @@ This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](
 
 These files are published as [a GitHub pages site here](https://openziti-test-kitchen.github.io/helm-charts/).
 
+## Test Local Changes
+
+Use helm to install a chart locally. Example prometheuz 
+
+```
+helm install prometheuz ./charts/prometheus \
+     --set-file prometheusIdentity=/tmp/id.json \
+     --set ZITI_LISTENER_SERVICE_NAME=svc.name \
+     --set ZITI_LISTENER_IDENTITY_NAME=svc.identity.name \
+     --set ZITI_LISTENER_IDENTITY_FILE=/tmp/id.json
+```
+
+
 ## Update this repo
 
 ### Manually
