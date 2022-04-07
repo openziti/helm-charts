@@ -362,7 +362,7 @@ alertmanager:
   clusterPeers: []
 
 ## Monitors ConfigMap changes and POSTs to a URL
-## Ref: https://github.com/jimmidyson/configmap-reload
+## Ref: https://github.com/openziti-test-kitchen/configmap-reloadz
 ##
 configmapReload:
   prometheus:
@@ -377,8 +377,8 @@ configmapReload:
     ## configmap-reload container image
     ##
     image:
-      repository: jimmidyson/configmap-reload
-      tag: v0.5.0
+      repository: openziti/configmap-reloadz
+      tag: latest-amd64
       pullPolicy: IfNotPresent
 
     ## Additional configmap-reload container arguments
@@ -415,8 +415,8 @@ configmapReload:
     ## configmap-reload container image
     ##
     image:
-      repository: jimmidyson/configmap-reload
-      tag: v0.5.0
+      repository: openziti/configmap-reloadz
+      tag: latest-amd64
       pullPolicy: IfNotPresent
 
     ## Additional configmap-reload container arguments
