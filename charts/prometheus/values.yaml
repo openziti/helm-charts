@@ -628,6 +628,7 @@ server:
     enabled: true
     identity: "prometheus"
     service: "prometheus.svc"
+    path: "/etc/prometheus/prometheus.json"
 
   ## Use a ClusterRole (and ClusterRoleBinding)
   ## - If set to false - we define a RoleBinding in the defined namespaces ONLY
