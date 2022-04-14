@@ -58,7 +58,10 @@ spec:
           imagePullPolicy: "{{ .Values.configmapReload.prometheus.image.pullPolicy }}"
           args:
             - --volume-dir=/etc/config
-            - --webhook-url=http://127.0.0.1:9090{{ .Values.server.prefixURL }}/-/reload
+            - --webhook-url={{ .Values.configmapReload.webhookUrl }}
+            - --ziti.identity.file={{ .Values.configmapReload.ziti.identityFile }}
+            - --ziti.service={{ .Values.configmapReload.ziti.targetService }}
+            - --ziti.target.identity={{ .Values.configmapReload.ziti.targetIdentity }}
           {{- range $key, $value := .Values.configmapReload.prometheus.extraArgs }}
             - --{{ $key }}={{ $value }}
           {{- end }}
@@ -77,6 +80,10 @@ spec:
               subPath: {{ .subPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
+          {{- if .Values.configmapReload.zitified -}}
+            - name: configmap-reloadz-identity
+              mountPath: /run/secrets
+          {{- end }}
         {{- end }}
 
         - name: {{ template "prometheus.name" . }}-{{ .Values.server.name }}
@@ -84,11 +91,11 @@ spec:
           imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           env:
             - name: "ZITI_LISTENER_SERVICE_NAME"
-              value: "{{ .Values.ZITI_LISTENER_SERVICE_NAME }}"
+              value: "{{ .Values.server.ziti.service }}"
             - name: "ZITI_LISTENER_IDENTITY_NAME"
-              value: "{{ .Values.ZITI_LISTENER_IDENTITY_NAME }}"
+              value: "{{ .Values.server.ziti.identity }}"
             - name: "ZITI_LISTENER_IDENTITY_FILE"
-              value: "{{ .Values.ZITI_LISTENER_IDENTITY_FILE }}"
+              value: "{{ .Values.server.ziti.path }}"
           {{- if .Values.server.env }}
 {{ toYaml .Values.server.env | indent 12}}
           {{- end }}
@@ -190,8 +197,8 @@ spec:
 {{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
             - name: prometheus-identity
-              mountPath: /etc/prometheus/{{ .Values.identityFileName }}.json
-              subPath: {{ .Values.identityFileName }}.json
+              mountPath: /etc/prometheus/prometheus.json
+              subPath: prometheus.json
             - name: config-volume
               mountPath: /etc/config
             - name: storage-volume
@@ -261,14 +268,26 @@ spec:
 {{ toYaml .Values.server.affinity | indent 8 }}
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
-      volumes: 
+      volumes:
+        {{- if .Values.server.ziti.enabled }}
         - name: prometheus-identity
           secret:
             secretName: prometheus-identity
             defaultMode: 0400
             items:
             - key: prometheusIdentity
-              path: {{ .Values.identityFileName }}.json
+              path: prometheus.json
+              #path: {{ .Values.identityFileName }}.json
+        {{- end }}
+        {{- if .Values.configmapReload.zitified }}
+        - name: configmap-reloadz-identity
+          secret:
+            secretName: configmap-reloadz-ziti-identity
+            defaultMode: 0400
+            items:
+              - key: zitiIdentity
+                path: ziti.identity.json
+        {{- end }}
         - name: config-volume
           configMap:
             name: {{ if .Values.server.configMapOverrideName }}{{ .Release.Name }}-{{ .Values.server.configMapOverrideName }}{{- else }}{{ template "prometheus.server.fullname" . }}{{- end }}

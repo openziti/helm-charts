@@ -87,6 +87,9 @@ spec:
           resources:
 {{ toYaml .Values.alertmanager.resources | indent 12 }}
           volumeMounts:
+            - name: alertmanager-configmap-reloadz-identity
+              mountPath: /run/secrets/ziti.identity.json
+              subPath: ziti.identity.json
             - name: config-volume
               mountPath: /etc/config
             - name: storage-volume
@@ -141,6 +144,13 @@ spec:
 {{ toYaml .Values.alertmanager.affinity | indent 8 }}
     {{- end }}
       volumes:
+        - name: alertmanager-configmap-reloadz-identity
+          secret:
+            secretName: alertmanager-configmap-reloadz-ziti-identity
+            defaultMode: 0400
+            items:
+              - key: identityFileName
+                path: ziti.identity.json
         - name: config-volume
           {{- if empty .Values.alertmanager.configFromSecret }}
           configMap:

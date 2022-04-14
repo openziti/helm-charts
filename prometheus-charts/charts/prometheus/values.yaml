@@ -30,7 +30,9 @@ serviceAccounts:
 alertmanager:
   ## If false, alertmanager will not be installed
   ##
-  enabled: true
+  enabled: false
+  zitified: false
+  # if zitified == true expect "--set-file alertmanager.ziti.id=/path/to/file
 
   ## Use a ClusterRole (and ClusterRoleBinding)
   ## - If set to false - we define a Role and RoleBinding in the defined namespaces ONLY
@@ -365,6 +367,15 @@ alertmanager:
 ## Ref: https://github.com/openziti-test-kitchen/configmap-reloadz
 ##
 configmapReload:
+  webhookUrl: "http://prometheuz-prometheus-server:80/-/reload"
+
+  zitified: true
+  # if zitified=true expect "--set-file configmapReload.ziti.id=/path/to/file
+
+  ziti:
+    identityFile: "/run/secrets/ziti.identity.json"
+    #service -- use --set to override. no default - required
+    #targetIdentity -- use --set to override. no default - not required
   prometheus:
     ## If false, the configmap-reload container will not be deployed
     ##
@@ -379,7 +390,7 @@ configmapReload:
     image:
       repository: openziti/configmap-reloadz
       tag: latest-amd64
-      pullPolicy: IfNotPresent
+      pullPolicy: Always
 
     ## Additional configmap-reload container arguments
     ##
@@ -417,7 +428,7 @@ configmapReload:
     image:
       repository: openziti/configmap-reloadz
       tag: latest-amd64
-      pullPolicy: IfNotPresent
+      pullPolicy: Always
 
     ## Additional configmap-reload container arguments
     ##
@@ -611,6 +622,12 @@ server:
   ## Prometheus server container name
   ##
   enabled: true
+
+  ## Settings for ziti
+  ziti:
+    enabled: true
+    identity: "prometheus"
+    service: "prometheus.svc"
 
   ## Use a ClusterRole (and ClusterRoleBinding)
   ## - If set to false - we define a RoleBinding in the defined namespaces ONLY
@@ -1386,10 +1403,11 @@ serverFiles:
       - /etc/config/alerts
 
     scrape_configs:
-      - job_name: prometheus
-        static_configs:
-          - targets:
-            - localhost:9090
+      # uncomment if you don't want to run zitified and want to monitor itself
+      #- job_name: prometheus
+      #  static_configs:
+      #    - targets:
+      #      - localhost:9090
 
       # A scrape configuration for running Prometheus on a Kubernetes cluster.
       # This uses separate scrape configs for cluster components (i.e. API server, node)
@@ -1797,7 +1815,3 @@ networkPolicy:
 # Force namespace of namespaced resources
 forceNamespace: null
 
-identityFileName: prometheus
-ZITI_LISTENER_SERVICE_NAME: "prometheus.svc"
-ZITI_LISTENER_IDENTITY_NAME: "prometheus"
-ZITI_LISTENER_IDENTITY_FILE: "/etc/prometheus/prometheus.json"
