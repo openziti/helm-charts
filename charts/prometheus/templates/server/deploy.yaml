@@ -80,7 +80,7 @@ spec:
               subPath: {{ .subPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-          {{- if .Values.configmapReload.zitified -}}
+          {{- if .Values.configmapReload.zitified }}
             - name: configmap-reloadz-identity
               mountPath: /run/secrets
           {{- end }}
