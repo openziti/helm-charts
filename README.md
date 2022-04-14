@@ -20,7 +20,7 @@ helm install prometheuz ./prometheus-charts/charts/prometheus \
 ```
 unzitified (but... why? probably only for testing but maybe you can't zitify prometheus):
 ```
-helm install prometheuz /home/cd/git/github/openziti/test-kitchen/helm-charts/prometheus-charts/charts/prometheus \
+helm install prometheuz ./prometheus-charts/charts/prometheus \
          --set configmapReload.zitified="false" \
          --set server.ziti.enabled="false"
 ```
