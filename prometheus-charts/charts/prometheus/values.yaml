@@ -30,7 +30,7 @@ serviceAccounts:
 alertmanager:
   ## If false, alertmanager will not be installed
   ##
-  enabled: true
+  enabled: false
   zitified: false
   # if zitified == true expect "--set-file alertmanager.ziti.id=/path/to/file
 
