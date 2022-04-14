@@ -32,13 +32,16 @@ helm install prometheuz ./prometheus-charts/charts/prometheus \
 
 * clone this repo
 * find/update values as needed
-* helm package prometheus-charts/charts/prometheus
+* update ./prometheus-charts/charts/prometheus/Chart.yaml with appVersion/version accordingly
+* run:
+
+      helm package prometheus-charts/charts/prometheus
+
 * if you see an error like shown below, run `helm dependency update prometheus-charts/charts/prometheus`:
     
     helm package prometheus-charts/charts/prometheus
     Error: found in Chart.yaml, but missing in charts/ directory: kube-state-metrics
     
-* update prometheus-charts/charts/prometheus/Chart.yaml with appVersion/version accordingly
 * run `helm package prometheus-charts/charts/prometheus`
 * this produces a .tgz file at the root folder
 * `git checkout gh-pages`
