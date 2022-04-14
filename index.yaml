@@ -1,30 +1,151 @@
 apiVersion: v1
 entries:
   prometheus:
-  - apiVersion: v2
-    appVersion: 0.0.11
-    created: "2022-04-14T08:58:47.7354506-04:00"
-    dependencies:
-    - condition: kubeStateMetrics.enabled
-      name: kube-state-metrics
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 4.0.*
-    description: Prometheus is a monitoring system and time series database.
-    digest: e994ea9e3dbfc0566d48251e9b463ab49d72557d7b98441e9e5768257150454b
-    home: https://prometheus.io/
-    icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
-    maintainers:
-    - email: help.openziti.org
-      name: OpenZiti
-    name: prometheus
-    sources:
-    - https://github.com/prometheus/alertmanager
-    - https://github.com/prometheus/prometheus
-    - https://github.com/prometheus/pushgateway
-    - https://github.com/prometheus/node_exporter
-    - https://github.com/kubernetes/kube-state-metrics
-    type: application
-    urls:
-    - prometheus-0.0.6.tgz
-    version: 0.0.6
-generated: "2022-04-14T08:58:47.7236105-04:00"
+    - apiVersion: v2
+      appVersion: 0.0.9
+      created: "2022-03-28T18:09:32.7346743-04:00"
+      dependencies:
+        - condition: kubeStateMetrics.enabled
+          name: kube-state-metrics
+          repository: https://prometheus-community.github.io/helm-charts
+          version: 4.0.*
+      description: Prometheus is a monitoring system and time series database.
+      digest: 08ff4df9cb9ec9f565ef21a9aadccc9f13091430a3eef63773a2ba4f5f3c08a5
+      home: https://prometheus.io/
+      icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+      maintainers:
+        - email: gianrubio@gmail.com
+          name: gianrubio
+        - email: zanhsieh@gmail.com
+          name: zanhsieh
+        - email: miroslav.hadzhiev@gmail.com
+          name: Xtigyro
+        - email: monotek23@gmail.com
+          name: monotek
+        - email: naseem@transit.app
+          name: naseemkullah
+      name: prometheus
+      sources:
+        - https://github.com/prometheus/alertmanager
+        - https://github.com/prometheus/prometheus
+        - https://github.com/prometheus/pushgateway
+        - https://github.com/prometheus/node_exporter
+        - https://github.com/kubernetes/kube-state-metrics
+      type: application
+      urls:
+        - prometheus-0.0.4.tgz
+      version: 0.0.4
+    - apiVersion: v2
+      appVersion: 0.0.8
+      created: "2022-03-28T18:09:32.7224231-04:00"
+      dependencies:
+        - condition: kubeStateMetrics.enabled
+          name: kube-state-metrics
+          repository: https://prometheus-community.github.io/helm-charts
+          version: 4.0.*
+      description: Prometheus is a monitoring system and time series database.
+      digest: 5319947065a6b78fce97379ca69e44e989d1ca6816d4ca217da828951e621b5a
+      home: https://prometheus.io/
+      icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+      maintainers:
+        - email: gianrubio@gmail.com
+          name: gianrubio
+        - email: zanhsieh@gmail.com
+          name: zanhsieh
+        - email: miroslav.hadzhiev@gmail.com
+          name: Xtigyro
+        - email: monotek23@gmail.com
+          name: monotek
+        - email: naseem@transit.app
+          name: naseemkullah
+      name: prometheus
+      sources:
+        - https://github.com/prometheus/alertmanager
+        - https://github.com/prometheus/prometheus
+        - https://github.com/prometheus/pushgateway
+        - https://github.com/prometheus/node_exporter
+        - https://github.com/kubernetes/kube-state-metrics
+      type: application
+      urls:
+        - prometheus-0.0.3.tgz
+      version: 0.0.3
+    - apiVersion: v2
+      appVersion: 0.0.7
+      created: "2022-03-28T18:09:32.7116225-04:00"
+      dependencies:
+        - condition: kubeStateMetrics.enabled
+          name: kube-state-metrics
+          repository: https://prometheus-community.github.io/helm-charts
+          version: 4.0.*
+      description: Prometheus is a monitoring system and time series database.
+      digest: b61c298ed974457ad8cdd1078880eecbc5ff2bdb1236951837d2dcb7ee0a4c87
+      home: https://prometheus.io/
+      icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+      maintainers:
+        - email: gianrubio@gmail.com
+          name: gianrubio
+        - email: zanhsieh@gmail.com
+          name: zanhsieh
+        - email: miroslav.hadzhiev@gmail.com
+          name: Xtigyro
+        - email: monotek23@gmail.com
+          name: monotek
+        - email: naseem@transit.app
+          name: naseemkullah
+      name: prometheus
+      sources:
+        - https://github.com/prometheus/alertmanager
+        - https://github.com/prometheus/prometheus
+        - https://github.com/prometheus/pushgateway
+        - https://github.com/prometheus/node_exporter
+        - https://github.com/kubernetes/kube-state-metrics
+      type: application
+      urls:
+        - prometheus-0.0.2.tgz
+      version: 0.0.2
+    - apiVersion: v2
+      appVersion: 0.0.5
+      created: "2022-03-28T18:09:32.6999894-04:00"
+      dependencies:
+        - condition: kubeStateMetrics.enabled
+          name: kube-state-metrics
+          repository: https://prometheus-community.github.io/helm-charts
+          version: 4.0.*
+      description: Prometheus is a monitoring system and time series database.
+      digest: 116b5205e6659485cbdcda902c6969f9b348489218e902fc1eaf8bd380ef8fb0
+      home: https://prometheus.io/
+      icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+      maintainers:
+        - email: gianrubio@gmail.com
+          name: gianrubio
+        - email: zanhsieh@gmail.com
+          name: zanhsieh
+        - email: miroslav.hadzhiev@gmail.com
+          name: Xtigyro
+        - email: monotek23@gmail.com
+          name: monotek
+        - email: naseem@transit.app
+          name: naseemkullah
+      name: prometheus
+      sources:
+        - https://github.com/prometheus/alertmanager
+        - https://github.com/prometheus/prometheus
+        - https://github.com/prometheus/pushgateway
+        - https://github.com/prometheus/node_exporter
+        - https://github.com/kubernetes/kube-state-metrics
+      type: application
+      urls:
+        - prometheus-0.0.1.tgz
+      version: 0.0.1
+  reflect:
+    - apiVersion: v2
+      appVersion: 0.0.4
+      created: "2022-03-28T18:09:32.7422169-04:00"
+      description: A Helm chart for Kubernetes
+      digest: c48aa9af9a0f32a73b0a4df785185c82bed75e9977191078478f4f285dd3620c
+      name: reflect
+      type: application
+      urls:
+        - reflect-0.3.0.tgz
+      version: 0.3.0
+generated: "2022-03-28T18:09:32.6899416-04:00"
