@@ -196,9 +196,11 @@ spec:
           resources:
 {{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
+            {{- if .Values.server.ziti.enabled }}
             - name: prometheus-identity
               mountPath: /etc/prometheus/prometheus.json
               subPath: prometheus.json
+            {{- end }}
             - name: config-volume
               mountPath: /etc/config
             - name: storage-volume

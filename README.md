@@ -8,12 +8,21 @@ These files are published as [a GitHub pages site here](https://openziti-test-ki
 
 Use helm to install a chart locally. Example prometheuz 
 
+zitified:
 ```
-helm install prometheuz ./charts/prometheus \
-     --set-file prometheusIdentity=/tmp/id.json \
-     --set ZITI_LISTENER_SERVICE_NAME=svc.name \
-     --set ZITI_LISTENER_IDENTITY_NAME=svc.identity.name \
-     --set ZITI_LISTENER_IDENTITY_FILE=/tmp/id.json
+helm install prometheuz ./prometheus-charts/charts/prometheus \
+    --set-file configmapReload.ziti.id.contents="/ziti/id/to/reload/prometheus/after/change.json" \
+         --set configmapReload.ziti.targetService="my.zitified.prometheus.svc" \
+         --set configmapReload.ziti.targetIdentity="hosting.ziti.identity" \
+    --set-file server.ziti.id.contents="/ziti/id/to/prometheus/ziti.id.json" \
+         --set server.ziti.service="my.zitified.prometheus.svc" \
+         --set server.ziti.identity="hosting.ziti.identity"
+```
+unzitified (but... why? probably only for testing but maybe you can't zitify prometheus):
+```
+helm install prometheuz /home/cd/git/github/openziti/test-kitchen/helm-charts/prometheus-charts/charts/prometheus \
+         --set configmapReload.zitified="false" \
+         --set server.ziti.enabled="false"
 ```
 
 
