@@ -1,6 +1,8 @@
+{{- if .Values.configmapReload.zitified -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-identity-file
 data:
-  {{ .Values.identityFileName }}.json: {{ .Values.prometheusIdentity | quote }}
+  configmapZitiId: {{ .Values.configmapReload.ziti.id.contents | b64enc }}
+{{- end }}
