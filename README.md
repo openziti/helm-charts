@@ -4,6 +4,28 @@ This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](
 
 These files are published as [a GitHub pages site here](https://openziti-test-kitchen.github.io/helm-charts/).
 
+## Test Local Changes
+
+Use helm to install a chart locally. Example prometheuz
+
+zitified:
+```
+helm install prometheuz ./charts/prometheus \
+    --set-file configmapReload.ziti.id.contents="/ziti/id/to/reload/prometheus/after/change.json" \
+         --set configmapReload.ziti.targetService="my.zitified.prometheus.svc" \
+         --set configmapReload.ziti.targetIdentity="hosting.ziti.identity" \
+    --set-file server.ziti.id.contents="/ziti/id/to/prometheus/ziti.id.json" \
+         --set server.ziti.service="my.zitified.prometheus.svc" \
+         --set server.ziti.identity="hosting.ziti.identity"
+```
+unzitified (but... why? probably only for testing but maybe you can't zitify prometheus):
+```
+helm install prometheuz ./charts/prometheus \
+         --set configmapReload.zitified="false" \
+         --set server.ziti.enabled="false"
+```
+
+
 ## Update this repo
 
 ### Automatic 
