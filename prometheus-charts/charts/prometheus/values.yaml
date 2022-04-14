@@ -628,10 +628,6 @@ server:
     enabled: true
     identity: "prometheus"
     service: "prometheus.svc"
-    #xx identityFileName: prometheus
-    #xx serviceName: "prometheus.svc"
-    #xx identityName: "prometheus"
-    #xx identityFile: "/etc/prometheus/prometheus.jsona"
 
   ## Use a ClusterRole (and ClusterRoleBinding)
   ## - If set to false - we define a RoleBinding in the defined namespaces ONLY

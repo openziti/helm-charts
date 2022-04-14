@@ -149,7 +149,7 @@ spec:
             secretName: alertmanager-configmap-reloadz-ziti-identity
             defaultMode: 0400
             items:
-              - key: zitiIdentity2
+              - key: identityFileName
                 path: ziti.identity.json
         - name: config-volume
           {{- if empty .Values.alertmanager.configFromSecret }}
