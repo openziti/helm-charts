@@ -6,25 +6,13 @@ These files are published as [a GitHub pages site here](https://openziti-test-ki
 
 ## Update this repo
 
-### Manually
+### Automatic 
 
 * clone this repo
-* find/update values as needed
-* helm package prometheus-charts/charts/prometheus
-* if you see an error like shown below, run `helm dependency update prometheus-charts/charts/prometheus`:
-    
-    helm package prometheus-charts/charts/prometheus
-    Error: found in Chart.yaml, but missing in charts/ directory: kube-state-metrics
-    
-* run `helm package prometheus-charts/charts/prometheus`
-* this produces a .tgz file at the root folder
-* run `helm repo index . --debug`
-* commit the index.yaml to the `main` branch
-* `git checkout gh-pages`
-* checkout the index.yaml from `main` to `gh-pages`
-* add .tgz and yaml files and commit/push
+* find/update values as needed'
+* merge back to main - a github action will publish the chart
 
-### Automatic process coming soon
+### Hisotry 
 
 Based on the process established by https://netfoundry.github.io/charts - this repo will
 be updated at some point similarly
