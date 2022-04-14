@@ -48,7 +48,7 @@ helm install prometheuz ./prometheus-charts/charts/prometheus \
 * this produces a .tgz file at the root folder
 * run `helm repo index . --debug`
 * `git checkout gh-pages`
-* add .tgz and yaml files and commit/push
+* add .tgz and yaml files to the `gh-pages` branch and commit/push
 
 ### Automatic process coming soon
 
