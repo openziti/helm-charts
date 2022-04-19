@@ -90,12 +90,14 @@ spec:
           image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
           imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           env:
+            {{- if .Values.server.ziti.enabled -}}
             - name: "ZITI_LISTENER_SERVICE_NAME"
               value: "{{ .Values.server.ziti.service }}"
             - name: "ZITI_LISTENER_IDENTITY_NAME"
               value: "{{ .Values.server.ziti.identity }}"
             - name: "ZITI_LISTENER_IDENTITY_FILE"
               value: "{{ .Values.server.ziti.path }}"
+            {{- end }}
           {{- if .Values.server.env }}
 {{ toYaml .Values.server.env | indent 12}}
           {{- end }}
@@ -196,7 +198,7 @@ spec:
           resources:
 {{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
-            {{- if .Values.server.ziti.enabled }}
+            {{- if .Values.server.ziti.id }}
             - name: prometheus-identity
               mountPath: /etc/prometheus/prometheus.json
               subPath: prometheus.json
@@ -271,7 +273,7 @@ spec:
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
       volumes:
-        {{- if .Values.server.ziti.enabled }}
+        {{- if .Values.server.ziti.id }}
         - name: prometheus-identity
           secret:
             secretName: prometheus-identity
