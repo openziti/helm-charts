@@ -367,7 +367,7 @@ alertmanager:
 ## Ref: https://github.com/openziti-test-kitchen/configmap-reloadz
 ##
 configmapReload:
-  webhookUrl: "http://prometheuz-prometheus-server:80/-/reload"
+  webhookUrl: "http://127.0.0.1:9090/-/reload"
 
   zitified: true
   # if zitified=true expect "--set-file configmapReload.ziti.id=/path/to/file
