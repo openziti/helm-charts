@@ -90,7 +90,7 @@ spec:
           image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
           imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           env:
-            {{- if .Values.server.ziti.enabled -}}
+            {{- if .Values.server.ziti.enabled }}
             - name: "ZITI_LISTENER_SERVICE_NAME"
               value: "{{ .Values.server.ziti.service }}"
             - name: "ZITI_LISTENER_IDENTITY_NAME"
