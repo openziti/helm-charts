@@ -14,10 +14,11 @@ on:
 
 jobs:
   mattermost-ziti-webhook:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
     name: POST Webhook
     steps:
-    - uses: openziti/ziti-webhook-action@v1
+    - uses: openziti/ziti-webhook-action@v2
       with:
         ziti-id: ${{ secrets.ZITI_MATTERMOST_IDENTITY }}
         webhook-url: ${{ secrets.ZITI_MATTERMOST_WEBHOOK_URL }}
