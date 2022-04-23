@@ -146,7 +146,7 @@ spec:
       volumes:
         - name: alertmanager-configmap-reloadz-identity
           secret:
-            secretName: alertmanager-configmap-reloadz-ziti-identity
+            secretName: alertmanager-configmap-reloadz-ziti-identity-secret
             defaultMode: 0400
             items:
               - key: identityFileName

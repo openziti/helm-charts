@@ -80,9 +80,10 @@ spec:
               subPath: {{ .subPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-          {{- if .Values.configmapReload.zitified }}
-            - name: configmap-reloadz-identity
-              mountPath: /run/secrets
+          {{- if .Values.server.ziti.enabled }}
+            - name: configmap-reloadz-identity-vol
+              mountPath: /run/secrets/ziti.identity.json
+              subPath: ziti.identity.json
           {{- end }}
         {{- end }}
 
@@ -198,10 +199,15 @@ spec:
           resources:
 {{ toYaml .Values.server.resources | indent 12 }}            
           volumeMounts:
-            {{- if .Values.server.ziti.id }}
-            - name: prometheus-identity
+            {{- if .Values.server.ziti.enabled }}
+            - name: prometheus-server-identity-vol
               mountPath: /etc/prometheus/prometheus.json
               subPath: prometheus.json
+            {{- end }}
+            {{- if .Values.server.scrape.id }}
+            - name: prometheus-scrape-identity-vol
+              mountPath: /etc/prometheus/scrape.json
+              subPath: scrape.json
             {{- end }}
             - name: config-volume
               mountPath: /etc/config
@@ -273,24 +279,30 @@ spec:
     {{- end }}
       terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
       volumes:
-        {{- if .Values.server.ziti.id }}
-        - name: prometheus-identity
+        {{- if .Values.server.ziti.enabled }}
+        - name: prometheus-server-identity-vol
           secret:
-            secretName: prometheus-identity
+            secretName: prometheus-server-identity-secret
             defaultMode: 0400
             items:
-            - key: prometheusIdentity
-              path: prometheus.json
-              #path: {{ .Values.identityFileName }}.json
-        {{- end }}
-        {{- if .Values.configmapReload.zitified }}
-        - name: configmap-reloadz-identity
+              - key: zid
+                path: prometheus.json
+        - name: configmap-reloadz-identity-vol
           secret:
-            secretName: configmap-reloadz-ziti-identity
+            secretName: configmap-reloadz-identity-secret
             defaultMode: 0400
             items:
-              - key: zitiIdentity
+              - key: zid
                 path: ziti.identity.json
+        {{- end }}
+        {{- if .Values.server.scrape.id }}
+        - name: prometheus-scrape-identity-vol
+          secret:
+            secretName: prometheus-scrape-identity-secret
+            defaultMode: 0400
+            items:
+            - key: zid
+              path: scrape.json
         {{- end }}
         - name: config-volume
           configMap:
