@@ -1,0 +1,5 @@
+This deployment provides an OpenZiti tunneler pod to which you may bind OpenZiti Services to provide cluster ingress to those cluster services.
+
+To bind a service to this tunneler you must create a Bind Service Policy matching the role of a service to the role of the identity you used to install this chart.
+
+    export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "ziti-host.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
