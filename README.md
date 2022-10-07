@@ -79,4 +79,4 @@ helm install prometheuz ./charts/prometheus \
 1. send PR targeting main
 1. merge main runs GitHub Actions to package and index the charts and triggers GitHub Pages to publish
 
-You may verify changes are present in the Helm index: https://openziti-test-kitchen.github.io/helm-charts/index.yaml.
+You may verify changes are present in the Helm index: https://openziti.github.io/helm-charts/index.yaml.
