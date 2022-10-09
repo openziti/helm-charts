@@ -11,15 +11,14 @@ persistence:
   size: 100Mi
 
 image:
-  repository: openziti/ziti-edge-tunnel
+  repository: openziti/ziti-host
 #  pullPolicy: Never
   pullPolicy: Always
 #  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
 #  tag: helmtest
 #   command: ["sh", "-c", "while true; do sleep 11; done"]
-  args:
-    - "run-host"  # exec "ziti-edge-tunnel run-host" to only host, not intercept/proxy, no DNS
+  args: []  # the ziti-host image execs "ziti-edge-tunnel run-host" to only host, not intercept/proxy, no DNS
 
 dnsPolicy: ClusterFirstWithHostNet
 
