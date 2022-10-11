@@ -37,12 +37,12 @@ The operation of this chart is described in [part 2 of the PrometheuZ tutorial](
 
 ```bash
 helm install prometheuz ./charts/prometheus \
-    --set-file configmapReload.ziti.id.contents="/ziti/id/to/reload/prometheus/after/change.json" \
-         --set configmapReload.ziti.targetService="my.zitified.prometheus.svc" \
-         --set configmapReload.ziti.targetIdentity="hosting.ziti.identity" \
-    --set-file server.ziti.id.contents="/ziti/id/to/prometheus/ziti.id.json" \
-         --set server.ziti.service="my.zitified.prometheus.svc" \
-         --set server.ziti.identity="hosting.ziti.identity"
+     --set-file configmapReload.ziti.id.contents="/ziti/id/to/reload/prometheus/after/change.json" \
+     --set configmapReload.ziti.targetService="my.zitified.prometheus.svc" \
+     --set configmapReload.ziti.targetIdentity="hosting.ziti.identity" \
+     --set-file server.ziti.id.contents="/ziti/id/to/prometheus/ziti.id.json" \
+     --set server.ziti.service="my.zitified.prometheus.svc" \
+     --set server.ziti.identity="hosting.ziti.identity"
 ```
 
 ### `reflect`
@@ -51,9 +51,9 @@ This chart provides a simple byte echoing server for demos and testing Ziti. You
 
 ```bash
 helm install reflectz openziti-test-kitchen/reflect \
-  --set-file reflectIdentity="/tmp/prometheus/kubeB.reflect.id.json" \
-  --set serviceName="kubeB.reflect.svc" \
-  --set prometheusServiceName="kubeB.reflect.scrape.svc"
+     --set-file reflectIdentity="/tmp/prometheus/kubeB.reflect.id.json" \
+     --set serviceName="kubeB.reflect.svc" \
+     --set prometheusServiceName="kubeB.reflect.scrape.svc"
 ```
 
 ## Development
@@ -64,12 +64,12 @@ Use helm to install a chart locally by targeting the local chart's directory. Fo
 
 ```bash
 helm install prometheuz ./charts/prometheus \
-    --set-file configmapReload.ziti.id.contents="/ziti/id/to/reload/prometheus/after/change.json" \
-         --set configmapReload.ziti.targetService="my.zitified.prometheus.svc" \
-         --set configmapReload.ziti.targetIdentity="hosting.ziti.identity" \
-    --set-file server.ziti.id.contents="/ziti/id/to/prometheus/ziti.id.json" \
-         --set server.ziti.service="my.zitified.prometheus.svc" \
-         --set server.ziti.identity="hosting.ziti.identity"
+     --set-file configmapReload.ziti.id.contents="/ziti/id/to/reload/prometheus/after/change.json" \
+     --set configmapReload.ziti.targetService="my.zitified.prometheus.svc" \
+     --set configmapReload.ziti.targetIdentity="hosting.ziti.identity" \
+     --set-file server.ziti.id.contents="/ziti/id/to/prometheus/ziti.id.json" \
+     --set server.ziti.service="my.zitified.prometheus.svc" \
+     --set server.ziti.identity="hosting.ziti.identity"
 ```
 
 ### Update this repo
