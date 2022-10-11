@@ -1,4 +1,4 @@
-# Default values for hello-netfoundry.
+# Default values for hello-openziti.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -13,7 +13,7 @@ ingress:
   enabled: false
 
 image:
-  repository: netfoundry/hello-world-webpage
+  repository: openziti/hello-world-webpage
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
 #  tag: 

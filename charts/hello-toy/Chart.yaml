@@ -2,7 +2,7 @@ apiVersion: v2
 name: hello-toy
 description: >
   Run the lightweight toy web server, optionally with a custom service domain name in cluster DNS e.g.
-    helm install my-toy-release netfoundry/hello-toy --set serviceDomainName=my-toy-service-dns
+    helm install my-toy-release openziti/hello-toy --set serviceDomainName=my-toy-service-dns
 
 # A chart can be either an 'application' or a 'library' chart.
 #

@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "hello-netfoundry.name" . }}
+  name: {{ include "hello-openziti.name" . }}
   labels:
-    {{- include "hello-netfoundry.labels" . | nindent 4 }}
+    {{- include "hello-openziti.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      {{- include "hello-netfoundry.selectorLabels" . | nindent 6 }}
+      {{- include "hello-openziti.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,13 +16,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "hello-netfoundry.selectorLabels" . | nindent 8 }}
+        {{- include "hello-openziti.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "hello-netfoundry.serviceAccountName" . }}
+      serviceAccountName: {{ include "hello-openziti.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       dnsPolicy: {{ .Values.dnsPolicy }}
