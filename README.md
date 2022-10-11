@@ -31,6 +31,16 @@ This chart deploys a pod running `ziti-edge-tunnel run-host`. This is the Linux 
 helm install ziti-host openziti/ziti-host --set-file zitiIdentity=/tmp/myAcmeIdentity.json
 ```
 
+### `httpbin`
+
+This chart deploys a pod running the Ziti-embeded version of go-httpbin, a REST API server.
+
+```bash
+helm install httpbinz-release1 openziti/httpbin \
+     --set zitiServiceName="my httpbin service" \
+     --set-file zitiIdentity=./my-ziti-identity.json
+```
+
 ### `prometheus`
 
 The operation of this chart is described in [part 2 of the PrometheuZ tutorial](https://openziti.github.io/articles/zitification/prometheus/part2.html#deploying-prometheuz-1).
