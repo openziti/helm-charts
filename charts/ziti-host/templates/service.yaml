@@ -42,7 +42,7 @@ spec:
           args:
             {{- toYaml .Values.image.args | nindent 12 }}
           env:
-            - name: NF_REG_NAME
+            - name: ZITI_IDENTITY_BASENAME
               value: {{ include "ziti-host.fullname" . }}-identity
           volumeMounts:
             - mountPath: /ziti-edge-tunnel
