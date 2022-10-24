@@ -13,7 +13,7 @@ ingress:
   enabled: false
 
 image:
-  repository: openziti/hello-world-webpage
+  repository: netfoundry/hello-world-webpage
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
 #  tag: 
