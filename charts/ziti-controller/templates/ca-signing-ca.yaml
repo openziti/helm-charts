@@ -1,0 +1,64 @@
+#######
+# Signing CA
+######
+
+---
+# the 'signing root ca' ca
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-signing-root-ca
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-signing-root-ca
+  secretName: {{ include "ziti-controller.fullname" . }}-signing-root-ca-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+---
+# an issuer for the 'signing root ca' ca
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-signing-root-ca-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "ziti-controller.fullname" . }}-signing-root-ca-secret
+---
+# the 'signing intermediate ca'
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-signing-intermediate-ca
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-signing-intermediate-ca
+  secretName: {{ include "ziti-controller.fullname" . }}-signing-intermediate-ca-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-signing-root-ca-issuer
+

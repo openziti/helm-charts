@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+    app.kubernetes.io/component: "ziti-controller"
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "ziti-controller.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: "ziti-controller"
+  serviceName: {{ include "ziti-controller.fullname" . }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ziti-controller.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: "ziti-controller"
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: client-mgmt
+            containerPort: {{ .Values.clientManagement.port }}
+          - name: controller
+            containerPort: {{ .Values.controller.port }}
+          - name: mgmt-api
+            containerPort: {{ .Values.managementApi.port }}
+          {{- if .Values.prometheus.enabled }}
+          - name: prometheus
+            containerPort: {{ .Values.prometheus.port }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{ if .Values.image.command }}
+          command: 
+          {{- range .Values.image.command }}
+            - {{ . | quote }}
+          {{- end }}
+          {{ end }}
+          args:
+            {{- toYaml .Values.image.args | nindent 12 }}
+          env:
+          - name: ZITI_ADMIN_USER
+            valueFrom:
+              secretKeyRef:
+                name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                key: admin-user
+          - name: ZITI_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                key: admin-password
+          volumeMounts:
+            - mountPath: /var/openziti/scripts/controller.sh
+              name: ziti-controller-config-map
+              subPath: controller.sh
+            - mountPath: /persistent
+              name: {{ include "ziti-controller.fullname" . }}-data
+            - mountPath: /persistent/ziti-controller.yaml
+              name: ziti-controller-config-map
+              subPath: ziti-controller.yaml
+            - mountPath: "/persistent/certs/controller-server/"
+              name: cert-controller-server
+              readOnly: true
+            - mountPath: "/persistent/certs/signing-intermediate-ca/"
+              name: cert-signing-intermediate-ca
+              readOnly: true
+            - mountPath: "/persistent/certs/edge-controller-server/"
+              name: cert-edge-controller-server
+              readOnly: true
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: ziti-controller-config-map
+          configMap:
+            name: {{ include "ziti-controller.fullname" . }}-config
+            defaultMode: 0755
+        - name: cert-controller-server
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-server-cert-secret
+        - name: cert-signing-intermediate-ca
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-signing-intermediate-ca-secret
+        - name: cert-edge-controller-server
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-edge-server-cert-secret
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ include "ziti-controller.fullname" . }}-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 250Mi
+

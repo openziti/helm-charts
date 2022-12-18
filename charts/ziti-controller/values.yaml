@@ -1,0 +1,120 @@
+# Default values for ziti-controller.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This is the "main service" exposing the client-management API
+# and the edge-controller required for routers to connect.
+# You usually want to expose both services. Except in your setup
+# you have all (edge-)routers connecting from 'inside' your kubernetes
+# infrastructure then you might have the main service internal only,
+# enable the clientApi.service and expose only the client-management API
+# to the outside (required for services / computers / users) to connect
+# and find the edge-router endpoints.
+
+service:
+  enabled: true
+  type: ClusterIP
+
+clientManagement:
+  port: 1280
+  service:
+    enabled: false
+    type: ClusterIP
+
+controller:
+  port: 6262
+
+managementApi:
+  port: 1281
+  service:
+    enabled: true
+    type: ClusterIP
+
+prometheus:
+  enabled: false
+  port: 2112
+  service:
+    enabled: true
+    type: ClusterIP
+
+ca:
+  # Note: The renewBefore and duration fields must be specified using a Go
+  # time.Duration string format, which does not allow the d (days) suffix.
+  # You must specify these values using s, m, and h suffixes instead.
+  # duration: 2160h # 90d
+  # renewBefore: 360h # 15d
+  duration: 87840h # 3660d / 10 y
+  renewBefore: 720h # 30d
+
+cert:
+  # Note: The renewBefore and duration fields must be specified using a Go
+  # time.Duration string format, which does not allow the d (days) suffix.
+  # You must specify these values using s, m, and h suffixes instead.
+  # TODO lower this value!
+  # duration: 2160h # 90d
+  # renewBefore: 360h # 15d
+  duration: 87840h # 3660d / 10 y
+  renewBefore: 720h # 30d
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 100Mi
+
+image:
+  repository: openziti/quickstart
+#  pullPolicy: Never
+#  pullPolicy: Always
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+#  tag: helmtest
+#   command: ["sh", "-c", "while true; do sleep 11; done"]
+  command:
+    - "/bin/bash"
+    - "-c"
+    - "/var/openziti/scripts/controller.sh"
+
+  args: []  # the ziti-host image execs "ziti-edge-tunnel run-host" to only host, not intercept/proxy, no DNS
+
+#dnsPolicy: ClusterFirstWithHostNet
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+hostNetwork: False
+securityContext: {}
+  # capabilities:
+  #   add:
+  #     - NET_ADMIN
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+ports: []
+
+nodeSelector: {}
+#  kubernetes.io/role: master
+
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+affinity: {}
+
+replicas: 1

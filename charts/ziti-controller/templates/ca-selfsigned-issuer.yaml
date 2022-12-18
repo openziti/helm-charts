@@ -1,0 +1,10 @@
+---
+# an 'empty' Issuer for creating self-signed root-CA's
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
