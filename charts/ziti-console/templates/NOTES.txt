@@ -1,0 +1,2 @@
+This deployment provides an OpenZiti router to accept/forward communication data within a OpenZiti Overlay network.
+

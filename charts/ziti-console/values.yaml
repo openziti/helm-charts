@@ -1,0 +1,85 @@
+# Default values for ziti-console.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+ingress:
+  enabled: false
+  ingressClassName: ""
+  annotations: {}
+  labels: {}
+  hosts:
+    - host: ziti-console.domain.tld
+      paths:
+        - path: "/"
+          pathType: Prefix
+  tls: []
+
+ports:
+  - name: http
+    containerPort: 1408
+
+service:
+  enabled: true
+  port: 1408
+  name: http
+  type: ClusterIP
+  labels: {}
+  annotations: {}
+
+settings:
+  edgeControllers: []
+  fabricControllers: []
+
+
+image:
+  repository: openziti/zac
+#  pullPolicy: Never
+  pullPolicy: IfNotPresent
+#  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  # tag: 0.26.11
+#   command: ["sh", "-c", "while true; do sleep 11; done"]
+  args: []
+  pullSecrets: []
+  command: ["/bin/bash","-c","/usr/src/app/console.sh"]
+
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  # capabilities:
+  #   add:
+  #     - NET_ADMIN
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+
+nodeSelector: {}
+#  kubernetes.io/role: master
+
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+affinity: {}
+
+replicas: 1

@@ -84,10 +84,10 @@ kubectl config set-context --current --namespace=ziti-quickstart
 
 ### Deployment of the ziti infrastructure
 
-First of all we need to put the IP and name of your kubernets cluster into the env. Please adopt and fill in how to reach the loadbalancer IP & hostname used during deployment accordingly to your environment:
+First of all we need to put the IP and name of your kubernetes cluster into the env. Please adopt and fill in how to reach the loadbalancer IP & hostname used during deployment accordingly to your environment:
 ```bash
 export KUBE_LB_IP=192.168.x.y
-export KUBE_LB_HOST=ziti.test.example.org
+export KUBE_LB_HOST=ziti-quickstart.example.org
 ```
 
 #### First of all we deploy the controller:
@@ -213,6 +213,26 @@ curl -v http://kube-http.ziti
 nc -v kube-http.ziti 80 &
 kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti fabric list circuits"
 ```
+#### Optional: install OpenZiti console
+
+Install ziti-console via helm. You have to adopt to host name accordingly to your needs. My test-env is build on k3s, so i have to put proper annotations and labels for traefik - please adjust things to match your enviornment.
+```bash
+helm install quickstart-console ziti-console \
+     --set "ingress.enabled=true" \
+     --set "ingress.hosts[0].host=quickstart-console.<example.org>" \
+     --set "settings.edgeControllers[0].name=quickstart" \
+     --set "settings.edgeControllers[0].url=https://quickstart-controller-mgmt:1281" \
+     --set "settings.edgeControllers[0].default=true" \
+     --set "ingress.annotations.traefik\.ingress\.kubernetes\.io/router\.entrypoints=websecure" \
+     --set "ingress.labels.ingressMethod=traefik"
+```
+
+To get the admin credentials execute this command:
+```bash
+kubectl get secret  quickstart-controller-admin-secret -o go-template='{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}'
+```
+
+Now you can open https://quickstart-console.<example.org> and authenticate using the listed credentials
 
 
 #### Cleanup
@@ -221,6 +241,7 @@ To uninstall the quickstart execute follwoing commands:
 ```bash
 # clean up helm installations
 helm uninstall hello-kubernetes
+helm uninstall quickstart-console
 helm uninstall quickstart-edge-server
 helm uninstall quickstart-router
 helm uninstall quickstart-controller

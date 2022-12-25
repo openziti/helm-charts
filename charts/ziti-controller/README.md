@@ -20,7 +20,7 @@ helm install -n ziti-test test-controller openziti/ziti-controller \
 
 During the installation a default admin user and password will be generated and saved to a secret. The credentials can be retrieved using this command:
 
-```
+```bash
 kubectl get secret -n ziti-text test-controller-admin-secret -o go-template='{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}'
 ```
 

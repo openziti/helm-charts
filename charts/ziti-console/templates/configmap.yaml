@@ -1,0 +1,17 @@
+---
+# Chart name: {{- .Chart.Name }} {{- .Values.nameOverride }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ziti-console.fullname" . }}-config
+  labels:
+    {{- include "ziti-console.labels" . | nindent 4 }}
+data:
+  console.sh: |-
+    #!/bin/bash
+    cp /usr/src/ziti/settings-template.json /usr/src/ziti/settings.json
+    exec /usr/src/app/run-zac.sh
+  settings-template.json: |-
+    {{- toJson .Values.settings | nindent 4 }}
+

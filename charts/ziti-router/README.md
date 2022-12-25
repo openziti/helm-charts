@@ -89,7 +89,7 @@ enrolmentJwt: <${ROUTER_NAME}.jwt>
 |-----|------|---------|-------------|
 | controller.endpoint | string | `""` | **Required**: How to reach the controller's router endpoint |
 | enrolmentJwt | string | `""` | **Required**: JWT for the router enrolment |
-| advertise.host | string | `""` | **conditionally required** Default advertised host name for `edge` and `transport` services for this router when enabled. |
+| advertise.host | string | `""` | **conditionally required** Default advertised host name for `edge` and `transport` services for this router when enabled |
 | csr.country | string | `""` | Edge CSR: country |
 | csr.province | string | `""` | Edge CSR: province |
 | csr.organization | string | `""` | Edge CSR: organization |
