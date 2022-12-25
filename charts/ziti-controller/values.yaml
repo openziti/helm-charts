@@ -10,7 +10,6 @@
 # enable the clientApi.service and expose only the client-management API
 # to the outside (required for services / computers / users) to connect
 # and find the edge-router endpoints.
-
 service:
   enabled: true
   type: ClusterIP
@@ -56,11 +55,6 @@ cert:
   duration: 87840h # 3660d / 10 y
   renewBefore: 720h # 30d
 
-persistence:
-  enabled: true
-  accessMode: ReadWriteOnce
-  size: 100Mi
-
 image:
   repository: openziti/quickstart
 #  pullPolicy: Never
@@ -78,7 +72,6 @@ image:
 
 #dnsPolicy: ClusterFirstWithHostNet
 
-imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
@@ -87,7 +80,6 @@ podAnnotations: {}
 podSecurityContext: {}
   # fsGroup: 2000
 
-hostNetwork: False
 securityContext: {}
   # capabilities:
   #   add:
@@ -104,8 +96,6 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
-ports: []
 
 nodeSelector: {}
 #  kubernetes.io/role: master

@@ -89,6 +89,7 @@ enrolmentJwt: <${ROUTER_NAME}.jwt>
 |-----|------|---------|-------------|
 | controller.endpoint | string | `""` | **Required**: How to reach the controller's router endpoint |
 | enrolmentJwt | string | `""` | **Required**: JWT for the router enrolment |
+| advertise.host | string | `""` | **conditionally required** Default advertised host name for `edge` and `transport` services for this router when enabled. |
 | csr.country | string | `""` | Edge CSR: country |
 | csr.province | string | `""` | Edge CSR: province |
 | csr.organization | string | `""` | Edge CSR: organization |
@@ -96,12 +97,11 @@ enrolmentJwt: <${ROUTER_NAME}.jwt>
 | csr.sans.dns | list | `[]` | Edge CSR: Alternative names: DNS |
 | csr.sans.ip | list | `[]` | Edge CSR: Alternative names: DNS |
 | edge.enabled | bool | `false` | Does this router act as edge-router? |
-| edge.host | string | `""` | Required: The host/ip that will be advertised for this router. |
+| edge.host | string | `"${advertise.host}"` | The host that will be advertised for edge service of this router. Required when `edge.enabled` set to true, but usually you want to set `advertise.host`|
 | edge.port | int | `1290` | The port the edge service is offered |
 | edge.service.annotations | object | `{}` |  |
-| edge.service.enabled | bool | `true` | Service that is created to access the router's edge service |
+| edge.service.enabled | bool | `true` | Create a service object to access the router's edge service |
 | edge.service.labels | object | `{}` |  |
-| edge.service.name | string | `"edge"` |  |
 | edge.service.type | string | `"ClusterIP"` | either `ClusterIP`, `LoadBalancer` or `NodePort` |
 | edge.service.externalIPs | list | `[]` | external IP's to bind the service on |
 | edge.service.clusterIP | string | `""` | IP to use when `mode=ClusterIP` `LoadBalancer` or `NodePort` |
@@ -109,6 +109,19 @@ enrolmentJwt: <${ROUTER_NAME}.jwt>
 | edge.service.publishNotReadyAddresses | string | `""` | |
 | edge.service.sessionAffinity | string | `""` | |
 | edge.service.sessionAffinityConfig | object | `{}` | |
+| transport.enabled | bool | `false` | Does this router expose the transport port? If it is disabled, it act's as a 'private router'. |
+| transport.host | string | `"${advertise.host}"` | The host that will be advertised for transport service of this router. Required when `transport.enabled` set to true, but usually you want to set `advertise.host` |
+| transport.port | int | `10080` | The port the transport service is offered |
+| transport.service.annotations | object | `{}` |  |
+| transport.service.enabled | bool | `true` | Create a cluster service object for the router's transport service |
+| transport.service.labels | object | `{}` |  |
+| transport.service.type | string | `"ClusterIP"` | either `ClusterIP`, `LoadBalancer` or `NodePort` |
+| transport.service.externalIPs | list | `[]` | external IP's to bind the service on |
+| transport.service.clusterIP | string | `""` | IP to use when `mode=ClusterIP` `LoadBalancer` or `NodePort` |
+| transport.service.loadBalancerIP | string | `""` | |
+| transport.service.publishNotReadyAddresses | string | `""` | |
+| transport.service.sessionAffinity | string | `""` | |
+| transport.service.sessionAffinityConfig | object | `{}` | |
 | tunnel.mode | string | `"disabled"` | Tunneling mode: `"disabled"`, `"tproxy"` or `"host"` |
 | tunnel.resolver | string | `"udp://192.168.10.11:53"` | DNS for tproxy mode |
 | tunnel.lanIf | string | `"eth0"` | interface for tproxy mode |

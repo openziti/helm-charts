@@ -44,7 +44,7 @@ data:
         listeners:
           - binding:          transport
             bind:             tls:0.0.0.0:{{ .Values.transport.port }}
-            advertise:        tls:{{ required "You must set either .Values.transport.host or .Values.advertise.host to the <host/ip> to advertise for this router as transport. Try adding --set-file router.advertise.host=router.zitinetwork.example.org to your Helm command" (coalesce .Values.transport.host .Values.advertise.host) }}:{{ .Values.transport.port }}
+            advertise:        tls:{{ required "You must set either .Values.transport.host or .Values.advertise.host to the <host> to advertise for this router as transport. Try adding --set-file router.advertise.host=router.zitinetwork.example.org to your Helm command" (coalesce .Values.transport.host .Values.advertise.host) }}:{{ .Values.transport.port }}
             options:
               outQueueSize:   4
       {{- end }}

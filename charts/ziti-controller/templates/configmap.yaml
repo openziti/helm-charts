@@ -10,6 +10,13 @@ data:
     #!/bin/bash
     ZITI_HOME=/persistent
     ZITI_BIN_DIR=/var/openziti/ziti-bin
+
+    # combine signing CA's and server CA..
+    cat ${ZITI_HOME}/certs/signing-intermediate-ca/ca.crt \
+      ${ZITI_HOME}/certs/signing-intermediate-ca/tls.crt \
+      ${ZITI_HOME}/certs/controller-server/ca.crt > ${ZITI_HOME}/signing-cas.crt
+
+    # check if this is the initial run and we have to setup the database
     if [ ! -e ${ZITI_HOME}/db/ctrl.db ]; then
       echo "Initializing / Bootstrapping ziti-controller"
 
@@ -19,11 +26,6 @@ data:
       # initialize the database with the admin user:
       "${ZITI_BIN_DIR}/ziti" controller edge init "${ZITI_HOME}/ziti-controller.yaml" -u "${ZITI_ADMIN_USER}" -p "${ZITI_ADMIN_PASSWORD}"
     fi
-
-    # combine signing CA's and server CA..
-    cat ${ZITI_HOME}/certs/signing-intermediate-ca/ca.crt \
-      ${ZITI_HOME}/certs/signing-intermediate-ca/tls.crt \
-      ${ZITI_HOME}/certs/controller-server/ca.crt > ${ZITI_HOME}/signing-cas.crt
 
     # just the env for the quickstart template...
     if [ ! -e ${ZITI_HOME}/ziti.env ]; then

@@ -64,7 +64,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "ziti-router.fullname" . }}-edge
+  name: {{ include "ziti-router.fullname" . }}-transport
   labels:
   {{- include "ziti-router.labels" . | nindent 4 }}
   {{- with .Values.transport.service.labels }}
