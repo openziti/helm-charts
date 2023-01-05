@@ -97,15 +97,18 @@ helm install quickstart-controller openziti/ziti-controller \
      --set service.type="LoadBalancer" \
      --set service.loadBalancerIP="${KUBE_LB_IP}"
 
+# get controller pod name
+export CONTROLLER_POD_NAME="$(kubectl get pods --selector=app.kubernetes.io/instance=quickstart-controller -o  jsonpath='{.items[0].metadata.name}')"
+
 # wait for the pod to be Running state
-kubectl wait --for=condition=ready --timeout=60s pod/quickstart-controller-0
-kubectl get pods quickstart-controller-0
+kubectl wait --for=condition=ready --timeout=60s pod/${CONTROLLER_POD_NAME}
+kubectl get pods ${CONTROLLER_POD_NAME}
 ```
 
 ####  Next we deploy the router using the `ziti-router` chart. It uses the internal service-name `quickstart-controller` for internal communication to the controller
 ```bash
 # register the quickstart-router and get the enrolment JWT
-export QS_ROUTER_ENROLMENT_JWT="$(kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti edge create edge-router quickstart-router -a 'public'; ziti edge list edge-routers  -j | jq -M -r '.data | .[] | .enrollmentJwt'" | tee /dev/stderr | tail -1| sed  's/\r//g')"
+export QS_ROUTER_ENROLMENT_JWT="$(kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti edge create edge-router quickstart-router -a 'public'; ziti edge list edge-routers  -j | jq -M -r '.data | .[] | .enrollmentJwt'" | tee /dev/stderr | tail -1| sed  's/\r//g')"
 # we install the router
 helm install quickstart-router openziti/ziti-router \
      --set enrolmentJwt="${QS_ROUTER_ENROLMENT_JWT}" \
@@ -117,14 +120,14 @@ helm install quickstart-router openziti/ziti-router \
      --set edge.service.type="LoadBalancer" \
      --set edge.service.loadBalancerIP="${KUBE_LB_IP}"
 # the router should be online now
-kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti edge list edge-routers"
+kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti edge list edge-routers"
 ```
 
 #### Deploy the edge-router using the `ziti-host` chart.
 
 ```bash
 # get a new identity for the server / edge box
-SERVER_JWT="$(kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti edge create identity user kube.http.server -o /tmp/kube.http.server.jwt; cat /tmp/kube.http.server.jwt; rm /tmp/kube.http.server.jwt" | tee /dev/stderr | tail -1 | sed 's/\r//g')"
+SERVER_JWT="$(kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti edge create identity user kube.http.server -o /tmp/kube.http.server.jwt; cat /tmp/kube.http.server.jwt; rm /tmp/kube.http.server.jwt" | tee /dev/stderr | tail -1 | sed 's/\r//g')"
 # we have to enroll the jwt. Piping through the `--attach` console didn't work relieable, so we start the container and exec a session into it for the deployment
 
 kubectl run ziti-edge-tunnel-enrolment --rm --restart=Never -i --tty --image openziti/ziti-host --attach --command -- bash -c "sleep 300" &
@@ -147,7 +150,7 @@ helm install quickstart-edge-server openziti/ziti-host \
      --set-file zitiIdentity=kube.http.server.json
 
 # the client should be online now
-kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti edge list identities"
+kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti edge list identities"
 
 ```
 
@@ -155,7 +158,7 @@ kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti edg
 
 ```bash
 # generate the JWT for kube.quickstart.client
-kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti edge create identity user kube.quickstart.client -a 'kube-http-clients' -o /tmp/kube.quickstart.client.jwt; cat /tmp/kube.quickstart.client.jwt; rm /tmp/kube.quickstart.client.jwt" | tee /dev/stderr | tail -1 | sed 's/\r//g' | >kube.quickstart.client.jwt
+kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti edge create identity user kube.quickstart.client -a 'kube-http-clients' -o /tmp/kube.quickstart.client.jwt; cat /tmp/kube.quickstart.client.jwt; rm /tmp/kube.quickstart.client.jwt" | tee /dev/stderr | tail -1 | sed 's/\r//g' | >kube.quickstart.client.jwt
 ```
 Now enroll `kube.quickstart.client.jwt` on your local client
 
@@ -172,7 +175,7 @@ This is adopted from the [OpenZiti ZTHA quickstart guide](https://openziti.githu
 
 ```bash
 # We open a shell within our controller instance
-kubectl exec -it quickstart-controller-0 -- /bin/bash -i
+kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i
 # all following commands in this section are are executed on the controller pod
 
 # we authenticate and open a session
@@ -211,7 +214,7 @@ curl -v http://kube-http.ziti
 
 # you should be able to see the cuircuit when you manage to set up a longer lasting connection, i.e. with `nc`:
 nc -v kube-http.ziti 80 &
-kubectl exec -it quickstart-controller-0 -- /bin/bash -i -c "zitiLogin; ziti fabric list circuits"
+kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti fabric list circuits"
 ```
 #### Optional: install OpenZiti console
 
@@ -258,8 +261,8 @@ kubectl delete secret/quickstart-controller-signing-root-ca-secret
 kubectl delete secret/quickstart-controller-signing-intermediate-ca-secret
 
 # delete pvc
-kubectl delete pvc quickstart-controller-data-quickstart-controller-0
-kubectl delete pvc quickstart-router-data-quickstart-router-0
+kubectl delete pvc quickstart-controller
+kubectl delete pvc quickstart-router
 
 ```
 

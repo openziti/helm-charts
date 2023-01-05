@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ include "ziti-router.fullname" . }}
   labels:
@@ -11,7 +11,6 @@ spec:
     matchLabels:
       {{- include "ziti-router.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: "ziti-router"
-  serviceName: {{ include "ziti-router.fullname" . }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -91,12 +90,10 @@ spec:
           configMap:
             name: {{ include "ziti-router.fullname" . }}-config
             defaultMode: 0555
-  volumeClaimTemplates:
-  - metadata:
-      name: {{ include "ziti-router.fullname" . }}-data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 50Mi
-
+        - name: {{ include "ziti-router.fullname" . }}-data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
