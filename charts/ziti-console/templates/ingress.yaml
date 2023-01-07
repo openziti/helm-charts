@@ -19,7 +19,7 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          {{- if and .paths (gt (len .paths) 0) -}}
+          {{- if and .paths (gt (len (default [] .paths)) 0) -}}
           {{- range .paths }}
           - path: {{ .path | quote }}
             pathType: {{ default "Prefix" .pathType }}

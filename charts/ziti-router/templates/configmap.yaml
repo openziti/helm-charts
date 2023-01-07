@@ -88,7 +88,7 @@ data:
           {{- end }}
             sans:
                 dns:
-                  {{- if ne .Values.csr.sans.noDefaults false }}
+                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
                     - localhost
                     {{- if .Values.advertise.host }}
                     - {{ .Values.advertise.host }}
@@ -104,7 +104,7 @@ data:
                     - {{ . | quote }}
                   {{- end }}
                 ip:
-                  {{- if ne .Values.csr.sans.noDefaults false }}
+                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
                     - 127.0.0.1
                   {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
                       {{- with .Values.edge.service.loadBalancerIP }}
