@@ -1,13 +1,13 @@
 # OpenZiti Helm Charts
 
-This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](https://openziti.github.io) on [Kubernetes](https://kubernetes.io/).
+This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](https://docs.openziti.io) on [Kubernetes](https://kubernetes.io/).
 
-These files are published from [a GitHub repo](https://github.com/openziti/helm-charts/#readme) as [a GitHub pages site here](https://openziti.github.io/helm-charts/).
+These files are published from [a GitHub repo](https://github.com/openziti/helm-charts/#readme) as [a GitHub pages site here](https://docs.openziti.io/helm-charts/).
 
 ## Add this repo to Helm
 
 ```bash
-❯ helm repo add openziti https://openziti.github.io/helm-charts/                                                                                               
+❯ helm repo add openziti https://docs.openziti.io/helm-charts/                                                                                               
 "openziti" has been added to your repositories                         
 ```
 
@@ -89,4 +89,4 @@ helm install prometheuz ./charts/prometheus \
 1. send PR targeting main
 1. merge main runs GitHub Actions to package and index the charts and triggers GitHub Pages to publish
 
-You may verify changes are present in the Helm index: https://openziti.github.io/helm-charts/index.yaml.
+You may verify changes are present in the Helm index: https://docs.openziti.io/helm-charts/index.yaml.
