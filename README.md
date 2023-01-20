@@ -2,7 +2,7 @@
 
 This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](https://openziti.github.io) on [Kubernetes](https://kubernetes.io/).
 
-These files are published as [a GitHub pages site here](https://openziti.github.io/helm-charts/).
+These files are published from [a GitHub repo](https://github.com/openziti/helm-charts/#readme) as [a GitHub pages site here](https://openziti.github.io/helm-charts/).
 
 ## Add this repo to Helm
 
@@ -25,7 +25,7 @@ openziti/ziti-host      0.1.0           0.19.11         Host OpenZiti services w
 
 ### `ziti-host`
 
-This chart deploys a pod running `ziti-edge-tunnel run-host`. This is the Linux tunneler in hosting mode. This is useful for hosting Ziti services. For example, you may install this chart once per cluster namespace and host each namespace's cluster services with the respective tunneler identity that you supplied when the chart was installed. The identity is stored as a Kubernetes Secret. For more information about the Linux tunneler please reference [the docs](https://openziti.github.io/ziti/clients/linux.html).
+This chart deploys a pod running `ziti-edge-tunnel run-host`. This is the Linux tunneler in hosting mode. This is useful for hosting Ziti services. For example, you may install this chart once per cluster namespace and host each namespace's cluster services with the respective tunneler identity that you supplied when the chart was installed. The identity is stored as a Kubernetes Secret. For more information about the Linux tunneler please reference [the docs](https://docs.openziti.io/docs/reference/tunnelers/linux/).
 
 ```bash
 helm install ziti-host openziti/ziti-host --set-file zitiIdentity=/tmp/myAcmeIdentity.json
@@ -43,7 +43,7 @@ helm install httpbinz-release1 openziti/httpbin \
 
 ### `prometheus`
 
-The operation of this chart is described in [part 2 of the PrometheuZ tutorial](https://openziti.github.io/articles/zitification/prometheus/part2.html#deploying-prometheuz-1).
+The operation of this chart is described in [part 2 of the PrometheuZ tutorial](https://docs.openziti.io/blog/zitification/prometheus/part2/#deploying-prometheuz-1).
 
 ```bash
 helm install prometheuz ./charts/prometheus \
@@ -57,7 +57,7 @@ helm install prometheuz ./charts/prometheus \
 
 ### `reflect`
 
-This chart provides a simple byte echoing server for demos and testing Ziti. You may read more about how this app can be used in [the PrometheuZ tutorial](https://openziti.github.io/articles/zitification/prometheus/part2.html#deploy-reflectz-1).
+This chart provides a simple byte echoing server for demos and testing Ziti. You may read more about how this app can be used in [the PrometheuZ tutorial](https://docs.openziti.io/blog/zitification/prometheus/part2/#deploy-reflectz-1).
 
 ```bash
 helm install reflectz openziti-test-kitchen/reflect \
