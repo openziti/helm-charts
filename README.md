@@ -106,6 +106,9 @@ kubectl get pods ${CONTROLLER_POD_NAME}
 ```
 
 ####  Next we deploy the router using the `ziti-router` chart. It uses the internal service-name `quickstart-controller` for internal communication to the controller
+
+Note: Please ensure the ziti-controller is reachable from within the kubernetes cluster by it's configured name. If you intend to use a dedicated load balancer or ingress: double check everything is working and a `curl -k https://<ziti-controller-name>:1280/` works and show's some output!
+
 ```bash
 # register the quickstart-router and get the enrolment JWT
 export QS_ROUTER_ENROLMENT_JWT="$(kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti edge create edge-router quickstart-router -a 'public'; ziti edge list edge-routers  -j | jq -M -r '.data | .[] | .enrollmentJwt'" | tee /dev/stderr | tail -1| sed  's/\r//g')"
@@ -123,7 +126,7 @@ helm install quickstart-router openziti/ziti-router \
 kubectl exec -it ${CONTROLLER_POD_NAME} -- /bin/bash -i -c "zitiLogin; ziti edge list edge-routers"
 ```
 
-#### Deploy the edge-router using the `ziti-host` chart.
+#### Deploy the edge-tunneler using the `ziti-host` chart.
 
 ```bash
 # get a new identity for the server / edge box
