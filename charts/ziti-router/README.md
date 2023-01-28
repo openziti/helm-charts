@@ -2,15 +2,15 @@
 
 ## Why?
 
-You may use this chart to publish a Ziti router within kubernetes. Depending on your use case the router can be deployed as edge, forwarder, public or private router.
+You may use this chart to provision a Ziti router in Kubernetes. You can configure the router edge, forwarder, public or private.
 
 ## How?
 
-This chart deploys a pod running `ziti-router`, [the OpenZiti router](https://openziti.github.io/operations/router/deployment/). The chart uses container image `docker.io/openziti/quickstart` and starts the `ziti-router` within it.
+This chart deploys a pod running `ziti-router`, [the OpenZiti router](https://docs.openziti.io/docs/reference/deployments/router/deployment). The chart uses container image `docker.io/openziti/ziti-router` and runs command `ziti router`.
 
 ## Installation
 
-After adding the charts repo to Helm then you may install the chart. You must supply a Ziti identity JSON file when you install the chart.
+After adding the charts repo to Helm, then you may install the chart. You must supply a Ziti identity JSON file when you install the chart.
 
 ```bash
 helm install ziti-router01 openziti/ziti-router --set-file zitiIdentity=/tmp/k8s-router-01.json
@@ -20,13 +20,12 @@ helm install ziti-router01 openziti/ziti-router --set-file zitiIdentity=/tmp/k8s
 
 The `helm install` command accepts param `--namespace` and so you may install this chart separately for each namespace for purposes such as achieving network isolation of your Ziti-hosted cluster services.
 
-
 ## Developing this Chart
 
-If you have downloaded this source code, then you may install the chart from a local source directory.
+You may install this chart from a local source directory.
 
 ```bash
-helm install {release} {source dir} --set-file zitiIdentity=/tmp/k8s-tunneler-03.json
+helm install {release name} {source dir} --set-file zitiIdentity=/tmp/k8s-tunneler-03.json
 ```
 
 If you change the chart's source files and wish to deploy with the same identity you need only bump the chart version in Chart.yaml and run:
@@ -37,19 +36,19 @@ helm upgrade {release} {source dir}
 
 ## Create new router
 
-Register a new router on controller (open a shell in the pod)
+Register a new router
 
 ```
-zitiLogin
+ziti edge login {controller URL}
 ROUTER_NAME=test-router
 ziti edge create edge-router $ROUTER_NAME --jwt-output-file $ROUTER_NAME.jwt
 ```
 
-Now grab the content of `${ROUTER_NAME}.jwt` and add it as `enrolmentJwt` to `values-override.yaml`
+Now grab the content of `${ROUTER_NAME}.jwt` and add it as `enrollmentJwt` to `values-override.yaml`
 
+Sample `values-override.yaml`:
 
-A sample `values-override.yaml`
-```
+```yaml
 # how to find / connect the ziti controller
 controller:
   endpoint: test-controller:6262
@@ -80,7 +79,7 @@ edge:
     loadBalancerIP: 192.168.1.20
     externalTrafficPolicy: Local
 
-enrolmentJwt: <${ROUTER_NAME}.jwt>
+enrollmentJwt: <${ROUTER_NAME}.jwt>
 ```
 
 ## Values
@@ -88,7 +87,7 @@ enrolmentJwt: <${ROUTER_NAME}.jwt>
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | controller.endpoint | string | `""` | **Required**: How to reach the controller's router endpoint |
-| enrolmentJwt | string | `""` | **Required**: JWT for the router enrolment |
+| enrollmentJwt | string | `""` | **Required**: JWT for the router enrolment |
 | advertise.host | string | `""` | **conditionally required** Default advertised host name for `edge` and `transport` services for this router when enabled |
 | csr.country | string | `""` | Edge CSR: country |
 | csr.province | string | `""` | Edge CSR: province |

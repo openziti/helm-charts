@@ -12,7 +12,7 @@ advertise: {}
   # host: my.host.name
 
 
-# Certificate signing requiest basic data
+# Certificate signing request basic data
 csr:
   # country: US
   # province: NC
@@ -43,19 +43,17 @@ edge:
   service:
     # -- Service that is created to access the edge
     enabled: true
-    type: ClusterIP
+    type: LoadBalancer
     labels: {}
     annotations: {}
 tunnel:
-  mode: disabled # disabled | none | tproxy | host
-  resolver: udp://192.168.10.11:53
-  lanIf: eth0
+  mode: host # disabled | none | tproxy | host
+  resolver: none  # udp://192.168.10.11:53
+  # lanIf: eth0
 
 image:
-  repository: openziti/quickstart
-#  pullPolicy: Never
-  pullPolicy: IfNotPresent
-#  pullPolicy: IfNotPresent
+  repository: openziti/ziti-router
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   # tag: 0.26.11
 #   command: ["sh", "-c", "while true; do sleep 11; done"]

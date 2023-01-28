@@ -82,7 +82,7 @@ spec:
             secretName: {{ include "ziti-router.fullname" . }}-enrolment-jwt
             defaultMode: 0444
             items:
-            - key: enrolmentJwt
+            - key: enrollmentJwt
               path: enrolment.jwt
         - name: ziti-router-config-map
           configMap:

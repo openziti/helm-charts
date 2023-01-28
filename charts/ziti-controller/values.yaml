@@ -2,39 +2,39 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# This is the "main service" exposing the client-management API
-# and the edge-controller required for routers to connect.
+# This is the "main service" exposing the client API
+# and the ctrl required for routers to connect.
 # You usually want to expose both services. Except in your setup
 # you have all (edge-)routers connecting from 'inside' your kubernetes
 # infrastructure then you might have the main service internal only,
-# enable the clientApi.service and expose only the client-management API
+# enable the clientApi.service and expose only the client API
 # to the outside (required for services / computers / users) to connect
-# and find the edge-router endpoints.
-service:
-  enabled: true
-  type: ClusterIP
+# and find the router endpoints.
 
-clientManagement:
-  port: 1280
+ctrlPlane:
+  port: 30262
   service:
-    enabled: false
-    type: ClusterIP
+    enabled: true
+    type: LoadBalancer
 
-controller:
-  port: 6262
+clientApi:
+  port: 31280
+  service:
+    enabled: true
+    type: LoadBalancer
 
 managementApi:
-  port: 1281
+  port: 31281
   service:
     enabled: true
-    type: ClusterIP
+    type: LoadBalancer
 
 prometheus:
-  enabled: false
-  port: 2112
+  enabled: true
+  port: 32112
   service:
     enabled: true
-    type: ClusterIP
+    type: LoadBalancer
 
 ca:
   # Note: The renewBefore and duration fields must be specified using a Go
@@ -56,21 +56,14 @@ cert:
   renewBefore: 720h # 30d
 
 image:
-  repository: openziti/quickstart
-#  pullPolicy: Never
-#  pullPolicy: Always
-  pullPolicy: IfNotPresent
+  repository: openziti/ziti-controller
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
 #  tag: helmtest
 #   command: ["sh", "-c", "while true; do sleep 11; done"]
-  command:
-    - "/bin/bash"
-    - "-c"
-    - "/var/openziti/scripts/controller.sh"
-
-  args: []  # the ziti-host image execs "ziti-edge-tunnel run-host" to only host, not intercept/proxy, no DNS
-
-#dnsPolicy: ClusterFirstWithHostNet
+  command: ["ziti", "controller", "run"]
+  configPath: &configPath /etc/ziti/ziti-controller.yaml
+  args: [*configPath]
 
 nameOverride: ""
 fullnameOverride: ""
@@ -134,4 +127,4 @@ persistence:
   storageClass: ""
   VolumeName: ""
   accessMode: ReadWriteOnce
-  size: 250Mi
+  size: 2Gi

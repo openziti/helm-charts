@@ -83,8 +83,8 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-edge-controller-server
-  secretName: {{ include "ziti-controller.fullname" . }}-edge-server-cert-secret
+  commonName: ziti-ctrl-server
+  secretName: {{ include "ziti-controller.fullname" . }}-xweb-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
   renewBefore: {{ .Values.cert.renewBefore }}
@@ -104,13 +104,11 @@ spec:
   dnsNames:
     - localhost
     - ziti-controller
-    - localhost
-    - ziti-controller
     - {{ include "ziti-controller.fullname" . }}
     - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}.cluster.local
-    {{- if .Values.controller.host }}
-    - {{ .Values.controller.host }}
+    {{- if .Values.advertisedHost }}
+    - {{ .Values.advertisedHost }}
     {{- end }}
   # uris:
   #   - spiffe://cluster.local/ns/sandbox/sa/example
@@ -127,10 +125,10 @@ spec:
 # apiVersion: cert-manager.io/v1
 # kind: Certificate
 # metadata:
-#   name: ziti-edge-controller-client
+#   name: ziti-ctrl-client
 # spec:
 #   isCA: false
-#   commonName: ziti-edge-controller-client
+#   commonName: ziti-ctrl-client
 #   secretName: ziti-controller-client-cert-secret
 #   privateKey:
 #     algorithm: ECDSA

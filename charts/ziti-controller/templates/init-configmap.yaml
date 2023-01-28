@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-init
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+data:
+  ctrl-init.sh: |-
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    ZITI_HOME=/persistent
+    ZITI_BIN_DIR=/var/openziti/ziti-bin
+
+    # combine signing CA's and server CA..
+    # cat ${ZITI_HOME}/certs/edge-signer/ca.crt \
+    #   ${ZITI_HOME}/certs/edge-signer/tls.crt \
+    #   ${ZITI_HOME}/certs/default-identity/ca.crt > ${ZITI_HOME}/trust-bundle.crt
+
+    # check if this is the initial run and we have to setup the database
+    if [ ! -e ${ZITI_HOME}/db/ctrl.db ]; then
+      echo "Initializing / Bootstrapping ziti controller"
+
+      # create a place for the internal db
+      mkdir -p ${ZITI_HOME}/db
+
+      # initialize the database with the admin user:
+      ziti controller edge init "{{ .Values.image.configPath }}" -u "${ZITI_ADMIN_USER}" -p "${ZITI_ADMIN_PASSWORD}"
+    fi
+
+    # just the env for the quickstart template...
+    if [ ! -e ${ZITI_HOME}/ziti.env ]; then
+      cat <<-'EOF' >${ZITI_HOME}/ziti.env
+        export ZITI_BIN_DIR="/usr/local/bin"
+        export ZITI_EDGE_CTRL_ADVERTISED="127.0.0.1:{{ .Values.managementApi.port }}"
+        export ZITI_SCRIPTS=""
+        export ZITI_SHARED="/persistent"
+        export ZITI_USER="admin"
+        alias zec='ziti edge'
+        alias zitiLogin='ziti edge login --ignore-config "${ZITI_EDGE_CTRL_ADVERTISED}" -u "${ZITI_ADMIN_USER-}" -p "${ZITI_ADMIN_PASSWORD}"'
+        alias psz='ps -ef | grep ziti'
+    EOF
+    fi

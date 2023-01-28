@@ -1,137 +1,124 @@
-{{- if .Values.service.enabled }}
-# This is the main service exposing the client-management API
-# and the edge-controller port required to manage routers and
+{{- if .Values.ctrlPlane.service.enabled }}
+# This is the main service exposing the client API
+# and the ctrl port required to manage routers and
 # clients to connect.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}
+  name: {{ include "ziti-controller.fullname" . }}-ctrl
   labels:
   {{- include "ziti-controller.labels" . | nindent 4 }}
-  {{- with .Values.service.labels }}
+  {{- with .Values.ctrlPlane.service.labels }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.service.annotations }}
+  {{- with .Values.ctrlPlane.service.annotations }}
   annotations:
   {{ toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- $type := default "ClusterIP" .Values.service.type }}
+  {{- $type := default "ClusterIP" .Values.ctrlPlane.service.type }}
   type: {{ $type }}
   {{- if eq $type "ClusterIP" }}
-  {{- with .Values.service.clusterIP }}
+  {{- with .Values.ctrlPlane.service.clusterIP }}
   clusterIP: {{ . }}
   {{- end }}
   {{- else if eq $type "LoadBalancer" }}
-  {{- with .Values.service.loadBalancerIP }}
+  {{- with .Values.ctrlPlane.service.loadBalancerIP }}
   loadBalancerIP: {{ . }}
   {{- end }}
-  {{- with .Values.service.externalTrafficPolicy }}
+  {{- with .Values.ctrlPlane.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ . }}
   {{- end }}
-  {{- with .Values.service.loadBalancerSourceRanges }}
+  {{- with .Values.ctrlPlane.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- if .Values.service.sessionAffinity }}
-  sessionAffinity: {{ .Values.service.sessionAffinity }}
-  {{- with .Values.service.sessionAffinityConfig }}
+  {{- if .Values.ctrlPlane.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.ctrlPlane.service.sessionAffinity }}
+  {{- with .Values.ctrlPlane.service.essionAffinityConfig }}
   sessionAffinityConfig:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- with .Values.service.externalIPs }}
+  {{- with .Values.ctrlPlane.service.externalIPs }}
   externalIPs:
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.service.publishNotReadyAddresses }}
+  {{- with .Values.ctrlPlane.service.publishNotReadyAddresses }}
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.clientManagement.port }}
-      targetPort: {{ .Values.clientManagement.port }}
+    - port: {{ .Values.ctrlPlane.port }}
+      targetPort: {{ .Values.ctrlPlane.port }}
       protocol: TCP
-      name: client-management
+      name: ctrl
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.clientManagement.port }}
-      {{- end }}
-    - port: {{ .Values.controller.port }}
-      targetPort: {{ .Values.controller.port }}
-      protocol: TCP
-      name: edge-controller
-      {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.controller.port }}
+      nodePort: {{ .Values.ctrlPlane.port }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
-{{- if .Values.clientManagement.service.enabled }}
-# This is the main service exposing the client-management API
-# and the edge-controller port required to manage routers and
+{{- if .Values.clientApi.service.enabled }}
+---
+# This is the main service exposing the client API
+# and the ctrl port required to manage routers and
 # clients to connect.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-client-mgmt
+  name: {{ include "ziti-controller.fullname" . }}-client
   labels:
   {{- include "ziti-controller.labels" . | nindent 4 }}
-  {{- with .Values.clientManagement.service.labels }}
+  {{- with .Values.clientApi.service.labels }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.clientManagement.service.annotations }}
+  {{- with .Values.clientApi.service.annotations }}
   annotations:
   {{ toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- $type := default "ClusterIP" .Values.clientManagement.service.type }}
+  {{- $type := default "ClusterIP" .Values.clientApi.service.type }}
   type: {{ $type }}
   {{- if eq $type "ClusterIP" }}
-  {{- with .Values.clientManagement.service.clusterIP }}
+  {{- with .Values.clientApi.service.clusterIP }}
   clusterIP: {{ . }}
   {{- end }}
   {{- else if eq $type "LoadBalancer" }}
-  {{- with .Values.clientManagement.service.loadBalancerIP }}
+  {{- with .Values.clientApi.service.loadBalancerIP }}
   loadBalancerIP: {{ . }}
   {{- end }}
-  {{- with .Values.clientManagement.service.externalTrafficPolicy }}
+  {{- with .Values.clientApi.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ . }}
   {{- end }}
-  {{- with .Values.clientManagement.service.loadBalancerSourceRanges }}
+  {{- with .Values.clientApi.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- if .Values.clientManagement.service.sessionAffinity }}
-  sessionAffinity: {{ .Values.clientManagement.service.sessionAffinity }}
-  {{- with .Values.clientManagement.service.sessionAffinityConfig }}
+  {{- if .Values.clientApi.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.clientApi.service.sessionAffinity }}
+  {{- with .Values.clientApi.service.sessionAffinityConfig }}
   sessionAffinityConfig:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- with .Values.clientManagement.service.externalIPs }}
+  {{- with .Values.clientApi.service.externalIPs }}
   externalIPs:
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.clientManagement.service.publishNotReadyAddresses }}
+  {{- with .Values.clientApi.service.publishNotReadyAddresses }}
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.clientManagement.port }}
-      targetPort: {{ .Values.clientManagement.port }}
+    - port: {{ .Values.clientApi.port }}
+      targetPort: {{ .Values.clientApi.port }}
       protocol: TCP
-      name: client-management
+      name: client
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.clientManagement.port }}
-      {{- end }}
-    - port: {{ .Values.controller.port }}
-      targetPort: {{ .Values.controller.port }}
-      protocol: TCP
-      name: edge-controller
-      {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.controller.port }}
+      nodePort: {{ .Values.clientApi.port }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
@@ -190,7 +177,7 @@ spec:
     - port: {{ .Values.managementApi.port }}
       targetPort: {{ .Values.managementApi.port }}
       protocol: TCP
-      name: management-api
+      name: mgmt
       {{- if (eq $type "NodePort") }}
       nodePort: {{ .Values.managementApi.port }}
       {{- end }}
@@ -259,4 +246,3 @@ spec:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: "ziti-controller"
 {{- end }}
-

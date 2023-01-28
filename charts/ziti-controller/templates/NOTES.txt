@@ -1,2 +1,2 @@
-This deployment provides an OpenZiti controller to manage a OpenZiti Overlay network.
+This deployment provides an OpenZiti controller to manage an OpenZiti network.
 

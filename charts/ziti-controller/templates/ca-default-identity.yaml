@@ -1,17 +1,16 @@
 #######
-# Controller CA
+# Controller default identity CA
 ######
 ---
-# the 'controller root ca' ca
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-root-ca
+  name: {{ include "ziti-controller.fullname" . }}-default-root-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-root-ca
-  secretName: {{ include "ziti-controller.fullname" . }}-root-ca-secret
+  commonName: ziti-controller-default-root-ca
+  secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -25,29 +24,28 @@ spec:
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+
 ---
-# an issuer for the 'controller root ca' ca
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-root-ca-issuer
+  name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-root-ca-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
 
 ---
-# the 'controller intermediate ca'
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-intermediate-ca
+  name: {{ include "ziti-controller.fullname" . }}-default-intermediate-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-intermediate-ca
-  secretName: {{ include "ziti-controller.fullname" . }}-intermediate-ca-secret
+  commonName: ziti-controller-default-intermediate-ca
+  secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -60,31 +58,29 @@ spec:
     size: 256
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-root-ca-issuer
+    name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
 
 ---
-# an issuer for the 'controller intermediate ca'
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-intermediate-ca-issuer
+  name: {{ include "ziti-controller.fullname" . }}-default-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-intermediate-ca-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
 
 ---
-# the controller's server certificate
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-server
+  name: {{ include "ziti-controller.fullname" . }}-default-server
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-server
-  secretName: {{ include "ziti-controller.fullname" . }}-server-cert-secret
+  commonName: ziti-controller-default-server
+  secretName: {{ include "ziti-controller.fullname" . }}-default-server-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
   renewBefore: {{ .Values.cert.renewBefore }}
@@ -107,8 +103,8 @@ spec:
     - {{ include "ziti-controller.fullname" . }}
     - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}.cluster.local
-    {{- if .Values.controller.host }}
-    - {{ .Values.controller.host }}
+    {{- if .Values.advertisedHost }}
+    - {{ .Values.advertisedHost }}
     {{- end }}
   # uris:
   #   - spiffe://cluster.local/ns/sandbox/sa/example
@@ -116,7 +112,7 @@ spec:
     - 127.0.0.1
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-intermediate-ca-issuer
+    name: {{ include "ziti-controller.fullname" . }}-default-intermediate-issuer
 
 # #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
 # via the same private key - I currenlty have no Idea how to solve this with CertManager
