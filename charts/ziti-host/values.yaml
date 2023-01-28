@@ -22,6 +22,10 @@ image:
 
 dnsPolicy: ClusterFirstWithHostNet
 
+secret: {}
+  # Use an existing secret name
+  # existingSecretName: ""
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
