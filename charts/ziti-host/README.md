@@ -6,7 +6,7 @@ You may use this chart to publish cluster services to your Ziti network. For exa
 
 ## How?
 
-This chart deploys a pod running `ziti-edge-tunnel`, [the OpenZiti Linux tunneler](https://openziti.github.io/ziti/clients/linux.html). The chart uses container image `docker.io/openziti/ziti-host` which runs `ziti-edge-tunnel run-host`. This puts the Linux tunneler in "hosting" mode which is useful for binding Ziti services without any need for elevated permissions and without any Ziti nameserver or intercepting proxy. You'll be able to publish any server that is known by an IP address or domain name that is reachable from the pod deployed by this chart.
+This chart deploys a pod running `ziti-edge-tunnel`, [the OpenZiti Linux tunneler](https://docs.openziti.io/docs/reference/tunnelers/linux/). The chart uses container image `docker.io/openziti/ziti-host` which runs `ziti-edge-tunnel run-host`. This puts the Linux tunneler in "hosting" mode which is useful for binding Ziti services without any need for elevated permissions and without any Ziti nameserver or intercepting proxy. You'll be able to publish any server that is known by an IP address or domain name that is reachable from the pod deployed by this chart.
 
 ## Installation
 
