@@ -1,0 +1,130 @@
+# Default values for ziti-router.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# required controller endpoint
+# controller:
+#   endpoint: <required>
+
+advertise: {}
+  # common adviertise-host for transport and edge - can also be specified individually
+  # via `edge.host` and `transport.host`
+  # host: my.host.name
+
+
+# Certificate signing requiest basic data
+csr:
+  # country: US
+  # province: NC
+  # locality: Charlotte
+  # organization: NetFoundry
+  # organizationalUnit: Ziti
+  sans: {}
+  # # you could specify additional SANS here - configurations from advertise hosts and
+  # # service's will be collected automatically
+  #   dns:
+  #     - my.additional.host
+  #   ip:
+  #     - "192.168.10.0"
+
+
+transport:
+  # if transport is disabled, it a 'private router' in OpenZiti 'speach'
+  enabled: false
+  port: 10080
+  service:
+    enabled: true
+
+# is the edge enabled?
+edge:
+  enabled: false
+  port: 1290
+  # host: <host/ip> this edge can be resolved from clients
+  service:
+    # -- Service that is created to access the edge
+    enabled: true
+    type: ClusterIP
+    labels: {}
+    annotations: {}
+tunnel:
+  mode: disabled # disabled | none | tproxy | host
+  resolver: udp://192.168.10.11:53
+  lanIf: eth0
+
+image:
+  repository: openziti/quickstart
+#  pullPolicy: Never
+  pullPolicy: IfNotPresent
+#  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  # tag: 0.26.11
+#   command: ["sh", "-c", "while true; do sleep 11; done"]
+  args: []
+  pullSecrets: []
+  command: ["/bin/bash","-c","/var/openziti/scripts/router.sh"]
+
+
+dnsPolicy: ClusterFirstWithHostNet
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  # capabilities:
+  #   add:
+  #     - NET_ADMIN
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+ports: []
+
+nodeSelector: {}
+#  kubernetes.io/role: master
+
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+affinity: {}
+
+## Enable persistence using Persistent Volume Claims
+## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+##
+persistence:
+  enabled: true
+  annotations: {}
+
+  ## A manually managed Persistent Volume and Claim
+  ## Requires persistence.enabled: true
+  ## If defined, PVC must be created manually before volume will be bound
+  existingClaim: ""
+
+  ## minio data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  ## Storage class of PV to bind. By default it looks for standard storage class.
+  ## If the PV uses a different storage class, specify that here.
+  storageClass: ""
+  VolumeName: ""
+  accessMode: ReadWriteOnce
+  size: 50Mi

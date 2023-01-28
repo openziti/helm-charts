@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ziti-router.fullname" . }}
+  labels:
+    {{- include "ziti-router.labels" . | nindent 4 }}
+    app.kubernetes.io/component: "ziti-router"
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ziti-router.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: "ziti-router"
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ziti-router.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: "ziti-router"
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{- toYaml .Values.ports | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{ if .Values.image.command }}
+          command: 
+          {{- range .Values.image.command }}
+            - {{ . | quote }}
+          {{- end }}
+          {{ end }}
+          args:
+            {{- toYaml .Values.image.args | nindent 12 }}
+          env:
+            - name: ZITI_IDENTITY_BASENAME
+              value: {{ include "ziti-router.fullname" . }}-identity
+          volumeMounts:
+            - mountPath: /persistent/enrolment.jwt
+              name: enrolment-jwt
+              subPath: enrolment.jwt
+              readOnly: true
+            - mountPath: /var/openziti/scripts/router.sh
+              name: ziti-router-config-map-script
+              subPath: router.sh
+            - mountPath: /persistent
+              name: {{ include "ziti-router.fullname" . }}-data
+            - mountPath: /persistent/ziti-router.yaml
+              name: ziti-router-config-map
+              subPath: ziti-router.yaml
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: enrolment-jwt
+          secret:
+            secretName: {{ include "ziti-router.fullname" . }}-enrolment-jwt
+            defaultMode: 0444
+            items:
+            - key: enrolmentJwt
+              path: enrolment.jwt
+        - name: ziti-router-config-map
+          configMap:
+            name: {{ include "ziti-router.fullname" . }}-config
+            defaultMode: 0444
+        - name: ziti-router-config-map-script
+          configMap:
+            name: {{ include "ziti-router.fullname" . }}-config
+            defaultMode: 0555
+        - name: {{ include "ziti-router.fullname" . }}-data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}

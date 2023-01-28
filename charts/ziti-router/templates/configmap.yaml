@@ -1,0 +1,149 @@
+---
+# Chart name: {{- .Chart.Name }} {{- .Values.nameOverride }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-config
+  labels:
+    {{- include "ziti-router.labels" . | nindent 4 }}
+data:
+  router.sh: |-
+    #!/bin/bash
+    ZITI_HOME=/persistent
+    ZITI_BIN_DIR=/var/openziti/ziti-bin
+    # while [ 1 = 1 ] ; do sleep 1; date; done
+    if [ ! -e ${ZITI_HOME}/cert/tls.key ]; then
+      echo "Enrolling ziti router"
+
+      # create a place for the router certs
+      [ -d ${ZITI_HOME}/cert ] || mkdir ${ZITI_HOME}/cert
+
+      # initialize the database with the admin user:
+      ${ZITI_BIN_DIR}/ziti router enroll "${ZITI_HOME}/ziti-router.yaml" -j "${ZITI_HOME}/enrolment.jwt"
+    fi
+
+    exec ${ZITI_BIN_DIR}/ziti router run "${ZITI_HOME}/ziti-router.yaml"
+  ziti-router.yaml: |-
+    v: 3
+
+    identity:
+        cert:        "/persistent/cert/client.crt"
+        server_cert: "/persistent/cert/tls.crt"
+        key:         "/persistent/cert/tls.key"
+        ca:          "/persistent/cert/ca.crt"
+
+    ctrl:
+        endpoint:             tls:{{ required "You must set .Values.controller.endpoint to the controller's client api host and port of your Ziti network. Try adding --set-file router.controller.endpoint=controller01.zitinetwork.example.org:1280 to your Helm command" .Values.controller.endpoint }}
+
+    link:
+        dialers:
+            - binding: transport
+        # When 'transport' is disabled this means we are a 'private' router
+      {{- if (ne .Values.transport.enabled false ) }}
+        listeners:
+          - binding:          transport
+            bind:             tls:0.0.0.0:{{ .Values.transport.port }}
+            advertise:        tls:{{ required "You must set either .Values.transport.host or .Values.advertise.host to the <host> to advertise for this router as transport. Try adding --set-file router.advertise.host=router.zitinetwork.example.org to your Helm command" (coalesce .Values.transport.host .Values.advertise.host) }}:{{ .Values.transport.port }}
+            options:
+              outQueueSize:   4
+      {{- end }}
+    {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "disabled" )) (eq .Values.edge.enabled true) }}
+    listeners:
+    # bindings of edge and tunnel requires an "edge" section below
+    {{- if (eq .Values.edge.enabled true) }}
+      - binding: edge
+        address: tls:0.0.0.0:{{ .Values.edge.port }}
+        options:
+            advertise: {{ required "You must set .Values.edge.host to the <host/ip> to advertise for this router. Try adding --set-file router.edge.host=router.zitinetwork.example.org to your Helm command" .Values.edge.host }}:{{ .Values.edge.port }}
+            connectTimeoutMs: 1000
+            getSessionTimeout: 60
+    {{- end }}
+    {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "disabled" ) }}
+      - binding: tunnel
+        options:
+            mode: {{ .Values.tunnel.mode }}
+            resolver: {{ .Values.tunnel.resolver }}
+            lanIf: {{ .Values.tunnel.lanIf }}
+    {{- end }}
+    {{- end }}
+
+
+    edge:
+        csr:
+          {{- if .Values.csr.country }}
+            country: {{ .Values.csr.country }}
+          {{- end }}
+          {{- if .Values.csr.province }}
+            province: {{ .Values.csr.province }}
+          {{- end }}
+          {{- if .Values.csr.locality }}
+            locality: {{ .Values.csr.locality }}
+          {{- end }}
+          {{- if .Values.csr.organization }}
+            organization: {{ .Values.csr.organization }}
+          {{- end }}
+          {{- if .Values.csr.organizationalUnit }}
+            organizationalUnit: {{ .Values.csr.organizationalUnit }}
+          {{- end }}
+            sans:
+                dns:
+                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+                    - localhost
+                    {{- if .Values.advertise.host }}
+                    - {{ .Values.advertise.host }}
+                    {{- end }}
+                    {{- if and .Values.edge.enabled .Values.edge.host }}
+                    - {{ .Values.edge.host }}
+                    {{- end }}
+                    {{- if and .Values.transport.enabled .Values.transport.host }}
+                    - {{ .Values.transport.host }}
+                    {{- end }}
+                  {{- end }}
+                  {{- range .Values.csr.sans.dns }}
+                    - {{ . | quote }}
+                  {{- end }}
+                ip:
+                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+                    - 127.0.0.1
+                  {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
+                      {{- with .Values.edge.service.loadBalancerIP }}
+                    - {{ . }}
+                      {{- end }}
+                      {{- with .Values.edge.service.externalIPs }}
+                        {{- toYaml . | nindent 4 }}
+                      {{- end }}
+                  {{- end }}
+                  {{- if and .Values.transport.enabled  .Values.transport.service.enabled }}
+                      {{- with .Values.transport.service.loadBalancerIP }}
+                    - {{ . }}
+                      {{- end }}
+                      {{- with .Values.transport.service.externalIPs }}
+                        {{- toYaml . | nindent 4 }}
+                      {{- end }}
+                  {{- end }}
+                  {{- end }}
+                  {{- range .Values.csr.sans.ip }}
+                    - {{ . | quote }}
+                  {{- end }}
+
+    #transport:
+    #  ws:
+    #    writeTimeout: 10
+    #    readTimeout: 5
+    #    idleTimeout: 5
+    #    pongTimeout: 60
+    #    pingInterval: 54
+    #    handshakeTimeout: 10
+    #    readBufferSize: 4096
+    #    writeBufferSize: 4096
+    #    enableCompression: true
+    #    server_cert: ~/.ziti/config/certs/192.168.10.11.server.chain.cert
+    #    key: ~/.ziti/config/certs/192.168.10.11.key
+
+    forwarder:
+        latencyProbeInterval: 10
+        xgressDialQueueLength: 1000
+        xgressDialWorkerCount: 128
+        linkDialQueueLength: 1000
+        linkDialWorkerCount: 32

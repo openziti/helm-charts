@@ -1,0 +1,96 @@
+# This is the Graphical UI Console - https://github.com/openziti/ziti-console
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ziti-console.fullname" . }}
+  labels:
+    {{- include "ziti-console.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "ziti-console.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: "ziti-console"
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ziti-console.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: "ziti-console"
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{- toYaml .Values.ports | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 1408
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 1408
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          {{ if .Values.image.command }}
+          command: 
+          {{- range .Values.image.command }}
+            - {{ . | quote }}
+          {{- end }}
+          {{ end }}
+          args:
+            {{- toYaml .Values.image.args | nindent 12 }}
+          volumeMounts:
+            - name: session-store
+              mountPath: /usr/src/app/sessions
+            - name: ziti-store
+              mountPath: /usr/src/ziti
+            - name: ziti-console-config-map-script
+              mountPath: /usr/src/app/console.sh
+              subPath: console.sh
+            - name: ziti-console-config-map
+              mountPath: /usr/src/ziti/settings-template.json
+              subPath: settings-template.json
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: session-store
+          emptyDir: {}
+        - name: ziti-store
+          emptyDir: {}
+        - name: ziti-console-config-map
+          configMap:
+            name: {{ include "ziti-console.fullname" . }}-config
+            defaultMode: 0444
+        - name: ziti-console-config-map-script
+          configMap:
+            name: {{ include "ziti-console.fullname" . }}-config
+            defaultMode: 0555

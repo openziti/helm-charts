@@ -1,0 +1,140 @@
+#######
+# Controller CA
+######
+---
+# the 'controller root ca' ca
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-root-ca
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-root-ca
+  secretName: {{ include "ziti-controller.fullname" . }}-root-ca-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+---
+# an issuer for the 'controller root ca' ca
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-root-ca-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "ziti-controller.fullname" . }}-root-ca-secret
+
+---
+# the 'controller intermediate ca'
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-intermediate-ca
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-intermediate-ca
+  secretName: {{ include "ziti-controller.fullname" . }}-intermediate-ca-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-root-ca-issuer
+
+---
+# an issuer for the 'controller intermediate ca'
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-intermediate-ca-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "ziti-controller.fullname" . }}-intermediate-ca-secret
+
+---
+# the controller's server certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-server
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-server
+  secretName: {{ include "ziti-controller.fullname" . }}-server-cert-secret
+  isCA: false
+  duration: {{ .Values.cert.duration }}
+  renewBefore: {{ .Values.cert.renewBefore }}
+  privateKey:
+# It seems OSX has problems validating ECDSA tokens.. :-/
+#    algorithm: ECDSA
+#    size: 256
+    algorithm: RSA
+    size: 4096
+  usages:
+    - client auth # remove when we fix #ClientCertKeyReuseIssue
+    - server auth
+    - digital signature
+    - content commitment
+    - key encipherment
+  # At least one of a DNS Name, URI, or IP address is required.
+  dnsNames:
+    - localhost
+    - ziti-controller
+    - {{ include "ziti-controller.fullname" . }}
+    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}.cluster.local
+    {{- if .Values.controller.host }}
+    - {{ .Values.controller.host }}
+    {{- end }}
+  # uris:
+  #   - spiffe://cluster.local/ns/sandbox/sa/example
+  ipAddresses:
+    - 127.0.0.1
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-intermediate-ca-issuer
+
+# #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
+# via the same private key - I currenlty have no Idea how to solve this with CertManager
+# ---
+# # the controller's client certificate
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: ziti-controller-client
+# spec:
+#   isCA: false
+#   commonName: ziti-controller-client
+#   secretName: ziti-controller-client-cert-secret
+#   privateKey:
+#     algorithm: ECDSA
+#     size: 256
+#   usages:
+#     - client auth
+#   issuerRef:
+#     kind: Issuer
+#     name: ziti-controller-intermediate-ca-issuer
