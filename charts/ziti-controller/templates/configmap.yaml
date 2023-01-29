@@ -6,6 +6,26 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 data:
+  ziti-controller-init.sh: |-
+    #!/usr/bin/env bash
+    set -xeuo pipefail
+
+    # if non-empty db file does not exist then initialize
+    if [[ ! -s {{ .Values.dbDir }}/{{ .Values.dbFile }} ]]; then
+
+      echo "Initializing Ziti Controller"
+
+      # create a place for the internal db
+      # mkdir -pv {{ .Values.dbDir }}
+
+      # initialize the database with the admin user:
+      ziti controller edge init \
+        "{{ .Values.image.configPath }}" \
+        -u "${ZITI_ADMIN_USER}" \
+        -p "${ZITI_ADMIN_PASSWORD}"
+
+    fi
+
   ziti-controller.yaml: |-
     v: 3
 
@@ -16,14 +36,14 @@ data:
     #  memory:
     #    path: ctrl.memprof
 
-    db:                     "/persistent/db/ctrl.db"
+    db:                     {{ .Values.dbDir }}/{{ .Values.dbFile }}
 
     identity:
       #ClientCertKeyReuseIssue
-      cert:                 "/etc/ziti/certs/default-identity/tls.crt"
-      server_cert:          "/etc/ziti/certs/default-identity/tls.crt"
-      key:                  "/etc/ziti/certs/default-identity/tls.key"
-      ca:                   "/etc/ziti/certs/default-identity/ca.crt"
+      cert:                 /etc/ziti/certs/default-identity/tls.crt
+      server_cert:          /etc/ziti/certs/default-identity/tls.crt
+      key:                  /etc/ziti/certs/default-identity/tls.key
+      ca:                   /etc/ziti/certs/default-identity/ca.crt
 
     # Network Configuration
     #
@@ -134,8 +154,10 @@ data:
         # a signing certificate from the PKI that the Ziti environment is using to sign certificates. The signingCert.cert
         # will be added to the /.well-known CA store that is used to bootstrap trust with the Ziti Controller.
         signingCert:
-          cert: /etc/ziti/certs/default-intermediate/tls.crt
-          key:  /etc/ziti/certs/default-intermediate/tls.key
+          # cert: /etc/ziti/certs/default-intermediate/tls.crt
+          # key:  /etc/ziti/certs/default-intermediate/tls.key
+          cert: /etc/ziti/certs/edge-intermediate/tls.crt
+          key:  /etc/ziti/certs/edge-intermediate/tls.key
         # edgeIdentity - optional
         # A section for identity enrollment specific settings
         edgeIdentity:
@@ -171,13 +193,13 @@ data:
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
             address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.clientApi.port }}
-        # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
+            # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
         identity:
           #ClientCertKeyReuseIssue
-          cert:        "/etc/ziti/certs/xweb-identity/tls.crt"
-          server_cert: "/etc/ziti/certs/xweb-identity/tls.crt"
-          key:         "/etc/ziti/certs/xweb-identity/tls.key"
-          ca:          "/etc/ziti/certs/xweb-identity/ca.crt"
+          cert:        /etc/ziti/certs/xweb-identity/tls.crt
+          server_cert: /etc/ziti/certs/xweb-identity/tls.crt
+          key:         /etc/ziti/certs/xweb-identity/tls.key
+          ca:          /etc/ziti/certs/xweb-identity/ca.crt
         # options - optional
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
         # used for all http servers started by the current webListener.
@@ -229,13 +251,13 @@ data:
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
             address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.managementApi.port }}
-        # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
-        # identity:
-        #   #ClientCertKeyReuseIssue
-        #   cert:        "/etc/ziti/certs/xweb-identity/tls.crt"
-        #   server_cert: "/etc/ziti/certs/xweb-identity/tls.crt"
-        #   key:         "/etc/ziti/certs/xweb-identity/tls.key"
-        #   ca:          "/etc/ziti/certs/xweb-identity/ca.crt"
+            # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
+        identity:
+          #ClientCertKeyReuseIssue
+          cert:        "/etc/ziti/certs/xweb-identity/tls.crt"
+          server_cert: "/etc/ziti/certs/xweb-identity/tls.crt"
+          key:         "/etc/ziti/certs/xweb-identity/tls.key"
+          ca:          "/etc/ziti/certs/xweb-identity/ca.crt"
         # options - optional
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
         # used for all http servers started by the current webListener.
@@ -290,14 +312,14 @@ data:
             # address - required
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
-            address: 0.0.0.0:2112
+            address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.prometheus.port }}
+        identity:
+          #ClientCertKeyReuseIssue
+          cert:        "/etc/ziti/certs/xweb-identity/tls.crt"
+          server_cert: "/etc/ziti/certs/xweb-identity/tls.crt"
+          key:         "/etc/ziti/certs/xweb-identity/tls.key"
+          ca:          "/etc/ziti/certs/xweb-identity/ca.crt"
         options: { }
-        # identity:
-        #   #ClientCertKeyReuseIssue
-        #   cert:        "/etc/ziti/certs/xweb-identity/tls.crt"
-        #   server_cert: "/etc/ziti/certs/xweb-identity/tls.crt"
-        #   key:         "/etc/ziti/certs/xweb-identity/tls.key"
-        #   ca:          "/etc/ziti/certs/xweb-identity/ca.crt"
         apis:
           - binding: metrics
             options: { }

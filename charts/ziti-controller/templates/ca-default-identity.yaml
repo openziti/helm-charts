@@ -9,7 +9,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-default-root-ca
+  commonName: ziti-controller-default-root
   secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -44,7 +44,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-default-intermediate-ca
+  commonName: ziti-controller-default-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -75,12 +75,12 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-server
+  name: {{ include "ziti-controller.fullname" . }}-default-identity
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-default-server
-  secretName: {{ include "ziti-controller.fullname" . }}-default-server-secret
+  commonName: ziti-controller-default-identity
+  secretName: {{ include "ziti-controller.fullname" . }}-default-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
   renewBefore: {{ .Values.cert.renewBefore }}

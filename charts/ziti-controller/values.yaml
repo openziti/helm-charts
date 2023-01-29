@@ -50,20 +50,21 @@ cert:
   # time.Duration string format, which does not allow the d (days) suffix.
   # You must specify these values using s, m, and h suffixes instead.
   # TODO lower this value!
-  # duration: 2160h # 90d
+  # duration: 2160h   # 90d
   # renewBefore: 360h # 15d
-  duration: 87840h # 3660d / 10 y
-  renewBefore: 720h # 30d
+  duration: 87840h    # 3660d / 10 y
+  renewBefore: 720h   # 30d
 
 image:
-  repository: openziti/ziti-controller
+  repository: kbinghamnetfoundry/ziti-controller  # FIXME: dev image tag
+  # repository: openziti/ziti-controller
   pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-#  tag: helmtest
-#   command: ["sh", "-c", "while true; do sleep 11; done"]
   command: ["ziti", "controller", "run"]
   configPath: &configPath /etc/ziti/ziti-controller.yaml
   args: [*configPath]
+
+dbDir: /persistent
+dbFile: ctrl.db
 
 nameOverride: ""
 fullnameOverride: ""

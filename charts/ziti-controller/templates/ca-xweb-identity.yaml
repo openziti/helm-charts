@@ -6,12 +6,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-edge-root-ca
+  name: {{ include "ziti-controller.fullname" . }}-xweb-root-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-edge-root-ca
-  secretName: {{ include "ziti-controller.fullname" . }}-edge-root-ca-secret
+  commonName: ziti-controller-xweb-root
+  secretName: {{ include "ziti-controller.fullname" . }}-xweb-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -30,24 +30,24 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-edge-root-ca-issuer
+  name: {{ include "ziti-controller.fullname" . }}-xweb-root-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-edge-root-ca-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-xweb-root-secret
 
 ---
 # the 'controller intermediate ca'
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-edge-intermediate-ca
+  name: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-edge-intermediate-ca
-  secretName: {{ include "ziti-controller.fullname" . }}-edge-intermediate-ca-secret
+  commonName: ziti-controller-xweb-intermediate
+  secretName: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -60,30 +60,30 @@ spec:
     size: 256
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-edge-root-ca-issuer
+    name: {{ include "ziti-controller.fullname" . }}-xweb-root-issuer
 
 ---
 # an issuer for the 'controller intermediate ca'
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-edge-intermediate-ca-issuer
+  name: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-edge-intermediate-ca-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-secret
 
 ---
 # the controller's server certificate
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-edge-server
+  name: {{ include "ziti-controller.fullname" . }}-xweb-identity-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-ctrl-server
+  commonName: ziti-controller-xweb-identity
   secretName: {{ include "ziti-controller.fullname" . }}-xweb-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
@@ -116,7 +116,7 @@ spec:
     - 127.0.0.1
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-edge-intermediate-ca-issuer
+    name: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-issuer
 
 # #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
 # via the same private key - I currenlty have no Idea how to solve this with CertManager

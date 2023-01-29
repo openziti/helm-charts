@@ -41,7 +41,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{ if .Values.image.command }}
-          command: 
+          command:
           {{- range .Values.image.command }}
             - {{ . | quote }}
           {{- end }}

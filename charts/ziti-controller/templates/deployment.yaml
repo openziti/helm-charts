@@ -30,6 +30,45 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       dnsPolicy: {{ .Values.dnsPolicy }}
+
+      initContainers:
+        - name: {{ .Chart.Name }}-init
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          command: ["ziti-controller-init.sh"]
+          volumeMounts:
+            - mountPath: /usr/local/bin/ziti-controller-init.sh
+              name: ziti-controller-configmap
+              subPath: ziti-controller-init.sh
+            - mountPath: {{ .Values.dbDir }}
+              name: data
+            - mountPath: {{ .Values.image.configPath }}
+              name: ziti-controller-configmap
+              subPath: ziti-controller.yaml
+            - mountPath: /etc/ziti/certs/default-identity/
+              name: cert-default-identity
+              readOnly: true
+            # - mountPath: /etc/ziti/certs/default-intermediate/
+            #   name: cert-default-intermediate
+            #   readOnly: true
+            - mountPath: /etc/ziti/certs/xweb-identity/
+              name: cert-xweb-identity
+              readOnly: true
+            - mountPath: /etc/ziti/certs/edge-intermediate/
+              name: cert-edge-intermediate
+              readOnly: true
+          env:
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-user
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-password
+            - name: PFXLOG_NO_JSON
+              value: "true"
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -61,23 +100,23 @@ spec:
             - name: PFXLOG_NO_JSON
               value: "true"
           volumeMounts:
-            - mountPath: /persistent
+            - mountPath: {{ .Values.dbDir }}
               name: data
             - mountPath: {{ .Values.image.configPath }}
-              name: ziti-controller-config
+              name: ziti-controller-configmap
               subPath: ziti-controller.yaml
             - mountPath: /etc/ziti/certs/default-identity/
               name: cert-default-identity
               readOnly: true
-            - mountPath: /etc/ziti/certs/default-intermediate/
-              name: cert-default-intermediate
+            # - mountPath: /etc/ziti/certs/default-intermediate/
+            #   name: cert-default-intermediate
+            #   readOnly: true
+            - mountPath: /etc/ziti/certs/xweb-identity/
+              name: cert-xweb-identity
               readOnly: true
-            # - mountPath: /etc/ziti/certs/edge-signer/
-            #   name: cert-edge-signer
-            #   readOnly: true
-            # - mountPath: /etc/ziti/certs/xweb-identity/
-            #   name: cert-xweb-identity
-            #   readOnly: true
+            - mountPath: /etc/ziti/certs/edge-intermediate/
+              name: cert-edge-intermediate
+              readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -91,19 +130,25 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: ziti-controller-config
+        - name: ziti-controller-configmap
           configMap:
             name: {{ include "ziti-controller.fullname" . }}-config
-            defaultMode: 292  # decimal 292 for octal 0444
+            items:
+              - key: ziti-controller-init.sh
+                path: ziti-controller-init.sh
+                mode: 0555
+              - key: ziti-controller.yaml
+                path: ziti-controller.yaml
+                mode: 0444
         - name: cert-default-identity
           secret:
-            secretName: {{ include "ziti-controller.fullname" . }}-default-server-secret
-        - name: cert-default-intermediate
+            secretName: {{ include "ziti-controller.fullname" . }}-default-identity-secret
+        # - name: cert-default-intermediate
+        #   secret:
+        #     secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
+        - name: cert-edge-intermediate
           secret:
-            secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
-        - name: cert-edge-signer
-          secret:
-            secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+            secretName: {{ include "ziti-controller.fullname" . }}-edge-intermediate-secret
         - name: cert-xweb-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-xweb-identity-secret

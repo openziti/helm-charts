@@ -10,7 +10,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-signing-root-ca
+  commonName: ziti-controller-edge-root
   secretName: {{ include "ziti-controller.fullname" . }}-edge-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -45,7 +45,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-edge-intermediate-ca
+  commonName: ziti-controller-edge-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-edge-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
