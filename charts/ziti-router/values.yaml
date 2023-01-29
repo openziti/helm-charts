@@ -52,7 +52,8 @@ tunnel:
   # lanIf: eth0
 
 image:
-  repository: openziti/ziti-router
+  repository: kbinghamnetfoundry/ziti-router  # FIXME: dev image tag
+  # repository: openziti/ziti-router
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   # tag: 0.26.11

@@ -36,24 +36,24 @@ spec:
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           command: ["ziti-controller-init.sh"]
           volumeMounts:
-            - mountPath: /usr/local/bin/ziti-controller-init.sh
+            - mountPath: {{ .Values.execMountDir }}/ziti-controller-init.sh
               name: ziti-controller-configmap
               subPath: ziti-controller-init.sh
-            - mountPath: {{ .Values.dbDir }}
+            - mountPath: {{ .Values.dataMountDir }}
               name: data
             - mountPath: {{ .Values.image.configPath }}
               name: ziti-controller-configmap
               subPath: ziti-controller.yaml
-            - mountPath: /etc/ziti/certs/default-identity/
+            - mountPath: {{ .Values.configMountDir }}/default-identity/
               name: cert-default-identity
               readOnly: true
-            # - mountPath: /etc/ziti/certs/default-intermediate/
+            # - mountPath: {{ .Values.configMountDir }}/default-intermediate/
             #   name: cert-default-intermediate
             #   readOnly: true
-            - mountPath: /etc/ziti/certs/xweb-identity/
+            - mountPath: {{ .Values.configMountDir }}/xweb-identity/
               name: cert-xweb-identity
               readOnly: true
-            - mountPath: /etc/ziti/certs/edge-intermediate/
+            - mountPath: {{ .Values.configMountDir }}/edge-intermediate/
               name: cert-edge-intermediate
               readOnly: true
           env:
@@ -100,21 +100,21 @@ spec:
             - name: PFXLOG_NO_JSON
               value: "true"
           volumeMounts:
-            - mountPath: {{ .Values.dbDir }}
+            - mountPath: {{ .Values.dataMountDir }}
               name: data
             - mountPath: {{ .Values.image.configPath }}
               name: ziti-controller-configmap
               subPath: ziti-controller.yaml
-            - mountPath: /etc/ziti/certs/default-identity/
+            - mountPath: {{ .Values.configMountDir }}/default-identity/
               name: cert-default-identity
               readOnly: true
-            # - mountPath: /etc/ziti/certs/default-intermediate/
+            # - mountPath: {{ .Values.configMountDir }}/default-intermediate/
             #   name: cert-default-intermediate
             #   readOnly: true
-            - mountPath: /etc/ziti/certs/xweb-identity/
+            - mountPath: {{ .Values.configMountDir }}/xweb-identity/
               name: cert-xweb-identity
               readOnly: true
-            - mountPath: /etc/ziti/certs/edge-intermediate/
+            - mountPath: {{ .Values.configMountDir }}/edge-intermediate/
               name: cert-edge-intermediate
               readOnly: true
       {{- with .Values.nodeSelector }}

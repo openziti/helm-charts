@@ -63,8 +63,10 @@ image:
   configPath: &configPath /etc/ziti/ziti-controller.yaml
   args: [*configPath]
 
-dbDir: /persistent
-dbFile: ctrl.db
+execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
+configMountDir: /etc/ziti        # read-only mountpoint for config, certs
+dataMountDir:   /persistent      # writeable mountpoint for database
+dbFile:         ctrl.db
 
 nameOverride: ""
 fullnameOverride: ""
