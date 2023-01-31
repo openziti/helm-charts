@@ -8,37 +8,24 @@ metadata:
   labels:
     {{- include "ziti-router.labels" . | nindent 4 }}
 data:
-  router.sh: |-
-    #!/bin/bash
-    ZITI_HOME=/persistent
-    ZITI_BIN_DIR=/var/openziti/ziti-bin
-    # while [ 1 = 1 ] ; do sleep 1; date; done
-    if [ ! -e ${ZITI_HOME}/cert/tls.key ]; then
-      echo "Enrolling ziti router"
+  router-init.py: |-
 
-      # create a place for the router certs
-      [ -d ${ZITI_HOME}/cert ] || mkdir ${ZITI_HOME}/cert
 
-      # initialize the database with the admin user:
-      ${ZITI_BIN_DIR}/ziti router enroll "${ZITI_HOME}/ziti-router.yaml" -j "${ZITI_HOME}/enrolment.jwt"
-    fi
-
-    exec ${ZITI_BIN_DIR}/ziti router run "${ZITI_HOME}/ziti-router.yaml"
   ziti-router.yaml: |-
     v: 3
 
-    identity:
-        cert:        "/persistent/cert/client.crt"
-        server_cert: "/persistent/cert/tls.crt"
-        key:         "/persistent/cert/tls.key"
-        ca:          "/persistent/cert/ca.crt"
+    identity:        # this dir is a var because the value is a writeable tmp dir during enrollment and a read-only mountpoint when running
+        cert:        ${ZITI_ROUTER_CONFIG_DIR}/identity/client.crt
+        server_cert: ${ZITI_ROUTER_CONFIG_DIR}/identity/tls.crt
+        key:         ${ZITI_ROUTER_CONFIG_DIR}/identity/tls.key
+        ca:          ${ZITI_ROUTER_CONFIG_DIR}/identity/ca.crt
 
     ctrl:
-        endpoint:             tls:{{ required "You must set .Values.controller.endpoint to the controller's client api host and port of your Ziti network. Try adding --set-file router.controller.endpoint=controller01.zitinetwork.example.org:1280 to your Helm command" .Values.controller.endpoint }}
+        endpoint:    tls:${ZITI_ROUTER_CTRL}  # router control plane API (:6262)
 
     link:
         dialers:
-            - binding: transport
+          - binding: transport
         # When 'transport' is disabled this means we are a 'private' router
       {{- if (ne .Values.transport.enabled false ) }}
         listeners:
@@ -48,7 +35,7 @@ data:
             options:
               outQueueSize:   4
       {{- end }}
-    {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "disabled" )) (eq .Values.edge.enabled true) }}
+    {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "none" )) (eq .Values.edge.enabled true) }}
     listeners:
     # bindings of edge and tunnel requires an "edge" section below
     {{- if (eq .Values.edge.enabled true) }}
@@ -59,15 +46,19 @@ data:
             connectTimeoutMs: 1000
             getSessionTimeout: 60
     {{- end }}
-    {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "disabled" ) }}
+    {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "none" ) }}
       - binding: tunnel
         options:
             mode: {{ .Values.tunnel.mode }}
+          {{- if eq .Values.tunnel.mode "tproxy" }}
             resolver: {{ .Values.tunnel.resolver }}
             lanIf: {{ .Values.tunnel.lanIf }}
+          {{- else if eq .Values.tunnel.mode "proxy" }}
+            services:
+            {{- include .Values.tunnel.services . | nindent 14 }}
+          {{- end }}
     {{- end }}
     {{- end }}
-
 
     edge:
         csr:

@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-post-install-job
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 2
+  completions: 1
+  template:
+    metadata:
+      name: {{ .Release.Name }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- include "ziti-router.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "ziti-router.fullname" . }}-serviceaccount
+      containers:
+      - name: post-install-job
+        image: python
+        env:
+          - name: ZITI_ROUTER_CONFIG_DIR
+            value: /tmp
+          - name: PFXLOG_NO_JSON
+            value: "true"
+        volumeMounts:
+          - mountPath: {{ .Values.execMountDir }}/router-init.py
+            name: ziti-router-config
+            subPath: router-init.py
+          - mountPath: {{ .Values.execMountDir }}/ziti-router.yaml
+            name: ziti-router-config
+            subPath: ziti-router.yaml
+          - mountPath: {{ .Values.configMountDir }}/enrollment.jwt
+            name: ziti-router-jwt
+            subPath: enrollment.jwt
+            readOnly: true
+        command: ["{{ .Values.execMountDir }}/router-init.py"]
+      volumes:
+        - name: ziti-router-config
+          configMap:
+            name: {{ include "ziti-router.fullname" . }}-config
+            defaultMode: 0555
+        - name: ziti-router-jwt
+          secret:
+            secretName: {{ include "ziti-router.fullname" . }}-jwt
+            defaultMode: 0444
+            items:
+            - key: enrollmentJwt
+              path: enrollment.jwt

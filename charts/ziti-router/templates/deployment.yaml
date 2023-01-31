@@ -49,21 +49,18 @@ spec:
           args:
             {{- toYaml .Values.image.args | nindent 12 }}
           env:
-            - name: ZITI_IDENTITY_BASENAME
-              value: {{ include "ziti-router.fullname" . }}-identity
+            - name: ZITI_ROUTER_CONFIG_DIR
+              value: {{ .Values.configMountDir }}
+            - name: PFXLOG_NO_JSON
+              value: "true"
           volumeMounts:
-            - mountPath: /persistent/enrolment.jwt
-              name: enrolment-jwt
-              subPath: enrolment.jwt
-              readOnly: true
-            - mountPath: /var/openziti/scripts/router.sh
-              name: ziti-router-config-map-script
-              subPath: router.sh
-            - mountPath: /persistent
+            - mountPath: {{ .Values.configMountDir }}
               name: {{ include "ziti-router.fullname" . }}-data
-            - mountPath: /persistent/ziti-router.yaml
-              name: ziti-router-config-map
+            - mountPath: {{ .Values.configMountDir }}/ziti-router.yaml
+              name: ziti-router-config
               subPath: ziti-router.yaml
+            - mountPath: {{ .Values.configMountDir }}/identity/
+              name: ziti-router-identity
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -77,25 +74,11 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: enrolment-jwt
+        - name: ziti-router-identity
           secret:
-            secretName: {{ include "ziti-router.fullname" . }}-enrolment-jwt
+            secretName: {{ include "ziti-router.fullname" . }}-identity
             defaultMode: 0444
-            items:
-            - key: enrollmentJwt
-              path: enrolment.jwt
-        - name: ziti-router-config-map
+        - name: ziti-router-config
           configMap:
             name: {{ include "ziti-router.fullname" . }}-config
             defaultMode: 0444
-        - name: ziti-router-config-map-script
-          configMap:
-            name: {{ include "ziti-router.fullname" . }}-config
-            defaultMode: 0555
-        - name: {{ include "ziti-router.fullname" . }}-data
-        {{- if .Values.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
-        {{- else }}
-          emptyDir: {}
-        {{- end }}

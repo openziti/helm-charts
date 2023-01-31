@@ -47,9 +47,10 @@ edge:
     labels: {}
     annotations: {}
 tunnel:
-  mode: host # disabled | none | tproxy | host
+  mode: host # host | tproxy | proxy | none
   resolver: none  # udp://192.168.10.11:53
-  # lanIf: eth0
+  lanIf: eth0
+  services: []  # list of service-name:tcp-port pairs if mode "proxy"
 
 image:
   repository: kbinghamnetfoundry/ziti-router  # FIXME: dev image tag
@@ -62,6 +63,8 @@ image:
   pullSecrets: []
   command: ["/bin/bash","-c","/var/openziti/scripts/router.sh"]
 
+execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
+configMountDir: /etc/ziti        # read-only mountpoint for config, certs
 
 dnsPolicy: ClusterFirstWithHostNet
 
