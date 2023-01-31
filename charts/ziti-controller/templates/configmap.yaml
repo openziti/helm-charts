@@ -8,22 +8,15 @@ metadata:
 data:
   ziti-controller-init.sh: |-
     #!/usr/bin/env bash
-    set -xeuo pipefail
+    set -euo pipefail
 
-    # if non-empty db file does not exist then initialize
+    # initialize unless non-empty db file
     if [[ ! -s {{ .Values.dataMountDir }}/{{ .Values.dbFile }} ]]; then
-
       echo "Initializing Ziti Controller"
-
-      # create a place for the internal db
-      # mkdir -pv {{ .Values.dataMountDir }}
-
-      # initialize the database with the admin user:
       ziti controller edge init \
         "{{ .Values.image.configPath }}" \
         -u "${ZITI_ADMIN_USER}" \
         -p "${ZITI_ADMIN_PASSWORD}"
-
     fi
 
   ziti-controller.yaml: |-

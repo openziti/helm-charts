@@ -108,15 +108,15 @@ spec:
             - mountPath: {{ .Values.configMountDir }}/default-identity/
               name: cert-default-identity
               readOnly: true
-            # - mountPath: {{ .Values.configMountDir }}/default-intermediate/
-            #   name: cert-default-intermediate
-            #   readOnly: true
             - mountPath: {{ .Values.configMountDir }}/xweb-identity/
               name: cert-xweb-identity
               readOnly: true
             - mountPath: {{ .Values.configMountDir }}/edge-intermediate/
               name: cert-edge-intermediate
               readOnly: true
+            # - mountPath: {{ .Values.configMountDir }}/default-intermediate/
+            #   name: cert-default-intermediate
+            #   readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
