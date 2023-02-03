@@ -11,9 +11,20 @@ data:
   # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
   ziti-router-init.bash: |-
     #!/usr/bin/env bash
-    set -euo pipefail
+    set -euo pipefail -x
 
-    ziti router enroll --jwt {{ .Values.configMountDir }}/enrollment.jwt {{ .Values.configMountDir }}/ziti-router.yaml
+    mkdir -v ${ZITI_ROUTER_IDENTITY_DIR}
+
+    ziti router enroll \
+      {{ .Values.configMountDir }}/ziti-router.yaml \
+      --jwt {{ .Values.configMountDir }}/enrollment.jwt
+
+    kubectl -n {{ .Release.Namespace }} create secret generic \
+      {{ include "ziti-router.fullname" . }}-identity \
+      --from-file=client.crt="${ZITI_ROUTER_IDENTITY_DIR}/client.crt" \
+      --from-file=tls.key="${ZITI_ROUTER_IDENTITY_DIR}/tls.key" \
+      --from-file=tls.crt="${ZITI_ROUTER_IDENTITY_DIR}/tls.crt" \
+      --from-file=ca.crt="${ZITI_ROUTER_IDENTITY_DIR}/ca.crt"
 
   ziti-router.yaml: |-
     v: 3
@@ -25,7 +36,8 @@ data:
         ca:          ${ZITI_ROUTER_IDENTITY_DIR}/ca.crt
 
     ctrl:
-        endpoint:    tls:${ZITI_ROUTER_CTRL}  # router control plane API (:6262)
+        # router control plane API (:6262)
+        endpoint:    tls:{{ required "You must set .Values.controller.endpoint to the control plane advertised address. Try adding --set-file controller.endpoint=ziti-controller.example.com:6262 to your Helm command" .Values.controller.endpoint }}
 
     link:
         dialers:
@@ -46,7 +58,7 @@ data:
       - binding: edge
         address: tls:0.0.0.0:{{ .Values.edge.port }}
         options:
-            advertise: {{ required "You must set .Values.edge.host to the <host/ip> to advertise for this router. Try adding --set-file router.edge.host=router.zitinetwork.example.org to your Helm command" .Values.edge.host }}:{{ .Values.edge.port }}
+            advertise: {{ required "You must set .Values.edge.host to the <host/ip> to advertise for this router. Try adding --set edge.host=router.zitinetwork.example.org to your Helm command" .Values.edge.host }}:{{ .Values.edge.port }}
             connectTimeoutMs: 1000
             getSessionTimeout: 60
     {{- end }}

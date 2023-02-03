@@ -106,7 +106,7 @@ spec:
     - ziti-controller
     - {{ include "ziti-controller.fullname" . }}
     - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}
-    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}.cluster.local
+    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
     {{- if .Values.advertisedHost }}
     - {{ .Values.advertisedHost }}
     {{- end }}

@@ -29,7 +29,8 @@ spec:
       serviceAccountName: {{ include "ziti-router.fullname" . }}-serviceaccount
       containers:
       - name: post-install-job
-        image: python
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
           - name: ZITI_ROUTER_IDENTITY_DIR
             value: /tmp/ziti-router-identity
@@ -46,7 +47,8 @@ spec:
             name: ziti-router-jwt
             subPath: enrollment.jwt
             readOnly: true
-        command: ["{{ .Values.execMountDir }}/ziti-router-init.py"]
+        command: ["ziti-router-init.bash"]
+        # command: ["sh", "-c", "while true; do sleep 86400; done"]
       volumes:
         - name: ziti-router-config
           configMap:

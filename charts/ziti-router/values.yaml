@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 
 # required controller endpoint
-# controller:
-#   endpoint: <required>
+controller:
+  endpoint: ""
 
 advertise: {}
   # common adviertise-host for transport and edge - can also be specified individually
@@ -37,7 +37,7 @@ transport:
 
 # is the edge enabled?
 edge:
-  enabled: false
+  enabled: true
   port: 1290
   # host: <host/ip> this edge can be resolved from clients
   service:
@@ -52,19 +52,17 @@ tunnel:
   lanIf: eth0
   services: []  # list of service-name:tcp-port pairs if mode "proxy"
 
+execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
+configMountDir: &configMountDir /etc/ziti        # read-only mountpoint for config, certs
+
 image:
   repository: kbinghamnetfoundry/ziti-router  # FIXME: dev image tag
   # repository: openziti/ziti-router
   pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  # tag: 0.26.11
-#   command: ["sh", "-c", "while true; do sleep 11; done"]
-  args: []
   pullSecrets: []
-  command: ["/bin/bash","-c","/var/openziti/scripts/router.sh"]
-
-execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
-configMountDir: /etc/ziti        # read-only mountpoint for config, certs
+  # command: ["sh", "-c", "while true; do sleep 86400; done"]
+  command: ["ziti", "router", "run"]
+  args: ["/etc/ziti/ziti-router.yaml"]
 
 dnsPolicy: ClusterFirstWithHostNet
 

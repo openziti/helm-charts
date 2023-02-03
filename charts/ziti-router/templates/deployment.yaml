@@ -54,8 +54,6 @@ spec:
             - name: PFXLOG_NO_JSON
               value: "true"
           volumeMounts:
-            - mountPath: {{ .Values.configMountDir }}
-              name: {{ include "ziti-router.fullname" . }}-data
             - mountPath: {{ .Values.configMountDir }}/ziti-router.yaml
               name: ziti-router-config
               subPath: ziti-router.yaml
