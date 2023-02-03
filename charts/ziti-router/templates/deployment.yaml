@@ -49,8 +49,8 @@ spec:
           args:
             {{- toYaml .Values.image.args | nindent 12 }}
           env:
-            - name: ZITI_ROUTER_CONFIG_DIR
-              value: {{ .Values.configMountDir }}
+            - name: ZITI_ROUTER_IDENTITY_DIR
+              value: {{ .Values.configMountDir }}/identity
             - name: PFXLOG_NO_JSON
               value: "true"
           volumeMounts:
@@ -61,6 +61,7 @@ spec:
               subPath: ziti-router.yaml
             - mountPath: {{ .Values.configMountDir }}/identity/
               name: ziti-router-identity
+              readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

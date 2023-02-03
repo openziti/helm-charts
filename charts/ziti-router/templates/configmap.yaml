@@ -8,17 +8,21 @@ metadata:
   labels:
     {{- include "ziti-router.labels" . | nindent 4 }}
 data:
-  router-init.py: |-
+  # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
+  ziti-router-init.bash: |-
+    #!/usr/bin/env bash
+    set -euo pipefail
 
+    ziti router enroll --jwt {{ .Values.configMountDir }}/enrollment.jwt {{ .Values.configMountDir }}/ziti-router.yaml
 
   ziti-router.yaml: |-
     v: 3
 
     identity:        # this dir is a var because the value is a writeable tmp dir during enrollment and a read-only mountpoint when running
-        cert:        ${ZITI_ROUTER_CONFIG_DIR}/identity/client.crt
-        server_cert: ${ZITI_ROUTER_CONFIG_DIR}/identity/tls.crt
-        key:         ${ZITI_ROUTER_CONFIG_DIR}/identity/tls.key
-        ca:          ${ZITI_ROUTER_CONFIG_DIR}/identity/ca.crt
+        cert:        ${ZITI_ROUTER_IDENTITY_DIR}/client.crt
+        server_cert: ${ZITI_ROUTER_IDENTITY_DIR}/tls.crt
+        key:         ${ZITI_ROUTER_IDENTITY_DIR}/tls.key
+        ca:          ${ZITI_ROUTER_IDENTITY_DIR}/ca.crt
 
     ctrl:
         endpoint:    tls:${ZITI_ROUTER_CTRL}  # router control plane API (:6262)

@@ -31,27 +31,33 @@ spec:
       - name: post-install-job
         image: python
         env:
-          - name: ZITI_ROUTER_CONFIG_DIR
-            value: /tmp
+          - name: ZITI_ROUTER_IDENTITY_DIR
+            value: /tmp/ziti-router-identity
           - name: PFXLOG_NO_JSON
             value: "true"
         volumeMounts:
-          - mountPath: {{ .Values.execMountDir }}/router-init.py
+          - mountPath: {{ .Values.execMountDir }}/ziti-router-init.bash
             name: ziti-router-config
-            subPath: router-init.py
-          - mountPath: {{ .Values.execMountDir }}/ziti-router.yaml
+            subPath: ziti-router-init.bash
+          - mountPath: {{ .Values.configMountDir }}/ziti-router.yaml
             name: ziti-router-config
             subPath: ziti-router.yaml
           - mountPath: {{ .Values.configMountDir }}/enrollment.jwt
             name: ziti-router-jwt
             subPath: enrollment.jwt
             readOnly: true
-        command: ["{{ .Values.execMountDir }}/router-init.py"]
+        command: ["{{ .Values.execMountDir }}/ziti-router-init.py"]
       volumes:
         - name: ziti-router-config
           configMap:
             name: {{ include "ziti-router.fullname" . }}-config
-            defaultMode: 0555
+            items:
+              - key: ziti-router-init.bash
+                path: ziti-router-init.bash
+                mode: 0555
+              - key: ziti-router.yaml
+                path: ziti-router.yaml
+                mode: 0444
         - name: ziti-router-jwt
           secret:
             secretName: {{ include "ziti-router.fullname" . }}-jwt
