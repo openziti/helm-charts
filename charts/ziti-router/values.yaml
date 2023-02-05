@@ -6,10 +6,10 @@
 controller:
   endpoint: ""
 
-advertise: {}
+advertise:
   # common adviertise-host for transport and edge - can also be specified individually
   # via `edge.host` and `transport.host`
-  # host: my.host.name
+  host: edge1.k3s.mira.qrk.us
 
 
 # Certificate signing request basic data
@@ -28,12 +28,14 @@ csr:
   #     - "192.168.10.0"
 
 
-transport:
-  # if transport is disabled, it a 'private router' in OpenZiti 'speach'
-  enabled: false
+transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
+  enabled: true
   port: 10080
   service:
     enabled: true
+    type: LoadBalancer
+    labels: {}
+    annotations: {}
 
 # is the edge enabled?
 edge:
@@ -49,20 +51,29 @@ edge:
 tunnel:
   mode: host # host | tproxy | proxy | none
   resolver: none  # udp://192.168.10.11:53
-  lanIf: eth0
-  services: []  # list of service-name:tcp-port pairs if mode "proxy"
+  # lanIf: eth0   # interface device name for tproxy?
+  # services: []  # list of service-name:tcp-port pairs if mode "proxy"
 
-execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
-configMountDir: &configMountDir /etc/ziti        # read-only mountpoint for config, certs
+# read-only mountpoint for executables (must be in image's executable search PATH)
+execMountDir:     /usr/local/bin
+# read-only mountpoint for identity secret
+identityMountDir: /etc/ziti/identity
+# writeable mountpoint where read-only config file is projected to allow router
+# to write ./endpoints statefile in same dir
+configMountDir:   /etc/ziti/config
+configFilename:   ziti-router.yaml
 
 image:
-  repository: kbinghamnetfoundry/ziti-router  # FIXME: dev image tag
-  # repository: openziti/ziti-router
+  repository: openziti/ziti-router
   pullPolicy: Always
   pullSecrets: []
   # command: ["sh", "-c", "while true; do sleep 86400; done"]
   command: ["ziti", "router", "run"]
-  args: ["/etc/ziti/ziti-router.yaml"]
+  # The templates inside this list are evalated by the tpl funtion in the
+  # deployment template because Helm values can not be directly referenced
+  # inside the Values.yaml file (because it's just a data structure, not a
+  # template).
+  args: [ "{{ .Values.configMountDir }}/{{ .Values.configFilename }}", "--verbose"]
 
 dnsPolicy: ClusterFirstWithHostNet
 

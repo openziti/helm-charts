@@ -1,8 +1,8 @@
 #######
 # Controller CA
 ######
+
 ---
-# the 'controller root ca' ca
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -25,8 +25,8 @@ spec:
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+
 ---
-# an issuer for the 'controller root ca' ca
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -38,7 +38,6 @@ spec:
     secretName: {{ include "ziti-controller.fullname" . }}-xweb-root-secret
 
 ---
-# the 'controller intermediate ca'
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -63,7 +62,6 @@ spec:
     name: {{ include "ziti-controller.fullname" . }}-xweb-root-issuer
 
 ---
-# an issuer for the 'controller intermediate ca'
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -75,7 +73,6 @@ spec:
     secretName: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-secret
 
 ---
-# the controller's server certificate
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:

@@ -40,9 +40,9 @@ spec:
           - mountPath: {{ .Values.execMountDir }}/ziti-router-init.bash
             name: ziti-router-config
             subPath: ziti-router-init.bash
-          - mountPath: {{ .Values.configMountDir }}/ziti-router.yaml
+          - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFilename }}
             name: ziti-router-config
-            subPath: ziti-router.yaml
+            subPath: {{ .Values.configFilename }}
           - mountPath: {{ .Values.configMountDir }}/enrollment.jwt
             name: ziti-router-jwt
             subPath: enrollment.jwt
@@ -57,8 +57,8 @@ spec:
               - key: ziti-router-init.bash
                 path: ziti-router-init.bash
                 mode: 0555
-              - key: ziti-router.yaml
-                path: ziti-router.yaml
+              - key: {{ .Values.configFilename }}
+                path: {{ .Values.configFilename }}
                 mode: 0444
         - name: ziti-router-jwt
           secret:

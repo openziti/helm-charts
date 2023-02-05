@@ -16,7 +16,7 @@ data:
     mkdir -v ${ZITI_ROUTER_IDENTITY_DIR}
 
     ziti router enroll \
-      {{ .Values.configMountDir }}/ziti-router.yaml \
+      {{ .Values.configMountDir }}/{{ .Values.configFilename }} \
       --jwt {{ .Values.configMountDir }}/enrollment.jwt
 
     kubectl -n {{ .Release.Namespace }} create secret generic \
@@ -26,7 +26,7 @@ data:
       --from-file=tls.crt="${ZITI_ROUTER_IDENTITY_DIR}/tls.crt" \
       --from-file=ca.crt="${ZITI_ROUTER_IDENTITY_DIR}/ca.crt"
 
-  ziti-router.yaml: |-
+  {{ .Values.configFilename }}: |-
     v: 3
 
     identity:        # this dir is a var because the value is a writeable tmp dir during enrollment and a read-only mountpoint when running
