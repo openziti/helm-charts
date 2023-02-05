@@ -149,8 +149,8 @@ data:
         signingCert:
           # cert: {{ .Values.configMountDir }}/default-intermediate/tls.crt
           # key:  {{ .Values.configMountDir }}/default-intermediate/tls.key
-          cert: {{ .Values.configMountDir }}/edge-intermediate/tls.crt
-          key:  {{ .Values.configMountDir }}/edge-intermediate/tls.key
+          cert: {{ .Values.configMountDir }}/edge-signer/tls.crt
+          key:  {{ .Values.configMountDir }}/edge-signer/tls.key
         # edgeIdentity - optional
         # A section for identity enrollment specific settings
         edgeIdentity:
@@ -189,10 +189,10 @@ data:
             # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
         identity:
           #ClientCertKeyReuseIssue
-          cert:        {{ .Values.configMountDir }}/xweb-identity/tls.crt
-          server_cert: {{ .Values.configMountDir }}/xweb-identity/tls.crt
-          key:         {{ .Values.configMountDir }}/xweb-identity/tls.key
-          ca:          {{ .Values.configMountDir }}/xweb-identity/ca.crt
+          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
+          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
+          key:         {{ .Values.configMountDir }}/web-identity/tls.key
+          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
         # options - optional
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
         # used for all http servers started by the current webListener.
@@ -247,10 +247,10 @@ data:
             # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
         identity:
           #ClientCertKeyReuseIssue
-          cert:        {{ .Values.configMountDir }}/xweb-identity/tls.crt
-          server_cert: {{ .Values.configMountDir }}/xweb-identity/tls.crt
-          key:         {{ .Values.configMountDir }}/xweb-identity/tls.key
-          ca:          {{ .Values.configMountDir }}/xweb-identity/ca.crt
+          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
+          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
+          key:         {{ .Values.configMountDir }}/web-identity/tls.key
+          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
         # options - optional
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
         # used for all http servers started by the current webListener.
@@ -308,10 +308,10 @@ data:
             address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.prometheus.port }}
         identity:
           #ClientCertKeyReuseIssue
-          cert:        {{ .Values.configMountDir }}/xweb-identity/tls.crt
-          server_cert: {{ .Values.configMountDir }}/xweb-identity/tls.crt
-          key:         {{ .Values.configMountDir }}/xweb-identity/tls.key
-          ca:          {{ .Values.configMountDir }}/xweb-identity/ca.crt
+          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
+          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
+          key:         {{ .Values.configMountDir }}/web-identity/tls.key
+          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
         options: { }
         apis:
           - binding: metrics

@@ -50,11 +50,11 @@ spec:
             # - mountPath: {{ .Values.configMountDir }}/default-intermediate/
             #   name: cert-default-intermediate
             #   readOnly: true
-            - mountPath: {{ .Values.configMountDir }}/xweb-identity/
-              name: cert-xweb-identity
+            - mountPath: {{ .Values.configMountDir }}/web-identity/
+              name: cert-web-identity
               readOnly: true
-            - mountPath: {{ .Values.configMountDir }}/edge-intermediate/
-              name: cert-edge-intermediate
+            - mountPath: {{ .Values.configMountDir }}/edge-signer/
+              name: cert-edge-signer
               readOnly: true
           env:
             - name: ZITI_ADMIN_USER
@@ -108,11 +108,11 @@ spec:
             - mountPath: {{ .Values.configMountDir }}/default-identity/
               name: cert-default-identity
               readOnly: true
-            - mountPath: {{ .Values.configMountDir }}/xweb-identity/
-              name: cert-xweb-identity
+            - mountPath: {{ .Values.configMountDir }}/web-identity/
+              name: cert-web-identity
               readOnly: true
-            - mountPath: {{ .Values.configMountDir }}/edge-intermediate/
-              name: cert-edge-intermediate
+            - mountPath: {{ .Values.configMountDir }}/edge-signer/
+              name: cert-edge-signer
               readOnly: true
             # - mountPath: {{ .Values.configMountDir }}/default-intermediate/
             #   name: cert-default-intermediate
@@ -146,12 +146,12 @@ spec:
         # - name: cert-default-intermediate
         #   secret:
         #     secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
-        - name: cert-edge-intermediate
+        - name: cert-edge-signer
           secret:
-            secretName: {{ include "ziti-controller.fullname" . }}-edge-intermediate-secret
-        - name: cert-xweb-identity
+            secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+        - name: cert-web-identity
           secret:
-            secretName: {{ include "ziti-controller.fullname" . }}-xweb-identity-secret
+            secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
         - name: data
         {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:

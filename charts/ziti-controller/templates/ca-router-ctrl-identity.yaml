@@ -1,17 +1,16 @@
 #######
-# Controller CA
+# CA to issue the controller's router control plane identity. This CA issues the server certificate that is presented by the controller to routers when they connect to the controller's "ctrl" endpoint, i.e. the router control plane. The same server certificate is re-used as a default identity if an alternative identity is not configured, e.g., web binding for the client API.
 ######
-
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-xweb-root-cert
+  name: {{ include "ziti-controller.fullname" . }}-default-root-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-xweb-root
-  secretName: {{ include "ziti-controller.fullname" . }}-xweb-root-secret
+  commonName: ziti-controller-default-root
+  secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -30,23 +29,23 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-xweb-root-issuer
+  name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-xweb-root-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
 
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-cert
+  name: {{ include "ziti-controller.fullname" . }}-default-intermediate-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-xweb-intermediate
-  secretName: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-secret
+  commonName: ziti-controller-default-intermediate
+  secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -59,29 +58,29 @@ spec:
     size: 256
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-xweb-root-issuer
+    name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
 
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-issuer
+  name: {{ include "ziti-controller.fullname" . }}-default-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
 
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-xweb-identity-cert
+  name: {{ include "ziti-controller.fullname" . }}-default-identity
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-xweb-identity
-  secretName: {{ include "ziti-controller.fullname" . }}-xweb-identity-secret
+  commonName: ziti-controller-default-identity
+  secretName: {{ include "ziti-controller.fullname" . }}-default-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
   renewBefore: {{ .Values.cert.renewBefore }}
@@ -113,7 +112,7 @@ spec:
     - 127.0.0.1
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-xweb-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-default-intermediate-issuer
 
 # #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
 # via the same private key - I currenlty have no Idea how to solve this with CertManager
@@ -122,10 +121,10 @@ spec:
 # apiVersion: cert-manager.io/v1
 # kind: Certificate
 # metadata:
-#   name: ziti-ctrl-client
+#   name: ziti-controller-client
 # spec:
 #   isCA: false
-#   commonName: ziti-ctrl-client
+#   commonName: ziti-controller-client
 #   secretName: ziti-controller-client-cert-secret
 #   privateKey:
 #     algorithm: ECDSA
