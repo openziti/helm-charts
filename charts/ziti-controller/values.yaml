@@ -59,13 +59,22 @@ image:
   repository: openziti/ziti-controller
   pullPolicy: Always
   command: ["ziti", "controller", "run"]
-  configPath: &configPath /etc/ziti/ziti-controller.yaml
-  args: [*configPath, "--verbose"]
+  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
 
+# a directory included in the init and run containers' executable search path
 execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
-configMountDir: /etc/ziti        # read-only mountpoint for config, certs
-dataMountDir:   /persistent      # writeable mountpoint for database
+# exec by init container
+initScriptFile: ziti-controller-init.bash
+# read-only mountpoint where configFile and various read-only identity dirs are projected
+configMountDir: /etc/ziti
+# filename of the controller configuration file
+configFile:     ziti-controller.yaml
+# writeable mountpoint where the controller will create dbFile during init
+dataMountDir:   /persistent
 dbFile:         ctrl.db
+# read-only mountpoint for run container to read the ctrl plane trust bundle created during init
+ctrlPlaneCaDir: ctrl-plane-cas
+ctrlPlaneCasFile: ctrl-plane-cas.crt
 
 nameOverride: ""
 fullnameOverride: ""

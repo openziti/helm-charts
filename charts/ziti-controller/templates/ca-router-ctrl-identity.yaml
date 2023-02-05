@@ -1,5 +1,10 @@
 #######
-# CA to issue the controller's router control plane identity. This CA issues the server certificate that is presented by the controller to routers when they connect to the controller's "ctrl" endpoint, i.e. the router control plane. The same server certificate is re-used as a default identity if an alternative identity is not configured, e.g., web binding for the client API.
+# CA to issue the controller's router control plane identity. This CA issues the
+# server certificate that is presented by the controller to routers when they
+# connect to the controller's "ctrl" endpoint, i.e. the router control plane. The
+# same server certificate is re-used as a default identity if an alternative
+# identity is not configured for a particular server TLS binding, e.g., web
+# binding for the client API.
 ######
 ---
 apiVersion: cert-manager.io/v1
@@ -40,12 +45,12 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-intermediate-cert
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-default-intermediate
-  secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
+  commonName: ziti-controller-ctrl-plane-intermediate
+  secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -64,23 +69,23 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-intermediate-issuer
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-default-intermediate-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
 
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-identity
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-default-identity
-  secretName: {{ include "ziti-controller.fullname" . }}-default-identity-secret
+  commonName: ziti-controller-ctrl-plane-identity
+  secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
   renewBefore: {{ .Values.cert.renewBefore }}
@@ -112,7 +117,7 @@ spec:
     - 127.0.0.1
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-default-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
 
 # #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
 # via the same private key - I currenlty have no Idea how to solve this with CertManager

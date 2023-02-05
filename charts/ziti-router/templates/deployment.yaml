@@ -60,9 +60,9 @@ spec:
             - mountPath: {{ .Values.configMountDir }}
               name: endpoints-data
               readOnly: false
-            - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFilename }}
+            - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
               name: ziti-router-config
-              subPath: {{ .Values.configFilename }}  # project the read-only config into the writeable volume to allow router to write ./endpoints state file in same dir as config
+              subPath: {{ .Values.configFile }}  # project the read-only config into the writeable volume to allow router to write ./endpoints state file in same dir as config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

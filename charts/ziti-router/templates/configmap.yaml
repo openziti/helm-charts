@@ -9,15 +9,15 @@ metadata:
     {{- include "ziti-router.labels" . | nindent 4 }}
 data:
   # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
-  ziti-router-init.bash: |-
+  {{ .Values.initScriptFile }}: |-
     #!/usr/bin/env bash
     set -euo pipefail -x
 
     mkdir -v ${ZITI_ROUTER_IDENTITY_DIR}
 
     ziti router enroll \
-      {{ .Values.configMountDir }}/{{ .Values.configFilename }} \
-      --jwt {{ .Values.configMountDir }}/enrollment.jwt
+      {{ .Values.configMountDir }}/{{ .Values.configFile }} \
+      --jwt {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }}
 
     kubectl -n {{ .Release.Namespace }} create secret generic \
       {{ include "ziti-router.fullname" . }}-identity \
@@ -26,7 +26,7 @@ data:
       --from-file=tls.crt="${ZITI_ROUTER_IDENTITY_DIR}/tls.crt" \
       --from-file=ca.crt="${ZITI_ROUTER_IDENTITY_DIR}/ca.crt"
 
-  {{ .Values.configFilename }}: |-
+  {{ .Values.configFile }}: |-
     v: 3
 
     identity:        # this dir is a var because the value is a writeable tmp dir during enrollment and a read-only mountpoint when running

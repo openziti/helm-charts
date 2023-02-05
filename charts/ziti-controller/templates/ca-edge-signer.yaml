@@ -1,5 +1,10 @@
 #######
-# CA that is used by the controller to issue edge identities (x509 certificates). This CA's cert and key must be configured as .edge.enrollment.signingCert. The controller will issue client and server certificates during router enrollment, and client certificates during identity enrollment. The edge signer's certificate must be appended to the trust bundle that is configured for the router control plane's identity in .identity.ca
+# CA that is used by the controller to issue edge identities (x509 certificates).
+# This CA's cert and key must be configured as .edge.enrollment.signingCert. The
+# controller will issue client and server certificates during router enrollment,
+# and client certificates during identity enrollment. The edge signer's
+# certificate must be appended to the trust bundle that is configured for the
+# router control plane's identity in .identity.ca
 ######
 
 ---

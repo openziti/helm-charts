@@ -6,20 +6,29 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 data:
-  ziti-controller-init.sh: |-
+  {{ .Values.initScriptFile }}: |-
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # initialize unless non-empty db file
-    if [[ ! -s {{ .Values.dataMountDir }}/{{ .Values.dbFile }} ]]; then
-      echo "Initializing Ziti Controller"
-      ziti controller edge init \
-        "{{ .Values.image.configPath }}" \
-        -u "${ZITI_ADMIN_USER}" \
-        -p "${ZITI_ADMIN_PASSWORD}"
-    fi
+    echo "INFO: concatenating ctrl-plane-cas"
+    mkdir -v ${ZITI_CTRL_PLANE_CA}/
+    cat \
+      {{ .Values.configMountDir }}/ctrl-plane-identity/ca.crt \
+      {{ .Values.configMountDir }}/edge-signer/tls.crt \
+    >| ${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
 
-  ziti-controller.yaml: |-
+    echo "INFO: creating ctrl-plane-cas configmap"
+    kubectl -n {{ .Release.Namespace }} create configmap \
+      {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas \
+      --from-file={{ .Values.ctrlPlaneCasFile }}=${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
+
+    echo "INFO: initializing Ziti Controller"
+    ziti controller edge init \
+      "{{ .Values.configMountDir }}/{{ .Values.configFile }}" \
+      -u "${ZITI_ADMIN_USER}" \
+      -p "${ZITI_ADMIN_PASSWORD}"
+
+  {{ .Values.configFile }}: |-
     v: 3
 
     #trace:
@@ -33,10 +42,10 @@ data:
 
     identity:
       #ClientCertKeyReuseIssue
-      cert:                 {{ .Values.configMountDir }}/default-identity/tls.crt
-      server_cert:          {{ .Values.configMountDir }}/default-identity/tls.crt
-      key:                  {{ .Values.configMountDir }}/default-identity/tls.key
-      ca:                   {{ .Values.configMountDir }}/default-identity/ca.crt
+      cert:                 {{ .Values.configMountDir }}/ctrl-plane-identity/tls.crt
+      server_cert:          {{ .Values.configMountDir }}/ctrl-plane-identity/tls.crt
+      key:                  {{ .Values.configMountDir }}/ctrl-plane-identity/tls.key
+      ca:                   ${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
 
     # Network Configuration
     #
@@ -147,8 +156,8 @@ data:
         # a signing certificate from the PKI that the Ziti environment is using to sign certificates. The signingCert.cert
         # will be added to the /.well-known CA store that is used to bootstrap trust with the Ziti Controller.
         signingCert:
-          # cert: {{ .Values.configMountDir }}/default-intermediate/tls.crt
-          # key:  {{ .Values.configMountDir }}/default-intermediate/tls.key
+          # cert: {{ .Values.configMountDir }}/ctrl-plane-intermediate/tls.crt
+          # key:  {{ .Values.configMountDir }}/ctrl-plane-intermediate/tls.key
           cert: {{ .Values.configMountDir }}/edge-signer/tls.crt
           key:  {{ .Values.configMountDir }}/edge-signer/tls.key
         # edgeIdentity - optional

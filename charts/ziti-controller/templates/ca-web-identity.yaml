@@ -1,5 +1,6 @@
 #######
-# CA that issues the server certificate for web bindings like the edge client API, edge management API
+# CA that issues the server certificate for web bindings like the edge client API,
+# edge management API
 ######
 
 ---

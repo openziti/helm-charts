@@ -26,7 +26,7 @@ spec:
         {{- include "ziti-router.labels" . | nindent 8 }}
     spec:
       restartPolicy: Never
-      serviceAccountName: {{ include "ziti-router.fullname" . }}-serviceaccount
+      serviceAccountName: {{ include "ziti-router.fullname" . }}-init-serviceaccount
       containers:
       - name: post-install-job
         image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
@@ -37,28 +37,28 @@ spec:
           - name: PFXLOG_NO_JSON
             value: "true"
         volumeMounts:
-          - mountPath: {{ .Values.execMountDir }}/ziti-router-init.bash
+          - mountPath: {{ .Values.execMountDir }}/{{ .Values.initScriptFile }}
             name: ziti-router-config
-            subPath: ziti-router-init.bash
-          - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFilename }}
+            subPath: {{ .Values.initScriptFile }}
+          - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
             name: ziti-router-config
-            subPath: {{ .Values.configFilename }}
-          - mountPath: {{ .Values.configMountDir }}/enrollment.jwt
+            subPath: {{ .Values.configFile }}
+          - mountPath: {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }}
             name: ziti-router-jwt
-            subPath: enrollment.jwt
+            subPath: {{ .Values.enrollJwtFile }}
             readOnly: true
-        command: ["ziti-router-init.bash"]
+        command: ["{{ .Values.initScriptFile }}"]
         # command: ["sh", "-c", "while true; do sleep 86400; done"]
       volumes:
         - name: ziti-router-config
           configMap:
             name: {{ include "ziti-router.fullname" . }}-config
             items:
-              - key: ziti-router-init.bash
-                path: ziti-router-init.bash
+              - key: {{ .Values.initScriptFile }}
+                path: {{ .Values.initScriptFile }}
                 mode: 0555
-              - key: {{ .Values.configFilename }}
-                path: {{ .Values.configFilename }}
+              - key: {{ .Values.configFile }}
+                path: {{ .Values.configFile }}
                 mode: 0444
         - name: ziti-router-jwt
           secret:
@@ -66,4 +66,4 @@ spec:
             defaultMode: 0444
             items:
             - key: enrollmentJwt
-              path: enrollment.jwt
+              path: {{ .Values.enrollJwtFile }}

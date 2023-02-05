@@ -56,12 +56,16 @@ tunnel:
 
 # read-only mountpoint for executables (must be in image's executable search PATH)
 execMountDir:     /usr/local/bin
-# read-only mountpoint for identity secret
+# exec by Helm post-install hook
+initScriptFile:   ziti-router-init.bash
+# provided to helm install as set value and consumed by init script to perform router enrollment
+enrollJwtFile:    enrollment.jwt
+# read-only mountpoint for router identity secret specified in deployment for use by router run container
 identityMountDir: /etc/ziti/identity
 # writeable mountpoint where read-only config file is projected to allow router
 # to write ./endpoints statefile in same dir
 configMountDir:   /etc/ziti/config
-configFilename:   ziti-router.yaml
+configFile:       ziti-router.yaml
 
 image:
   repository: openziti/ziti-router
@@ -73,7 +77,7 @@ image:
   # deployment template because Helm values can not be directly referenced
   # inside the Values.yaml file (because it's just a data structure, not a
   # template).
-  args: [ "{{ .Values.configMountDir }}/{{ .Values.configFilename }}", "--verbose"]
+  args: [ "{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
 
 dnsPolicy: ClusterFirstWithHostNet
 
