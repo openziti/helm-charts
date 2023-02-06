@@ -34,6 +34,9 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "1408"
           ports:
             {{- toYaml .Values.ports | nindent 12 }}
           resources:
@@ -63,11 +66,8 @@ spec:
               mountPath: /usr/src/app/sessions
             - name: ziti-store
               mountPath: /usr/src/ziti
-            - name: ziti-console-config-map-script
-              mountPath: /usr/src/app/console.sh
-              subPath: console.sh
             - name: ziti-console-config-map
-              mountPath: /usr/src/ziti/settings-template.json
+              mountPath: /usr/src/ziti/settings.json
               subPath: settings-template.json
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -90,7 +90,3 @@ spec:
           configMap:
             name: {{ include "ziti-console.fullname" . }}-config
             defaultMode: 0444
-        - name: ziti-console-config-map-script
-          configMap:
-            name: {{ include "ziti-console.fullname" . }}-config
-            defaultMode: 0555

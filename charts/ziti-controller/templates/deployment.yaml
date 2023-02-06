@@ -80,9 +80,6 @@ spec:
             - mountPath: {{ .Values.configMountDir }}/edge-signer/
               name: cert-edge-signer
               readOnly: true
-            # - mountPath: {{ .Values.configMountDir }}/ctrl-plane-intermediate/
-            #   name: cert-ctrl-plane-intermediate
-            #   readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -8,10 +8,6 @@ metadata:
   labels:
     {{- include "ziti-console.labels" . | nindent 4 }}
 data:
-  console.sh: |-
-    #!/bin/bash
-    cp /usr/src/ziti/settings-template.json /usr/src/ziti/settings.json
-    exec /usr/src/app/run-zac.sh
   settings-template.json: |-
     {{- toJson .Values.settings | nindent 4 }}
 

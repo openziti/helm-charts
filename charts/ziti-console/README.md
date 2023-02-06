@@ -16,11 +16,11 @@ This is this sample from the quickstart:
 helm install quickstart-console ziti-console \
      --set "ingress.enabled=true" \
      --set "ingress.hosts[0].host=quickstart-console.<example.org>" \
-     --set "settings.edgeControllers[0].name=quickstart" \
-     --set "settings.edgeControllers[0].url=https://quickstart-controller-mgmt:1281" \
-     --set "settings.edgeControllers[0].default=true" \
      --set "ingress.annotations.traefik\.ingress\.kubernetes\.io/router\.entrypoints=websecure" \
      --set "ingress.labels.ingressMethod=traefik"
+    #  --set "settings.edgeControllers[0].name=quickstart" \
+    #  --set "settings.edgeControllers[0].url=https://quickstart-controller-mgmt:1281" \
+    #  --set "settings.edgeControllers[0].default=true" \
 
 ```
 
