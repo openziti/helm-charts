@@ -12,26 +12,26 @@
 # and find the router endpoints.
 
 ctrlPlane:
-  port: 30262
+  port: 6262
   service:
     enabled: true
-    type: LoadBalancer
+    type: ClusterIP  # this can be cluster-internal unless there are routers outside the cluster
 
 clientApi:
-  port: 31280
+  port: 1280
   service:
     enabled: true
-    type: LoadBalancer
+    type: LoadBalancer  # this is the only service that really needs to be exposed
 
 managementApi:
-  port: 31281
+  port: 1281
   service:
     enabled: true
-    type: LoadBalancer
+    type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
 
 prometheus:
   enabled: true
-  port: 32112
+  port: 9090
   service:
     enabled: true
     type: ClusterIP
