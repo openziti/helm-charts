@@ -36,7 +36,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: PORT
-              value: "1408"
+              value: "{{ .Values.httpContainerPort }}"
           ports:
             {{- toYaml .Values.ports | nindent 12 }}
           resources:
@@ -44,13 +44,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 1408
+              port: {{ .Values.httpContainerPort }}
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /login
-              port: 1408
+              port: {{ .Values.httpContainerPort }}
             initialDelaySeconds: 10
             periodSeconds: 10
           {{ if .Values.image.command }}

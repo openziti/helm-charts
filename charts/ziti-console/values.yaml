@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 ingress:
-  enabled: false
+  enabled: true
   ingressClassName: ""
   annotations: {}
     # kubernetes.io/ingress.class: 'nginx'
@@ -16,13 +16,15 @@ ingress:
           pathType: Prefix
   tls: []
 
+httpContainerPort: &httpContainerPort 1408
+
 ports:
   - name: http
-    containerPort: 1408
+    containerPort: *httpContainerPort
 
 service:
   enabled: true
-  port: 1408
+  port: *httpContainerPort
   name: http
   type: ClusterIP
   labels: {}
