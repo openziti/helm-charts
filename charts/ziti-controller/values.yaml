@@ -16,9 +16,9 @@ ctrlPlane:
   service:
     enabled: true
     type: ClusterIP  # this can be cluster-internal unless there are routers outside the cluster
-  # issuer:
-  #   kind: Issuer
-  #   name: my-istio-issuer
+  issuer:
+    kind: Issuer
+    name: zt-issuer
 
 clientApi:
   port: 1280

@@ -63,8 +63,9 @@ spec:
     size: 256
   issuerRef:
     {{- if .Values.ctrlPlane.issuer }}
-    {{- include ".Values.ctrlPlane.issuer" . | nindent 4 }}
-    {{- else -}}
+      name: {{ .Values.ctrlPlane.issuer.name }}
+      kind: {{ .Values.ctrlPlane.issuer.kind }}
+    {{- else }}
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
     {{- end }}
