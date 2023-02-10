@@ -141,5 +141,5 @@ persistence:
   ## If the PV uses a different storage class, specify that here.
   storageClass: ""
   VolumeName: ""
-  accessMode: ReadWriteOnce
+  accessMode: ReadWriteMany
   size: 2Gi
