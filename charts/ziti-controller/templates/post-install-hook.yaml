@@ -47,6 +47,9 @@ spec:
             - mountPath: {{ .Values.configMountDir }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
+            - mountPath: {{ .Values.configMountDir }}/ctrl-plane-intermediate/
+              name: cert-ctrl-plane-intermediate
+              readOnly: true
             - mountPath: {{ .Values.configMountDir }}/web-identity/
               name: cert-web-identity
               readOnly: true
@@ -82,6 +85,9 @@ spec:
         - name: cert-ctrl-plane-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
+        - name: cert-ctrl-plane-intermediate
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
         - name: cert-edge-signer
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
