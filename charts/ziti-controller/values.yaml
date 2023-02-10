@@ -16,20 +16,20 @@ ctrlPlane:
   service:
     enabled: true
     type: ClusterIP  # this can be cluster-internal unless there are routers outside the cluster
-  issuer:
-    kind: Issuer
-    name: zt-issuer
+  # issuer:
+  #   kind: Issuer
+  #   name: zt-issuer
 
 clientApi:
   port: 1280
   service:
     enabled: true
-    type: LoadBalancer  # this is the only service that really needs to be exposed
+    type: ClusterIP  # this is the only service that really needs to be exposed
 
 managementApi:
   port: 1281
   service:
-    enabled: true
+    enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
     type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
 
 prometheus:
@@ -61,8 +61,8 @@ cert:
 image:
   repository: openziti/ziti-controller
   pullPolicy: Always
-  # command: ["ziti", "controller", "run"]
-  command: ["bash", "-c", "while true; do sleep 1; done"]
+  command: ["ziti", "controller", "run"]
+  # command: ["bash", "-c", "while true; do sleep 1; done"]
   # args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
 
 # a directory included in the init and run containers' executable search path
