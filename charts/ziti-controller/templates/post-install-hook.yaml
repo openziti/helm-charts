@@ -13,9 +13,6 @@ metadata:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "-5"
     "helm.sh/hook-delete-policy": hook-succeeded
-    {{- with .Values.podAnnotations }}
-      {{- toYaml . | nindent 4 }}
-    {{- end }}
 spec:
   backoffLimit: 2
   completions: 1
@@ -27,6 +24,10 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
         {{- include "ziti-controller.labels" . | nindent 8 }}
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       restartPolicy: Never
       serviceAccountName: {{ include "ziti-controller.fullname" . }}-init-serviceaccount
