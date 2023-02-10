@@ -62,8 +62,12 @@ spec:
     algorithm: ECDSA
     size: 256
   issuerRef:
+    {{- if .Values.ctrlPlane.issuer }}
+    {{- include ".Values.ctrlPlane.issuer" . | nindent 4 }}
+    {{- else -}}
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
+    {{- end }}
 
 ---
 apiVersion: cert-manager.io/v1
