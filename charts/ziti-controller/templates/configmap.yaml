@@ -10,17 +10,18 @@ data:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "INFO: concatenating ctrl-plane-cas"
-    mkdir -v ${ZITI_CTRL_PLANE_CA}/
-    cat \
-      {{ .Values.configMountDir }}/ctrl-plane-identity/ca.crt \
-      {{ .Values.configMountDir }}/edge-signer/tls.crt \
-    >| ${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
+    ### now the bundle is composed by trust-manager
+    # echo "INFO: concatenating ctrl-plane-cas"
+    # mkdir -v ${ZITI_CTRL_PLANE_CA}/
+    # cat \
+    #   {{ .Values.configMountDir }}/ctrl-plane-identity/ca.crt \
+    #   {{ .Values.configMountDir }}/edge-signer/tls.crt \
+    # >| ${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
 
-    echo "INFO: creating ctrl-plane-cas configmap"
-    kubectl -n {{ .Release.Namespace }} create configmap \
-      {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas \
-      --from-file={{ .Values.ctrlPlaneCasFile }}=${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
+    # echo "INFO: creating ctrl-plane-cas configmap"
+    # kubectl -n {{ .Release.Namespace }} create configmap \
+    #   {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas \
+    #   --from-file={{ .Values.ctrlPlaneCasFile }}=${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
 
     echo "INFO: initializing Ziti Controller"
     ziti controller edge init \
