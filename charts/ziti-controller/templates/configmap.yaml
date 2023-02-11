@@ -157,10 +157,13 @@ data:
         # a signing certificate from the PKI that the Ziti environment is using to sign certificates. The signingCert.cert
         # will be added to the /.well-known CA store that is used to bootstrap trust with the Ziti Controller.
         signingCert:
+          {{- if (eq .Values.edgeSignerPki.enabled true) }}
+          cert: {{ .Values.configMountDir }}/edge-signer/tls.crt
+          key:  {{ .Values.configMountDir }}/edge-signer/tls.key
+          {{- else }}
           cert: {{ .Values.configMountDir }}/ctrl-plane-intermediate/tls.crt
           key:  {{ .Values.configMountDir }}/ctrl-plane-intermediate/tls.key
-          # cert: {{ .Values.configMountDir }}/edge-signer/tls.crt
-          # key:  {{ .Values.configMountDir }}/edge-signer/tls.key
+          {{- end }}
         # edgeIdentity - optional
         # A section for identity enrollment specific settings
         edgeIdentity:
@@ -197,12 +200,14 @@ data:
             # response content that requires full host:port/path addresses.
             address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.clientApi.port }}
             # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
-        # identity:
-        #   #ClientCertKeyReuseIssue
-        #   cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
-        #   server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
-        #   key:         {{ .Values.configMountDir }}/web-identity/tls.key
-        #   ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+        {{- if (eq .Values.webBindingPki.enabled true) }}
+        identity:
+          #ClientCertKeyReuseIssue
+          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
+          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
+          key:         {{ .Values.configMountDir }}/web-identity/tls.key
+          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+        {{- end }}
         # options - optional
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
         # used for all http servers started by the current webListener.
@@ -260,13 +265,14 @@ data:
             # response content that requires full host:port/path addresses.
             address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.managementApi.port }}
             # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
-        # identity:
-        #   #ClientCertKeyReuseIssue
-        #   cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
-        #   server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
-        #   key:         {{ .Values.configMountDir }}/web-identity/tls.key
-        #   ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
-        # options - optional
+        {{- if (eq .Values.webBindingPki.enabled true) }}
+        identity:
+          #ClientCertKeyReuseIssue
+          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
+          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
+          key:         {{ .Values.configMountDir }}/web-identity/tls.key
+          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+        {{- end }}
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
         # used for all http servers started by the current webListener.
         options:
@@ -322,12 +328,14 @@ data:
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
             address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.prometheus.port }}
-        # identity:
-        #   #ClientCertKeyReuseIssue
-        #   cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
-        #   server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
-        #   key:         {{ .Values.configMountDir }}/web-identity/tls.key
-        #   ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+        {{- if (eq .Values.webBindingPki.enabled true) }}
+        identity:
+          #ClientCertKeyReuseIssue
+          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
+          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
+          key:         {{ .Values.configMountDir }}/web-identity/tls.key
+          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+        {{- end }}
         options: { }
         apis:
           - binding: metrics

@@ -58,12 +58,19 @@ cert:
   duration: 87840h    # 3660d / 10 y
   renewBefore: 720h   # 30d
 
+# you can enable these if you want to use roots of trust that are separate from
+# the main identity used by the ctrl plane
+edgeSignerPki:
+  enabled: false
+webBindingPki:
+  enabled: false
+
 image:
   repository: openziti/ziti-controller
   pullPolicy: Always
   command: ["ziti", "controller", "run"]
   # command: ["bash", "-c", "while true; do sleep 1; done"]
-  # args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
+  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
 
 # a directory included in the init and run containers' executable search path
 execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 

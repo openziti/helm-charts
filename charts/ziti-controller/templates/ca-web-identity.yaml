@@ -2,7 +2,7 @@
 # CA that issues the server certificate for web bindings like the edge client API,
 # edge management API
 ######
-
+{{- if (eq .Values.webBindingPki.enabled true) }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -136,3 +136,4 @@ spec:
 #   issuerRef:
 #     kind: Issuer
 #     name: ziti-controller-intermediate-ca-issuer
+{{- end }}
