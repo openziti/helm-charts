@@ -10,19 +10,6 @@ data:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    ### now the bundle is composed by trust-manager
-    # echo "INFO: concatenating ctrl-plane-cas"
-    # mkdir -v ${ZITI_CTRL_PLANE_CA}/
-    # cat \
-    #   {{ .Values.configMountDir }}/ctrl-plane-identity/ca.crt \
-    #   {{ .Values.configMountDir }}/edge-signer/tls.crt \
-    # >| ${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
-
-    # echo "INFO: creating ctrl-plane-cas configmap"
-    # kubectl -n {{ .Release.Namespace }} create configmap \
-    #   {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas \
-    #   --from-file={{ .Values.ctrlPlaneCasFile }}=${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
-
     if [[ -s "{{ .Values.dataMountDir }}/{{ .Values.dbFile }}" ]]; then
       echo "INFO: noop because BoltDB exists in {{ .Values.dataMountDir }}/{{ .Values.dbFile }}"
       exit 0
@@ -248,12 +235,12 @@ data:
           #   - fabric-management
           - binding: edge-client
             options: { }
-          {{- if (eq .Values.managementApi.enabled false) }}
+          {{- if (eq .Values.managementApi.service.enabled false) }}
           - binding: edge-management
             options: { }
           {{- end }}
       # name - required
-    {{- if (eq .Values.managementApi.enabled true) }}
+    {{- if (eq .Values.managementApi.service.enabled true) }}
       # Provides a name for this listener, used for logging output. Not required to be unique, but is highly suggested.
       - name: management
         # bindPoints - required
