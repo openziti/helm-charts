@@ -23,11 +23,16 @@ data:
     #   {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas \
     #   --from-file={{ .Values.ctrlPlaneCasFile }}=${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
 
-    echo "INFO: initializing Ziti Controller"
-    ziti controller edge init \
-      "{{ .Values.configMountDir }}/{{ .Values.configFile }}" \
-      -u "${ZITI_ADMIN_USER}" \
-      -p "${ZITI_ADMIN_PASSWORD}"
+    if [[ -s "{{ .Values.dataMountDir }}/{{ .Values.dbFile }}" ]]; then
+      echo "INFO: noop because BoltDB exists in {{ .Values.dataMountDir }}/{{ .Values.dbFile }}"
+      exit 0
+    else
+      echo "INFO: initializing Ziti Controller"
+      ziti controller edge init \
+        "{{ .Values.configMountDir }}/{{ .Values.configFile }}" \
+        -u "${ZITI_ADMIN_USER}" \
+        -p "${ZITI_ADMIN_PASSWORD}"
+    fi
 
   {{ .Values.configFile }}: |-
     v: 3
