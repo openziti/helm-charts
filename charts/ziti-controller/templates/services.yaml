@@ -50,7 +50,7 @@ spec:
   {{- end }}
   ports:
     - port: {{ .Values.ctrlPlane.advertisedPort }}
-      targetPort: {{ .Values.ctrlPlane.advertisedPort }}
+      targetPort: {{ .Values.ctrlPlane.containerPort }}
       protocol: TCP
       name: ctrl
       {{- if (eq $type "NodePort") }}
@@ -58,7 +58,7 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller-ctrl"
+    app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
 {{- if .Values.clientApi.service.enabled }}
@@ -114,7 +114,7 @@ spec:
   {{- end }}
   ports:
     - port: {{ .Values.clientApi.advertisedPort }}
-      targetPort: {{ .Values.clientApi.advertisedPort }}
+      targetPort: {{ .Values.clientApi.containerPort }}
       protocol: TCP
       name: client
       {{- if (eq $type "NodePort") }}
@@ -122,7 +122,7 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller-client"
+    app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
 {{- if .Values.managementApi.service.enabled }}
@@ -175,7 +175,7 @@ spec:
   {{- end }}
   ports:
     - port: {{ .Values.managementApi.advertisedPort }}
-      targetPort: {{ .Values.managementApi.advertisedPort }}
+      targetPort: {{ .Values.managementApi.containerPort }}
       protocol: TCP
       name: mgmt
       {{- if (eq $type "NodePort") }}
@@ -183,7 +183,7 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller-mgmt"
+    app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
 {{- if and .Values.prometheus.enabled  .Values.prometheus.service.enabled }}
@@ -236,7 +236,7 @@ spec:
   {{- end }}
   ports:
     - port: {{ .Values.prometheus.advertisedPort }}
-      targetPort: {{ .Values.prometheus.advertisedPort }}
+      targetPort: {{ .Values.prometheus.containerPort }}
       protocol: TCP
       name: prometheus
       {{- if (eq $type "NodePort") }}
@@ -244,5 +244,5 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller-prometheus"
+    app.kubernetes.io/component: "ziti-controller"
 {{- end }}

@@ -13,18 +13,6 @@ spec:
     matchLabels:
       {{- include "ziti-controller.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: "ziti-controller"
-      {{- if .Values.ctrlPlane.service.enabled }}
-      app.kubernetes.io/component: "ziti-controller-ctrl"
-      {{- end }}
-      {{- if .Values.clientApi.service.enabled }}
-      app.kubernetes.io/component: "ziti-controller-client"
-      {{- end }}
-      {{- if .Values.managementApi.service.enabled }}
-      app.kubernetes.io/component: "ziti-controller-mgmt"
-      {{- end }}
-      {{- if .Values.prometheus.service.enabled }}
-      app.kubernetes.io/component: "ziti-controller-prometheus"
-      {{- end }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -34,18 +22,6 @@ spec:
       labels:
         {{- include "ziti-controller.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: "ziti-controller"
-        {{- if .Values.ctrlPlane.service.enabled }}
-        app.kubernetes.io/component: "ziti-controller-ctrl"
-        {{- end }}
-        {{- if .Values.clientApi.service.enabled }}
-        app.kubernetes.io/component: "ziti-controller-client"
-        {{- end }}
-        {{- if .Values.managementApi.service.enabled }}
-        app.kubernetes.io/component: "ziti-controller-mgmt"
-        {{- end }}
-        {{- if .Values.prometheus.service.enabled }}
-        app.kubernetes.io/component: "ziti-controller-prometheus"
-        {{- end }}
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
