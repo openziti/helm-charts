@@ -232,13 +232,13 @@ data:
           # Specifies an API to bind to this webListener. Built-in APIs are
           #   - edge-management
           #   - edge-client
-          #   - fabric-management
+          #   - fabric
           - binding: edge-client
             options: { }
           {{- if (eq .Values.managementApi.service.enabled false) }}
           - binding: edge-management
             options: { }
-          - binding: fabric-management
+          - binding: fabric
             options: { }
           {{- end }}
       # name - required
@@ -298,14 +298,16 @@ data:
           # Specifies an API to bind to this webListener. Built-in APIs are
           #   - edge-management
           #   - edge-client
-          #   - fabric-management
+          #   - fabric
+          - binding: edge-client
+            options: { }
           - binding: edge-management
             # options - arg optional/required
             # This section is used to define values that are specified by the API they are associated with.
             # These settings are per API. The example below is for the 'edge-api' and contains both optional values and
             # required values.
             options: { }
-          - binding: fabric-management
+          - binding: fabric
             options: { }
     {{- end }}
     {{- if (eq .Values.prometheus.enabled true) }}
