@@ -34,7 +34,7 @@ clientApi:
     annotations: {}
 
 managementApi:
-  containerPort: &mgmtPort 1280
+  containerPort: &mgmtPort 1281
   advertisedPort: *mgmtPort
   service:
     enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi

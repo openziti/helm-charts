@@ -238,6 +238,8 @@ data:
           {{- if (eq .Values.managementApi.service.enabled false) }}
           - binding: edge-management
             options: { }
+          - binding: fabric-management
+            options: { }
           {{- end }}
       # name - required
     {{- if (eq .Values.managementApi.service.enabled true) }}
@@ -303,9 +305,7 @@ data:
             # These settings are per API. The example below is for the 'edge-api' and contains both optional values and
             # required values.
             options: { }
-          - binding: fabric
-            options: { }
-          - binding: edge-client
+          - binding: fabric-management
             options: { }
     {{- end }}
     {{- if (eq .Values.prometheus.enabled true) }}
