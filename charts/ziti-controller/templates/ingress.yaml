@@ -23,9 +23,16 @@ spec:
       {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- end }}
-  defaultBackend:
-    service:
-      name: {{ include "ziti-controller.fullname" . }}-client
-      port:
-        number: {{ .Values.clientApi.port }}
+  rules:
+    - host: {{ .Values.clientApi.advertisedHost }}
+      http:
+        paths:
+          # This rule gives internal access to the pingaccess admin services.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-controller.fullname" . }}-client
+                port:
+                  number: {{ .Values.clientApi.advertisedPort }}
 {{- end }}

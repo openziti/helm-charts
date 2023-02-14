@@ -86,14 +86,14 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
           - name: client
-            containerPort: {{ .Values.clientApi.port }}
+            containerPort: {{ .Values.clientApi.containerPort }}
           - name: controller
-            containerPort: {{ .Values.ctrlPlane.port }}
+            containerPort: {{ .Values.ctrlPlane.containerPort }}
           - name: mgmt-api
-            containerPort: {{ .Values.managementApi.port }}
+            containerPort: {{ .Values.managementApi.containerPort }}
           {{- if .Values.prometheus.enabled }}
           - name: prometheus
-            containerPort: {{ .Values.prometheus.port }}
+            containerPort: {{ .Values.prometheus.containerPort }}
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

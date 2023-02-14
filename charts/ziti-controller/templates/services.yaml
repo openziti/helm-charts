@@ -49,12 +49,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.ctrlPlane.port }}
-      targetPort: {{ .Values.ctrlPlane.port }}
+    - port: {{ .Values.ctrlPlane.advertisedPort }}
+      targetPort: {{ .Values.ctrlPlane.advertisedPort }}
       protocol: TCP
       name: ctrl
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.ctrlPlane.port }}
+      nodePort: {{ .Values.ctrlPlane.advertisedPort }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
@@ -113,12 +113,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.clientApi.port }}
-      targetPort: {{ .Values.clientApi.port }}
+    - port: {{ .Values.clientApi.advertisedPort }}
+      targetPort: {{ .Values.clientApi.advertisedPort }}
       protocol: TCP
       name: client
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.clientApi.port }}
+      nodePort: {{ .Values.clientApi.advertisedPort }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
@@ -174,12 +174,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.managementApi.port }}
-      targetPort: {{ .Values.managementApi.port }}
+    - port: {{ .Values.managementApi.advertisedPort }}
+      targetPort: {{ .Values.managementApi.advertisedPort }}
       protocol: TCP
       name: mgmt
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.managementApi.port }}
+      nodePort: {{ .Values.managementApi.advertisedPort }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
@@ -235,12 +235,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.prometheus.port }}
-      targetPort: {{ .Values.prometheus.port }}
+    - port: {{ .Values.prometheus.advertisedPort }}
+      targetPort: {{ .Values.prometheus.advertisedPort }}
       protocol: TCP
       name: prometheus
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.prometheus.port }}
+      nodePort: {{ .Values.prometheus.advertisedPort }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}

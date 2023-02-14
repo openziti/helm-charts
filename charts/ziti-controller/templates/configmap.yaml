@@ -100,7 +100,7 @@ data:
       #maxOutstandingConnects: 16
       # the number of milliseconds to wait before a hello synchronization fails and closes the connection (30ms to 60000ms, default: 1000ms)
       #connectTimeoutMs:       1000
-      listener:                tls:0.0.0.0:{{ .Values.ctrlPlane.port }}
+      listener:                tls:0.0.0.0:{{ .Values.ctrlPlane.containerPort }}
 
 
     # the endpoint that management tools connect to the controller over.
@@ -139,8 +139,8 @@ data:
         sessionTimeout: 30m
         # address - required
         # The default address (host:port) to use for enrollment for the Client API. This value must match one of the addresses
-        # defined in this Controller.WebListener.'s bindPoints.
-        address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.clientApi.port }}
+        # defined in this Controller.WebListener's bindPoints.
+        address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
 
       # This section is used to define option that are used during enrollment of Edge Routers, Ziti Edge Identities.
       enrollment:
@@ -186,13 +186,13 @@ data:
         bindPoints:
           #interface - required
           # A host:port string on which network interface to listen on. 0.0.0.0 will listen on all interfaces
-          - interface: 0.0.0.0:{{ .Values.clientApi.port }}
+          - interface: 0.0.0.0:{{ .Values.clientApi.containerPort }}
             # address - required
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
-            address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.clientApi.port }}
-            # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
+            address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
         {{- if (eq .Values.webBindingPki.enabled true) }}
+        # Allows the webListener to have a specific identity instead of defaulting to the ctrl plane 'identity' section.
         identity:
           #ClientCertKeyReuseIssue
           cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
@@ -251,11 +251,11 @@ data:
         bindPoints:
           #interface - required
           # A host:port string on which network interface to listen on. 0.0.0.0 will listen on all interfaces
-          - interface: 0.0.0.0:{{ .Values.managementApi.port }}
+          - interface: 0.0.0.0:{{ .Values.managementApi.containerPort }}
             # address - required
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
-            address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.managementApi.port }}
+            address: {{ .Values.managementApi.advertisedHost | default (printf "%s-mgmt.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}:{{ .Values.managementApi.advertisedPort }}
             # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
         {{- if (eq .Values.webBindingPki.enabled true) }}
         identity:
@@ -314,12 +314,12 @@ data:
         bindPoints:
           #interface - required
           # A host:port string on which network interface to listen on. 0.0.0.0 will listen on all interfaces
-          - interface: 0.0.0.0:{{ .Values.prometheus.port }}
+          - interface: 0.0.0.0:{{ .Values.prometheus.containerPort }}
 
             # address - required
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
-            address: {{ required "You must set .Values.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file controller.host=controller01.zitinetwork.example.org to your Helm command" .Values.advertisedHost }}:{{ .Values.prometheus.port }}
+            address: {{ .Values.prometheus.advertisedHost | default (printf "%s-prometheus.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}:{{ .Values.prometheus.advertisedPort }}
         {{- if (eq .Values.webBindingPki.enabled true) }}
         identity:
           #ClientCertKeyReuseIssue

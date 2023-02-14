@@ -116,8 +116,8 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
     {{- end }}
-    {{- if .Values.advertisedHost }}
-    - {{ .Values.advertisedHost }}
+    {{- if .Values.managementApi.advertisedHost }}
+    - {{ .Values.managementApi.advertisedHost }}
     {{- end }}
   # uris:
   #   - spiffe://cluster.local/ns/sandbox/sa/example
