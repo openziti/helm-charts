@@ -58,7 +58,7 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
+    app.kubernetes.io/component: "ziti-controller-ctrl"
 {{- end }}
 
 {{- if .Values.clientApi.service.enabled }}
@@ -122,7 +122,7 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
+    app.kubernetes.io/component: "ziti-controller-client"
 {{- end }}
 
 {{- if .Values.managementApi.service.enabled }}
@@ -183,7 +183,7 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
+    app.kubernetes.io/component: "ziti-controller-mgmt"
 {{- end }}
 
 {{- if and .Values.prometheus.enabled  .Values.prometheus.service.enabled }}
@@ -244,5 +244,5 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
+    app.kubernetes.io/component: "ziti-controller-prometheus"
 {{- end }}
