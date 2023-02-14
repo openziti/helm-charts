@@ -102,9 +102,20 @@ spec:
   dnsNames:
     - localhost
     - ziti-controller
-    - {{ include "ziti-controller.fullname" . }}
-    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}
-    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+    {{- if .Values.clientApi.service.enabled }}
+    - {{ include "ziti-controller.fullname" . }}-client
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
+    {{- end }}
+    {{- if .Values.managementApi.service.enabled }}
+    - {{ include "ziti-controller.fullname" . }}-mgmt
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
+    {{- end }}
     {{- if .Values.advertisedHost }}
     - {{ .Values.advertisedHost }}
     {{- end }}

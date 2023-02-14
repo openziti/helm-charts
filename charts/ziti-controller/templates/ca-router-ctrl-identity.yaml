@@ -111,9 +111,25 @@ spec:
   dnsNames:
     - localhost
     - ziti-controller
-    - {{ include "ziti-controller.fullname" . }}
-    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}
-    - {{ include "ziti-controller.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+    - {{ include "ziti-controller.fullname" . }}-ctrl
+    - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc
+    - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster.local
+    {{- if and .Values.clientApi.service.enabled (not .Values.webBindingPki.enabled) }}
+    - {{ include "ziti-controller.fullname" . }}-client
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
+    {{- end }}
+    {{- if and .Values.managementApi.service.enabled (not .Values.webBindingPki.enabled)}}
+    - {{ include "ziti-controller.fullname" . }}-mgmt
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
+    {{- end }}
     {{- if .Values.advertisedHost }}
     - {{ .Values.advertisedHost }}
     {{- end }}

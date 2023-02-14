@@ -25,6 +25,9 @@ clientApi:
   service:
     enabled: true
     type: ClusterIP  # this is the only service that really needs to be exposed
+  ingress:
+    enabled: false
+    annotations: {}
 
 managementApi:
   port: 1281
