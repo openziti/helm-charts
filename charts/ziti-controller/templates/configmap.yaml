@@ -149,7 +149,7 @@ data:
         # a signing certificate from the PKI that the Ziti environment is using to sign certificates. The signingCert.cert
         # will be added to the /.well-known CA store that is used to bootstrap trust with the Ziti Controller.
         signingCert:
-          {{- if (eq .Values.edgeSignerPki.enabled true) }}
+          {{- if .Values.edgeSignerPki.enabled }}
           cert: {{ .Values.configMountDir }}/edge-signer/tls.crt
           key:  {{ .Values.configMountDir }}/edge-signer/tls.key
           {{- else }}
@@ -191,7 +191,7 @@ data:
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
             address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
-        {{- if (eq .Values.webBindingPki.enabled true) }}
+        {{- if .Values.webBindingPki.enabled }}
         # Allows the webListener to have a specific identity instead of defaulting to the ctrl plane 'identity' section.
         identity:
           #ClientCertKeyReuseIssue
@@ -235,14 +235,14 @@ data:
           #   - fabric
           - binding: edge-client
             options: { }
-          {{- if (eq .Values.managementApi.service.enabled false) }}
+          {{- if .Values.managementApi.service.enabled }}
           - binding: edge-management
             options: { }
           - binding: fabric
             options: { }
           {{- end }}
       # name - required
-    {{- if (eq .Values.managementApi.service.enabled true) }}
+    {{- if .Values.managementApi.service.enabled }}
       # Provides a name for this listener, used for logging output. Not required to be unique, but is highly suggested.
       - name: management
         # bindPoints - required
@@ -259,7 +259,7 @@ data:
             # response content that requires full host:port/path addresses.
             address: {{ .Values.managementApi.advertisedHost | default (printf "%s-mgmt.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}:{{ .Values.managementApi.advertisedPort }}
             # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
-        {{- if (eq .Values.webBindingPki.enabled true) }}
+        {{- if .Values.webBindingPki.enabled }}
         identity:
           #ClientCertKeyReuseIssue
           cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
@@ -302,15 +302,11 @@ data:
           - binding: edge-client
             options: { }
           - binding: edge-management
-            # options - arg optional/required
-            # This section is used to define values that are specified by the API they are associated with.
-            # These settings are per API. The example below is for the 'edge-api' and contains both optional values and
-            # required values.
             options: { }
           - binding: fabric
             options: { }
     {{- end }}
-    {{- if (eq .Values.prometheus.enabled true) }}
+    {{- if .Values.prometheus.service.enabled }}
       # Binding for prometheus https://openziti.github.io/docs/core-concepts/metrics/prometheus
       - name: prometheus-metrics
         bindPoints:
@@ -322,7 +318,7 @@ data:
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
             address: {{ .Values.prometheus.advertisedHost | default (printf "%s-prometheus.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}:{{ .Values.prometheus.advertisedPort }}
-        {{- if (eq .Values.webBindingPki.enabled true) }}
+        {{- if .Values.webBindingPki.enabled }}
         identity:
           #ClientCertKeyReuseIssue
           cert:        {{ .Values.configMountDir }}/web-identity/tls.crt

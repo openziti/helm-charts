@@ -41,7 +41,6 @@ managementApi:
     type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
 
 prometheus:
-  enabled: true
   containerPort: &prometheusPort 9090
   advertisedPort: *prometheusPort
   service:
