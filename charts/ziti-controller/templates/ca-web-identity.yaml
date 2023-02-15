@@ -108,6 +108,9 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
+    {{- if .Values.clientApi.advertisedHost }}
+    - {{ .Values.clientApi.advertisedHost }}
+    {{- end }}
     {{- end }}
     {{- if .Values.managementApi.service.enabled }}
     - {{ include "ziti-controller.fullname" . }}-mgmt

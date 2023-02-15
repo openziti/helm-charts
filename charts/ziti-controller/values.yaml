@@ -18,6 +18,9 @@ ctrlPlane:
   service:
     enabled: true
     type: ClusterIP  # this can be cluster-internal unless there are routers outside the cluster
+  ingress:
+    enabled: yes
+    annotations: {}
   # issuer:
   #   kind: Issuer
   #   name: my-alternative-namespaced-issuer

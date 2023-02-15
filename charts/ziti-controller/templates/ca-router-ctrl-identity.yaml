@@ -116,22 +116,24 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster.local
+    - {{ .Values.ctrlPlane.advertisedHost }}
     {{- if and .Values.clientApi.service.enabled (not .Values.webBindingPki.enabled) }}
     - {{ include "ziti-controller.fullname" . }}-client
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
+    - {{ .Values.clientApi.advertisedHost }}
     {{- end }}
-    {{- if and .Values.managementApi.service.enabled (not .Values.webBindingPki.enabled)}}
+    {{- if and .Values.managementApi.service.enabled (not .Values.webBindingPki.enabled) }}
     - {{ include "ziti-controller.fullname" . }}-mgmt
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
+    {{- if .Values.managementApi.advertisedHost }}
+    - {{ .Values.managementApi.advertisedHost }}
     {{- end }}
-    {{- if .Values.ctrlPlane.advertisedHost }}
-    - {{ .Values.ctrlPlane.advertisedHost }}
     {{- end }}
   # uris:
   #   - spiffe://cluster.local/ns/sandbox/sa/example
