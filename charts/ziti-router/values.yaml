@@ -6,10 +6,9 @@
 controller:
   endpoint: ""
 
-advertise:
-  # common adviertise-host for transport and edge - can also be specified individually
-  # via `edge.host` and `transport.host`
-  host: edge1.k3s.mira.qrk.us
+# common advertise-host for transport and edge - can also be specified individually
+# via `edge.advertisedHost` and `transport.advertisedHost`
+# advertisedHost: router11.ziti.example.com
 
 
 # Certificate signing request basic data
@@ -28,26 +27,34 @@ csr:
   #     - "192.168.10.0"
 
 
+# listen for router links
 transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
   enabled: true
-  port: 10080
+  containerPort: 6004
+  # advertisedHost: router11-links.ziti.example.com
+  advertisedPort: 443
   service:
     enabled: true
-    type: LoadBalancer
+    type: ClusterIP
     labels: {}
     annotations: {}
+  ingress:
+    enabled: false
 
-# is the edge enabled?
+# listen for edge clients
 edge:
   enabled: true
-  port: 1290
-  # host: <host/ip> this edge can be resolved from clients
+  containerPort: 3022
+  # advertisedHost: router11-edge.ziti.example.com
+  advertisedPort: 443
   service:
-    # -- Service that is created to access the edge
     enabled: true
-    type: LoadBalancer
+    type: ClusterIP
     labels: {}
     annotations: {}
+  ingress:
+    enabled: false
+
 tunnel:
   mode: host # host | tproxy | proxy | none
   resolver: none  # udp://192.168.10.11:53

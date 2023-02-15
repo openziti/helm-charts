@@ -29,36 +29,38 @@ data:
   {{ .Values.configFile }}: |-
     v: 3
 
-    identity:        # this dir is a var because the value is a writeable tmp dir during enrollment and a read-only mountpoint when running
-        cert:        ${ZITI_ROUTER_IDENTITY_DIR}/client.crt
-        server_cert: ${ZITI_ROUTER_IDENTITY_DIR}/tls.crt
-        key:         ${ZITI_ROUTER_IDENTITY_DIR}/tls.key
-        ca:          ${ZITI_ROUTER_IDENTITY_DIR}/ca.crt
+    # this dir is a var because the value is a writeable tmp dir during
+    #  enrollment and a read-only mountpoint when running
+    identity:
+      cert:        ${ZITI_ROUTER_IDENTITY_DIR}/client.crt
+      server_cert: ${ZITI_ROUTER_IDENTITY_DIR}/tls.crt
+      key:         ${ZITI_ROUTER_IDENTITY_DIR}/tls.key
+      ca:          ${ZITI_ROUTER_IDENTITY_DIR}/ca.crt
 
     ctrl:
-        # router control plane API (:6262)
-        endpoint:    tls:{{ required "You must set .Values.controller.endpoint to the control plane advertised address. Try adding --set-file controller.endpoint=ziti-controller.example.com:6262 to your Helm command" .Values.controller.endpoint }}
+      # router control plane API (:6262)
+      endpoint:    tls:{{ required "You must set .Values.ctrl.endpoint to the control plane advertised address. Try adding --set-file ctrl.endpoint=ziti-controller.example.com:6262 to your Helm command" .Values.ctrl.endpoint }}
 
     link:
-        dialers:
-          - binding: transport
-        # When 'transport' is disabled this means we are a 'private' router
-      {{- if (ne .Values.transport.enabled false ) }}
-        listeners:
-          - binding:          transport
-            bind:             tls:0.0.0.0:{{ .Values.transport.port }}
-            advertise:        tls:{{ required "You must set either .Values.transport.host or .Values.advertise.host to the <host> to advertise for this router as transport. Try adding --set-file router.advertise.host=router.zitinetwork.example.org to your Helm command" (coalesce .Values.transport.host .Values.advertise.host) }}:{{ .Values.transport.port }}
-            options:
-              outQueueSize:   4
+      dialers:
+        - binding: transport
+      # When 'transport' is disabled this means we are a 'private' router
+      {{- if .Values.transport.enabled }}
+      listeners:
+        - binding:          transport
+          bind:             tls:0.0.0.0:{{ .Values.transport.containerPort }}
+          advertise:        tls:{{ required "You must set either .Values.transport.advertisedHost or .Values.advertisedHost to the address to advertise for this router's transport listener. Try adding --set-file .Values.advertisedHost=router11-xport.ziti.example.org to your Helm command" (coalesce .Values.transport.advertisedHost .Values.advertisedHost) }}:{{ .Values.transport.advertisedPort }}
+          options:
+            outQueueSize:   4
       {{- end }}
     {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "none" )) (eq .Values.edge.enabled true) }}
     listeners:
     # bindings of edge and tunnel requires an "edge" section below
     {{- if (eq .Values.edge.enabled true) }}
       - binding: edge
-        address: tls:0.0.0.0:{{ .Values.edge.port }}
+        address: tls:0.0.0.0:{{ .Values.edge.containerPort }}
         options:
-            advertise: {{ required "You must set .Values.edge.host to the <host/ip> to advertise for this router. Try adding --set edge.host=router.zitinetwork.example.org to your Helm command" .Values.edge.host }}:{{ .Values.edge.port }}
+            advertise: {{ required "You must set .Values.edge.advertisedHost to the <host/ip> to advertise for this router. Try adding --set edge.advertisedHost=router.zitinetwork.example.org to your Helm command" .Values.edge.advertisedHost }}:{{ .Values.edge.advertisedPort }}
             connectTimeoutMs: 1000
             getSessionTimeout: 60
     {{- end }}
@@ -97,14 +99,14 @@ data:
                 dns:
                   {{- if eq (default false .Values.csr.sans.noDefaults) false }}
                     - localhost
-                    {{- if .Values.advertise.host }}
-                    - {{ .Values.advertise.host }}
+                    {{- if .Values.advertisedHost }}
+                    - {{ .Values.advertisedHost }}
                     {{- end }}
-                    {{- if and .Values.edge.enabled .Values.edge.host }}
-                    - {{ .Values.edge.host }}
+                    {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
+                    - {{ .Values.edge.advertisedHost }}
                     {{- end }}
-                    {{- if and .Values.transport.enabled .Values.transport.host }}
-                    - {{ .Values.transport.host }}
+                    {{- if and .Values.transport.enabled .Values.transport.advertisedHost }}
+                    - {{ .Values.transport.advertisedHost }}
                     {{- end }}
                   {{- end }}
                   {{- range .Values.csr.sans.dns }}

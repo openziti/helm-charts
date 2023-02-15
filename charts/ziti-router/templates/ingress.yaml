@@ -1,0 +1,77 @@
+{{- if .Values.edge.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-edge
+  labels:
+  {{- include "ziti-router.labels" . | nindent 4 }}
+  {{- with .Values.edge.ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.edge.ingress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.edge.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.edge.ingress.ingressClassName }}
+  {{- end }}
+  {{- if .Values.edge.ingress.tls }}
+  tls:
+    {{- with .Values.edge.ingress.tls }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.edge.advertisedHost }}
+      http:
+        paths:
+          # This rule gives internal access to the pingaccess admin services.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-router.fullname" . }}-edge
+                port:
+                  number: {{ .Values.edge.advertisedPort }}
+{{- end }}
+
+{{- if .Values.transport.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-transport
+  labels:
+  {{- include "ziti-router.labels" . | nindent 4 }}
+  {{- with .Values.transport.ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.transport.ingress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.transport.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.transport.ingress.ingressClassName }}
+  {{- end }}
+  {{- if .Values.transport.ingress.tls }}
+  tls:
+    {{- with .Values.transport.ingress.tls }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.transport.advertisedHost }}
+      http:
+        paths:
+          # This rule gives internal access to the pingaccess admin services.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-router.fullname" . }}-transport
+                port:
+                  number: {{ .Values.transport.advertisedPort }}
+{{- end }}

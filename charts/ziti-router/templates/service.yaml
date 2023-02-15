@@ -47,12 +47,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.edge.port }}
-      targetPort: {{ .Values.edge.port }}
+    - port: {{ .Values.edge.advertisedPort }}
+      targetPort: {{ .Values.edge.containerPort }}
       protocol: TCP
       name: edge
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.edge.port }}
+      nodePort: {{ .Values.edge.advertisedPort }}
       {{- end }}
   selector:
     {{- include "ziti-router.selectorLabels" . | nindent 4 }}
@@ -108,8 +108,8 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.transport.port }}
-      targetPort: {{ .Values.transport.port }}
+    - port: {{ .Values.transport.advertisedPort }}
+      targetPort: {{ .Values.transport.containerPort }}
       protocol: TCP
       name: transport
       {{- if (eq $type "NodePort") }}
