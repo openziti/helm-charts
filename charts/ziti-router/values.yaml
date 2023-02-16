@@ -35,7 +35,7 @@ transport:  # https://docs.openziti.io/docs/reference/configuration/router/#tran
   advertisedPort: 443
   service:
     enabled: true
-    type: ClusterIP
+    type: LoadBalancer
     labels: {}
     annotations: {}
   ingress:
@@ -49,7 +49,7 @@ edge:
   advertisedPort: 443
   service:
     enabled: true
-    type: ClusterIP
+    type: LoadBalancer
     labels: {}
     annotations: {}
   ingress:

@@ -14,12 +14,12 @@
 ctrlPlane:
   containerPort: 6262
   # advertisedHost: ctrl.example.com
-  advertisedPort: 443
+  advertisedPort: 6262
   service:
     enabled: true
     type: ClusterIP  # this can be cluster-internal unless there are routers outside the cluster
   ingress:
-    enabled: yes
+    enabled: false
     annotations: {}
   # issuer:
   #   kind: Issuer
@@ -28,10 +28,10 @@ ctrlPlane:
 clientApi:
   containerPort: 1280
   # advertisedHost: ctrl.example.com
-  advertisedPort: 443
+  advertisedPort: 1280
   service:
     enabled: true
-    type: ClusterIP  # this is the only service that really needs to be exposed
+    type: LoadBalancer  # this is the only service that really needs to be exposed
   ingress:
     enabled: false
     annotations: {}
@@ -47,7 +47,7 @@ prometheus:
   containerPort: &prometheusPort 9090
   advertisedPort: *prometheusPort
   service:
-    enabled: true
+    enabled: false
     type: ClusterIP
 
 ca:
