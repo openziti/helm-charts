@@ -28,25 +28,26 @@ csr:
 
 
 # listen for router links
-transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
-  enabled: true
-  containerPort: 6004
-  # advertisedHost: router11-links.ziti.example.com
-  advertisedPort: 443
-  service:
+linkListeners:
+  transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
     enabled: true
-    type: LoadBalancer
-    labels: {}
-    annotations: {}
-  ingress:
-    enabled: false
+    containerPort: 6004
+    # advertisedHost: router11-links.ziti.example.com
+    advertisedPort: 6004
+    service:
+      enabled: true
+      type: LoadBalancer
+      labels: {}
+      annotations: {}
+    ingress:
+      enabled: false
 
 # listen for edge clients
 edge:
   enabled: true
   containerPort: 3022
   # advertisedHost: router11-edge.ziti.example.com
-  advertisedPort: 443
+  advertisedPort: 3022
   service:
     enabled: true
     type: LoadBalancer
@@ -84,7 +85,7 @@ image:
   # deployment template because Helm values can not be directly referenced
   # inside the Values.yaml file (because it's just a data structure, not a
   # template).
-  args: [ "{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
+  args: [ "{{ .Values.configMountDir }}/{{ .Values.configFile }}"]
 
 dnsPolicy: ClusterFirstWithHostNet
 

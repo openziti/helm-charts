@@ -37,7 +37,7 @@ spec:
                   number: {{ .Values.edge.advertisedPort }}
 {{- end }}
 
-{{- if .Values.transport.ingress.enabled }}
+{{- if .Values.linkListeners.transport.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -45,25 +45,25 @@ metadata:
   name: {{ include "ziti-router.fullname" . }}-transport
   labels:
   {{- include "ziti-router.labels" . | nindent 4 }}
-  {{- with .Values.transport.ingress.labels }}
+  {{- with .Values.linkListeners.transport.ingress.labels }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.transport.ingress.annotations }}
+  {{- with .Values.linkListeners.transport.ingress.annotations }}
   annotations:
   {{ toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.transport.ingress.ingressClassName }}
-  ingressClassName: {{ .Values.transport.ingress.ingressClassName }}
+  {{- if .Values.linkListeners.transport.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.linkListeners.transport.ingress.ingressClassName }}
   {{- end }}
-  {{- if .Values.transport.ingress.tls }}
+  {{- if .Values.linkListeners.transport.ingress.tls }}
   tls:
-    {{- with .Values.transport.ingress.tls }}
+    {{- with .Values.linkListeners.transport.ingress.tls }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ .Values.transport.advertisedHost }}
+    - host: {{ .Values.linkListeners.transport.advertisedHost }}
       http:
         paths:
           # This rule gives internal access to the pingaccess admin services.
@@ -73,5 +73,5 @@ spec:
               service:
                 name: {{ include "ziti-router.fullname" . }}-transport
                 port:
-                  number: {{ .Values.transport.advertisedPort }}
+                  number: {{ .Values.linkListeners.transport.advertisedPort }}
 {{- end }}

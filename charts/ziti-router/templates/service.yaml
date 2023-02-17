@@ -59,7 +59,7 @@ spec:
     app.kubernetes.io/component: "ziti-router"
 {{- end }}
 
-{{- if and .Values.transport.enabled  .Values.transport.service.enabled }}
+{{- if and .Values.linkListeners.transport.enabled  .Values.linkListeners.transport.service.enabled }}
 ---
 apiVersion: v1
 kind: Service
@@ -67,53 +67,53 @@ metadata:
   name: {{ include "ziti-router.fullname" . }}-transport
   labels:
   {{- include "ziti-router.labels" . | nindent 4 }}
-  {{- with .Values.transport.service.labels }}
+  {{- with .Values.linkListeners.transport.service.labels }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.transport.service.annotations }}
+  {{- with .Values.linkListeners.transport.service.annotations }}
   annotations:
   {{ toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- $type := default "ClusterIP" .Values.transport.service.type }}
+  {{- $type := default "ClusterIP" .Values.linkListeners.transport.service.type }}
   type: {{ $type }}
   {{- if eq $type "ClusterIP" }}
-  {{- with .Values.transport.service.clusterIP }}
+  {{- with .Values.linkListeners.transport.service.clusterIP }}
   clusterIP: {{ . }}
   {{- end }}
   {{- else if eq $type "LoadBalancer" }}
-  {{- with .Values.transport.service.loadBalancerIP }}
+  {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
   loadBalancerIP: {{ . }}
   {{- end }}
-  {{- with .Values.transport.service.externalTrafficPolicy }}
+  {{- with .Values.linkListeners.transport.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ . }}
   {{- end }}
-  {{- with .Values.transport.service.loadBalancerSourceRanges }}
+  {{- with .Values.linkListeners.transport.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- if .Values.transport.service.sessionAffinity }}
-  sessionAffinity: {{ .Values.transport.service.sessionAffinity }}
-  {{- with .Values.transport.service.sessionAffinityConfig }}
+  {{- if .Values.linkListeners.transport.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.linkListeners.transport.service.sessionAffinity }}
+  {{- with .Values.linkListeners.transport.service.sessionAffinityConfig }}
   sessionAffinityConfig:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- with .Values.transport.service.externalIPs }}
+  {{- with .Values.linkListeners.transport.service.externalIPs }}
   externalIPs:
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.transport.service.publishNotReadyAddresses }}
+  {{- with .Values.linkListeners.transport.service.publishNotReadyAddresses }}
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.transport.advertisedPort }}
-      targetPort: {{ .Values.transport.containerPort }}
+    - port: {{ .Values.linkListeners.transport.advertisedPort }}
+      targetPort: {{ .Values.linkListeners.transport.containerPort }}
       protocol: TCP
       name: transport
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.transport.port }}
+      nodePort: {{ .Values.linkListeners.transport.port }}
       {{- end }}
   selector:
     {{- include "ziti-router.selectorLabels" . | nindent 4 }}

@@ -45,11 +45,11 @@ data:
       dialers:
         - binding: transport
       # When 'transport' is disabled this means we are a 'private' router
-      {{- if .Values.transport.enabled }}
+      {{- if .Values.linkListeners.transport.enabled }}
       listeners:
         - binding:          transport
-          bind:             tls:0.0.0.0:{{ .Values.transport.containerPort }}
-          advertise:        tls:{{ required "You must set either .Values.transport.advertisedHost or .Values.advertisedHost to the address to advertise for this router's transport listener. Try adding --set-file .Values.advertisedHost=router11-xport.ziti.example.org to your Helm command" (coalesce .Values.transport.advertisedHost .Values.advertisedHost) }}:{{ .Values.transport.advertisedPort }}
+          bind:             tls:0.0.0.0:{{ .Values.linkListeners.transport.containerPort }}
+          advertise:        tls:{{ required "You must set either .Values.linkListeners.transport.advertisedHost or .Values.advertisedHost to the address to advertise for this router's transport listener. Try adding --set-file .Values.advertisedHost=router11-xport.ziti.example.org to your Helm command" (coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost) }}:{{ .Values.linkListeners.transport.advertisedPort }}
           options:
             outQueueSize:   4
       {{- end }}
@@ -105,8 +105,8 @@ data:
                     {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
                     - {{ .Values.edge.advertisedHost }}
                     {{- end }}
-                    {{- if and .Values.transport.enabled .Values.transport.advertisedHost }}
-                    - {{ .Values.transport.advertisedHost }}
+                    {{- if and .Values.linkListeners.transport.enabled .Values.linkListeners.transport.advertisedHost }}
+                    - {{ .Values.linkListeners.transport.advertisedHost }}
                     {{- end }}
                   {{- end }}
                   {{- range .Values.csr.sans.dns }}
@@ -123,11 +123,11 @@ data:
                         {{- toYaml . | nindent 4 }}
                       {{- end }}
                   {{- end }}
-                  {{- if and .Values.transport.enabled  .Values.transport.service.enabled }}
-                      {{- with .Values.transport.service.loadBalancerIP }}
+                  {{- if and .Values.linkListeners.transport.enabled  .Values.linkListeners.transport.service.enabled }}
+                      {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
                     - {{ . }}
                       {{- end }}
-                      {{- with .Values.transport.service.externalIPs }}
+                      {{- with .Values.linkListeners.transport.service.externalIPs }}
                         {{- toYaml . | nindent 4 }}
                       {{- end }}
                   {{- end }}
