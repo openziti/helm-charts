@@ -1,5 +1,18 @@
 apiVersion: v1
 entries:
+  hello-toy:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2023-02-21T12:54:28.097276659-05:00"
+    description: 'Run the lightweight toy web server, optionally with a custom service
+      domain name in cluster DNS e.g.   helm install my-toy-release openziti/hello-toy
+      --set serviceDomainName=my-toy-service-dns '
+    digest: cf4d5eb6ec0ed51af99fa5878bda7f7b751d8673ff125eec8ce18d104b35a310
+    name: hello-toy
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/hello-toy-1.3.0/hello-toy-1.3.0.tgz
+    version: 1.3.0
   ziti-host:
   - apiVersion: v2
     appVersion: 0.20.18
@@ -12,4 +25,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.4/ziti-host-0.3.4.tgz
     version: 0.3.4
-generated: "2023-02-09T20:47:35.132243964Z"
+generated: "2023-02-21T12:54:28.09728102-05:00"
