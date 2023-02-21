@@ -43,7 +43,7 @@ helm install httpbinz-release1 openziti/httpbin \
 
 ### `prometheus`
 
-The operation of this chart is described in [part 2 of the PrometheuZ tutorial](https://docs.openziti.io/blog/zitification/prometheus/part2/#deploying-prometheuz-1).
+The operation of this chart is described in [part 2 of the PrometheuZ tutorial](https://docs.openziti.io/blog/zitification/prometheus/part2/#deploying-prometheuz-1). This chart is not packaged for this Helm repo, but you can work with it in a Git working copy as shown in the example.
 
 ```bash
 helm install prometheuz ./charts/prometheus \
