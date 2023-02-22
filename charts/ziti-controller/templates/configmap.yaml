@@ -127,7 +127,7 @@ data:
         # address - required
         # The default address (host:port) to use for enrollment for the Client API. This value must match one of the addresses
         # defined in this Controller.WebListener's bindPoints.
-        address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
+        address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
 
       # This section is used to define option that are used during enrollment of Edge Routers, Ziti Edge Identities.
       enrollment:
@@ -177,7 +177,7 @@ data:
             # address - required
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
-            address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set-file clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
+            address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
         {{- if .Values.webBindingPki.enabled }}
         # Allows the webListener to have a specific identity instead of defaulting to the ctrl plane 'identity' section.
         identity:
