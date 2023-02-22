@@ -1,0 +1,18 @@
+name: Generate helm docs
+on:
+  - pull_request
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Render helm docs inside the README.md and push changes back to PR branch
+      uses: shaybentk/helm-docs-action@v0.0.1
+      with:
+        # search is recursive, so add to this comma-sep list until all charts
+        # have templates, then change to ./charts
+        working-dir: ./charts/ziti-controller
+        git-push: "true"
