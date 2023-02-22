@@ -1,9 +1,18 @@
 
-# ziti-controller
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+{{ template "chart.badgesSection" . }}
 
-Host OpenZiti controller on your cluster
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
 
 ## Overview
 
@@ -27,7 +36,7 @@ A default admin user and password will be generated and saved to a secret during
 ```bash
 kubectl get secret \
     -n ziti-controller ziti-controller-minimal1-admin-secret \
-    -o go-template='{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}'
+    -o go-template='{{`{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}`}}'
 ```
 
 You may log in the `ziti` CLI with one command or omit the `-p` part to prompt:
@@ -38,7 +47,7 @@ ziti edge login ziti-controller-minimal.example.com:1280 \
     -u admin \
     -p $(kubectl -n ziti-controller \
             get secrets ziti-controller-minimal1-admin-secret \
-            -o go-template='{{index .data "admin-password" | base64decode }}'
+            -o go-template='{{`{{index .data "admin-password" | base64decode }}`}}'
         )
 ```
 
@@ -46,7 +55,7 @@ ziti edge login ziti-controller-minimal.example.com:1280 \
 
 Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because it uses the client certificates of edge clients and routers. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
 
-This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/).
+This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/). 
 
 Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
 
@@ -133,69 +142,7 @@ edgeSignerPki:
 
 ## Values Reference
 
-## Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| affinity | object | `{}` |  |
-| ca.duration | string | `"87840h"` |  |
-| ca.renewBefore | string | `"720h"` |  |
-| cert.duration | string | `"87840h"` |  |
-| cert.renewBefore | string | `"720h"` |  |
-| clientApi.advertisedPort | int | `1280` |  |
-| clientApi.containerPort | int | `1280` |  |
-| clientApi.ingress.annotations | object | `{}` |  |
-| clientApi.ingress.enabled | bool | `false` |  |
-| clientApi.service.enabled | bool | `true` |  |
-| clientApi.service.type | string | `"LoadBalancer"` |  |
-| configFile | string | `"ziti-controller.yaml"` |  |
-| configMountDir | string | `"/etc/ziti"` |  |
-| ctrlPlane.advertisedPort | int | `6262` |  |
-| ctrlPlane.containerPort | int | `6262` |  |
-| ctrlPlane.ingress.annotations | object | `{}` |  |
-| ctrlPlane.ingress.enabled | bool | `false` |  |
-| ctrlPlane.service.enabled | bool | `true` |  |
-| ctrlPlane.service.type | string | `"ClusterIP"` |  |
-| ctrlPlaneCaDir | string | `"ctrl-plane-cas"` |  |
-| ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` |  |
-| dataMountDir | string | `"/persistent"` |  |
-| dbFile | string | `"ctrl.db"` |  |
-| edgeSignerPki.enabled | bool | `false` |  |
-| execMountDir | string | `"/usr/local/bin"` |  |
-| fullnameOverride | string | `""` |  |
-| image.args[0] | string | `"{{ .Values.configMountDir }}/{{ .Values.configFile }}"` |  |
-| image.args[1] | string | `"--verbose"` |  |
-| image.command[0] | string | `"ziti"` |  |
-| image.command[1] | string | `"controller"` |  |
-| image.command[2] | string | `"run"` |  |
-| image.pullPolicy | string | `"Always"` |  |
-| image.repository | string | `"openziti/ziti-controller"` |  |
-| initScriptFile | string | `"ziti-controller-init.bash"` |  |
-| managementApi.advertisedPort | int | `1281` |  |
-| managementApi.containerPort | int | `1281` |  |
-| managementApi.service.enabled | bool | `false` |  |
-| managementApi.service.type | string | `"ClusterIP"` |  |
-| mode | string | `"standalone"` |  |
-| nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
-| persistence.VolumeName | string | `""` |  |
-| persistence.accessMode | string | `"ReadWriteOnce"` |  |
-| persistence.annotations | object | `{}` |  |
-| persistence.enabled | bool | `true` |  |
-| persistence.existingClaim | string | `""` |  |
-| persistence.size | string | `"2Gi"` |  |
-| persistence.storageClass | string | `""` |  |
-| podAnnotations | object | `{}` |  |
-| podSecurityContext.fsGroup | int | `65534` |  |
-| prometheus.advertisedPort | int | `9090` |  |
-| prometheus.containerPort | int | `9090` |  |
-| prometheus.service.enabled | bool | `false` |  |
-| prometheus.service.type | string | `"ClusterIP"` |  |
-| replicas | int | `1` |  |
-| resources | object | `{}` |  |
-| securityContext | object | `{}` |  |
-| tolerations | list | `[]` |  |
-| webBindingPki.enabled | bool | `false` |  |
+{{ template "chart.valuesSection" . }}
 
 ## TODO's
 
