@@ -9,9 +9,9 @@ Host an OpenZiti controller in Kubernetes
 
 | Repository | Name | Version |
 |------------|------|---------|
-|  | cert-manager | ~1.11.0 |
-|  | ingress-nginx | ~4.5.2 |
-|  | trust-manager | ~0.4.0 |
+| https://charts.jetstack.io | cert-manager | ~1.11.0 |
+| https://charts.jetstack.io | trust-manager | ~0.4.0 |
+| https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.5.2 |
 
 Note that ingress-nginx is not strictly required, but the chart is parameterized to allow for conveniently declaring pass-through TLS.
 
@@ -19,18 +19,46 @@ Note that ingress-nginx is not strictly required, but the chart is parameterized
 
 This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. Delete the controller pod after an upgrade for the new controller configuration to take effect.
 
+## Requirements
+
+This chart requires Certificate, Issuer, and Bundle resources to be applied before installing the chart. Sub-charts `cert-manager`, and `trust-manager` will not be installed automatically, but their values may serve as a reference.
+
+```bash
+# subscribe to the cert-manager repo
+helm repo add cert-manager https://charts.jetstack.io
+
+# install cert-manager with CRDs
+helm install \
+    --namespace cert-manager --create-namespace --generate-name \
+    cert-manager/cert-manager \
+        --set installCRDs=true
+
+# create the namespace where ziti-controller will be installed
+kubectl create namespace ziti-controller
+
+# install trust-manager with trusted namespace where ziti-controller will be installed
+helm install \
+    --namespace cert-manager --generate-name \
+    cert-manager/trust-manager \
+        --set app.trust.namespace=ziti-controller
+```
+
 ## Minimal Installation
 
 This first example shows a minimal installation for a Kubernetes distribution that provides TLS pass-through for Service type LoadBalancer, e.g., K3S, Minikube.
 
+You must supply one value when you install the chart.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+|clientApi.advertisedHost|string|nil|the DNS name that edge clients and routers will resolve to reach this controller's edge client API|
+
 ```bash
 helm install \
-    --create-namespace --namespace ziti-controller ziti-controller-minimal1 \
+    --namespace ziti-controller ziti-controller-minimal1 \
     openziti/ziti-controller \
         --set clientApi.advertisedHost="ziti-controller-minimal.example.com"
 ```
-
-The advertised DNS name must resolve to a reachable IP for all Ziti edge clients and routers.
 
 A default admin user and password will be generated and saved to a secret during installation. The credentials can be retrieved using this command:
 
@@ -54,7 +82,7 @@ ziti edge login ziti-controller-minimal.example.com:1280 \
 
 ## Managed Kubernetes Installation
 
-Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because it uses the client certificates of edge clients and routers. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
+Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because edge clients and routers authenticate with client certificates. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
 
 This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/).
 
@@ -82,14 +110,14 @@ Now install or upgrade this controller chart with your values file.
 
 ```bash
 helm install \
-    --create-namespace --namespace ziti-controller \
-    ziti-controller-managed1 openziti/ziti-controller \
+    --namespace ziti-controller ziti-controller-managed1 \
+    openziti/ziti-controller \
     --values /tmp/controller-values.yml
 ```
 
 ### Expose the Router Control Plane
 
-This is applicable if you have any routers outside the Ziti controller's cluster. You must configure pass-through TLS LoadBalancer or Ingress for the control plane service, i.e., "ctrl." Routers running in the same cluster as the controller can use the cluster service named `{controller release}-ctrl` (the ctrl endpoint). This example demonstrates a pass-through Ingress resource for `nginx-ingress`.
+This is applicable if you have any routers outside the Ziti controller's cluster. You must configure pass-through TLS LoadBalancer or Ingress for the control plane service. Routers running in the same cluster as the controller can use the cluster service named `{controller release}-ctrl` (the "ctrl" endpoint). This example demonstrates a pass-through Ingress resource for `nginx-ingress`.
 
 Merge this with your Helm chart values file before installing or upgrading.
 
@@ -115,9 +143,8 @@ You can split the client and management APIs into separate cluster services by s
 This Helm chart's values allow for both operational scenarios: combined and split. The default choice is to expose the combined client and management APIs as the cluster service named `{controller release}-client`, which is convenient because you can use the `ziti` CLI immediately. For additional security, you may shelter the management API by splitting these two sets of features, exposing them as separate API servers. After the split, you can access the management API in several ways:
 
 * running the web console inside the cluster,
-* hosting a Ziti service to make it available to your admin devices,
-* `kubectl port-forward`, or
-* configuring a restrictive cluster ingress to the service.
+* hosting a Ziti service, or
+* `kubectl port-forward`.
 
 ## Advanced PKI
 
@@ -127,9 +154,9 @@ Merge this with your Helm chart values file before installing or upgrading.
 
 ```yaml
 ctrlPlane:
-  issuer:
-    kind: ClusterIssuer
-    name: my-alternative-cluster-issuer
+    issuer:
+        kind: ClusterIssuer
+        name: my-alternative-cluster-issuer
 ```
 
 You may also configure the Ziti controller to use separate PKI roots of trust for its three main identities: control plane, edge signer, and web bindings.
@@ -138,7 +165,7 @@ For example, to use a separate CA for the edge signer function, merge this with 
 
 ```yaml
 edgeSignerPki:
-  enabled: true
+    enabled: true
 ```
 
 ## Values Reference
@@ -148,7 +175,8 @@ edgeSignerPki:
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
-| cert-manager.enabled | bool | `true` | required: install the cert-manager subchart |
+| cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
+| cert-manager.enabled | bool | `false` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
 | cert.duration | string | `"87840h"` | Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | Go time.Duration string format |
 | clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
@@ -162,8 +190,7 @@ edgeSignerPki:
 | configMountDir | string | `"/etc/ziti"` | read-only mountpoint where configFile and various read-only identity dirs are projected |
 | ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | ctrlPlane.advertisedPort | int | `6262` | cluster service, node port, load balancer, and ingress port |
-| ctrlPlane.alternativeIssuer.kind | string | `nil` | type of alternative issuer for the controller's identity: Issuer, ClusterIssuer |
-| ctrlPlane.alternativeIssuer.name | string | `nil` | metadata name of the alternative issuer |
+| ctrlPlane.alternativeIssuer | string | `nil` | kind and name of alternative issuer for the controller's identity |
 | ctrlPlane.containerPort | int | `6262` | cluster service target port on the container |
 | ctrlPlane.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
@@ -192,7 +219,7 @@ edgeSignerPki:
 | persistence.VolumeName | string | `nil` | PVC volume name |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |
-| persistence.enabled | bool | `true` | required: place a storage claim with for the BoltDB persistent volume |
+| persistence.enabled | bool | `true` | required: place a storage claim for the BoltDB persistent volume |
 | persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled=true. If defined, PVC must be created manually before volume will be bound. |
 | persistence.size | string | `"2Gi"` | 2GiB is enough for tens of thousands of entities, but feel free to make it larger |
 | persistence.storageClass | string | `nil` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
@@ -206,7 +233,8 @@ edgeSignerPki:
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| trust-manager.enabled | bool | `true` | required: install the trust-manager subchart |
+| trust-manager.app.trust.namespace | string | `"ziti-controller"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
+| trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
 | webBindingPki.enabled | bool | `false` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 
 ## TODO's
@@ -215,3 +243,5 @@ edgeSignerPki:
 * lower CA / Cert livetime; how to refresh stuff when Certs are updated?
 * Deploy Prometheus scraper configuration when `prometheus.enabled = true`
 * cert-manager allows issuing only one cert per key, i.e., ClientCertKeyReuseIssue prevents us from issuing a user cert and server cert backed by same private key, hence the controller config.yaml re-uses server certs in place of user certs to allow startup and testing to continue
+
+<!-- generated with helm-docs -->

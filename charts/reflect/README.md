@@ -1,16 +1,16 @@
+# reflect
 
-# httpbin
+![Version: 0.3.2](https://img.shields.io/badge/Version-0.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.4](https://img.shields.io/badge/AppVersion-0.0.4-informational?style=flat-square)
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+Deploy a pod running the Ziti-embeded version of go-httpbin, a REST API server.
 
-A Helm chart for Kubernetes
-
-This chart deploys a pod running the Ziti-embeded version of go-httpbin, a REST API server.
+This chart provides a simple byte echoing server for demos and testing Ziti. You may read more about how this app can be used in [the PrometheuZ tutorial](https://docs.openziti.io/blog/zitification/prometheus/part2/#deploy-reflectz-1).
 
 ```bash
-helm install httpbinz-release1 openziti/httpbin \
-     --set zitiServiceName="my httpbin service" \
-     --set-file zitiIdentity=./my-ziti-identity.json
+helm install reflectz openziti-test-kitchen/reflect \
+    --set-file reflectIdentity="/tmp/prometheus/kubeB.reflect.id.json" \
+    --set serviceName="kubeB.reflect.svc" \
+    --set prometheusServiceName="kubeB.reflect.scrape.svc"
 ```
 
 ## Values Reference
@@ -24,8 +24,8 @@ helm install httpbinz-release1 openziti/httpbin \
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"openziti/go-httpbin"` |  |
-| image.tag | string | `"latest"` |  |
+| image.repository | string | `"nfnpieros/reflect"` |  |
+| image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.annotations | object | `{}` |  |
 | ingress.className | string | `""` |  |
@@ -38,6 +38,7 @@ helm install httpbinz-release1 openziti/httpbin \
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
+| prometheusServiceName | string | `"metrics"` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | securityContext | object | `{}` |  |
@@ -46,6 +47,7 @@ helm install httpbinz-release1 openziti/httpbin \
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
+| serviceName | string | `"reflect"` |  |
 | tolerations | list | `[]` |  |
 
 <!-- generated with helm-docs -->

@@ -87,3 +87,5 @@ settings:
       url: https://quickstart-controller-mgmt:1281
       default: true
 ```
+
+<!-- generated with helm-docs -->
