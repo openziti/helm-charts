@@ -59,7 +59,7 @@ spec:
     app.kubernetes.io/component: "ziti-router"
 {{- end }}
 
-{{- if and .Values.linkListeners.transport.enabled  .Values.linkListeners.transport.service.enabled }}
+{{- if .Values.linkListeners.transport.service.enabled }}
 ---
 apiVersion: v1
 kind: Service

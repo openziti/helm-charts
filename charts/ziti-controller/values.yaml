@@ -182,7 +182,7 @@ highAvailability:
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
 persistence:
-  # -- required: place a storage claim with for the BoltDB persistent volume
+  # -- required: place a storage claim for the BoltDB persistent volume
   enabled: true
   # -- annotations for the PVC
   annotations: {}

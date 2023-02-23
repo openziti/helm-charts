@@ -45,7 +45,7 @@ data:
       dialers:
         - binding: transport
       # When 'transport' is disabled this means we are a 'private' router
-      {{- if .Values.linkListeners.transport.enabled }}
+      {{- if .Values.linkListeners.transport.service.enabled }}
       listeners:
         - binding:          transport
           bind:             tls:0.0.0.0:{{ .Values.linkListeners.transport.containerPort }}
@@ -105,7 +105,7 @@ data:
                     {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
                     - {{ .Values.edge.advertisedHost }}
                     {{- end }}
-                    {{- if and .Values.linkListeners.transport.enabled .Values.linkListeners.transport.advertisedHost }}
+                    {{- if and .Values.linkListeners.transport.service.enabled .Values.linkListeners.transport.advertisedHost }}
                     - {{ .Values.linkListeners.transport.advertisedHost }}
                     {{- end }}
                   {{- end }}
@@ -123,7 +123,7 @@ data:
                         {{- toYaml . | nindent 4 }}
                       {{- end }}
                   {{- end }}
-                  {{- if and .Values.linkListeners.transport.enabled  .Values.linkListeners.transport.service.enabled }}
+                  {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
                       {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
                     - {{ . }}
                       {{- end }}

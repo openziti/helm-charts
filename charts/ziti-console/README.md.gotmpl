@@ -1,0 +1,59 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Installation
+
+This chart deploys a pod running `ziti-console`, [the OpenZiti console](https://github.com/openziti/ziti-console/).
+
+After adding the charts repo to Helm then you may install the chart. You must supply some useful defaults, i.e. the name the console listens on. For a sample you might have a look into the [Quickstart Scenario](../../README.md#quickstart-scenario)
+
+This is this sample from the quickstart:
+
+```bash
+helm install quickstart-console ziti-console \
+     --set "ingress.enabled=true" \
+     --set "ingress.hosts[0].host=quickstart-console.<example.org>" \
+     --set "ingress.annotations.traefik\.ingress\.kubernetes\.io/router\.entrypoints=websecure" \
+     --set "ingress.labels.ingressMethod=traefik"
+    #  --set "settings.edgeControllers[0].name=quickstart" \
+    #  --set "settings.edgeControllers[0].url=https://quickstart-controller-mgmt:1281" \
+    #  --set "settings.edgeControllers[0].default=true" \
+
+```
+
+## Values Reference
+
+{{ template "chart.valuesTable" . }}
+
+## Sample `my-values.yaml`
+
+This is a minimal `values.yaml` sample for an k3s-enviroment using traefik as ingress loadbalancer:
+
+```yaml
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  labels:
+    ingressMethod: traefik
+  hosts:
+    - host: quickstart-console.<example.org>
+
+settings:
+  edgeControllers:
+    - name: quickstart
+      url: https://quickstart-controller-mgmt:1281
+      default: true
+```

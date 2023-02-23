@@ -120,57 +120,57 @@ helm upgrade \
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | `{}` |  |
-| configFile | string | `"ziti-router.yaml"` |  |
-| configMountDir | string | `"/etc/ziti/config"` |  |
-| csr.sans | object | `{}` |  |
+| affinity | object | `{}` | deployment template spec affinity |
+| configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
+| configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints statefile in same dir |
+| csr.sans.dns | list | `[]` | additional DNS SANs |
+| csr.sans.ip | list | `[]` | additional IP SANs |
 | ctrl.endpoint | string | `nil` | required control plane endpoint |
 | dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
-| edge.advertisedPort | int | `3022` |  |
-| edge.containerPort | int | `3022` |  |
-| edge.enabled | bool | `true` |  |
-| edge.ingress.enabled | bool | `false` |  |
-| edge.service.annotations | object | `{}` |  |
-| edge.service.enabled | bool | `true` |  |
-| edge.service.labels | object | `{}` |  |
-| edge.service.type | string | `"LoadBalancer"` |  |
-| enrollJwtFile | string | `"enrollment.jwt"` |  |
-| execMountDir | string | `"/usr/local/bin"` |  |
-| fullnameOverride | string | `""` |  |
-| identityMountDir | string | `"/etc/ziti/identity"` |  |
-| image.args[0] | string | `"{{ .Values.configMountDir }}/{{ .Values.configFile }}"` |  |
-| image.command[0] | string | `"ziti"` |  |
-| image.command[1] | string | `"router"` |  |
-| image.command[2] | string | `"run"` |  |
-| image.pullPolicy | string | `"Always"` |  |
-| image.pullSecrets | list | `[]` |  |
-| image.repository | string | `"openziti/ziti-router"` |  |
-| initScriptFile | string | `"ziti-router-init.bash"` |  |
-| linkListeners.transport.advertisedPort | int | `6004` |  |
-| linkListeners.transport.containerPort | int | `6004` |  |
-| linkListeners.transport.enabled | bool | `true` |  |
-| linkListeners.transport.ingress.enabled | bool | `false` |  |
-| linkListeners.transport.service.annotations | object | `{}` |  |
-| linkListeners.transport.service.enabled | bool | `true` |  |
-| linkListeners.transport.service.labels | object | `{}` |  |
-| linkListeners.transport.service.type | string | `"ClusterIP"` |  |
-| nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
-| persistence.VolumeName | string | `""` |  |
-| persistence.accessMode | string | `"ReadWriteOnce"` |  |
-| persistence.annotations | object | `{}` |  |
-| persistence.enabled | bool | `true` |  |
-| persistence.existingClaim | string | `""` |  |
-| persistence.size | string | `"50Mi"` |  |
-| persistence.storageClass | string | `""` |  |
-| podAnnotations | object | `{}` |  |
-| podSecurityContext.fsGroup | int | `1000` |  |
-| ports | list | `[]` |  |
-| resources | object | `{}` |  |
-| securityContext | string | `nil` |  |
-| tolerations | list | `[]` |  |
-| tunnel.mode | string | `"host"` |  |
-| tunnel.resolver | string | `"none"` |  |
+| edge.advertisedHost | string | `nil` | DNS name that edge clients will use to reach this router's edge listener |
+| edge.advertisedPort | int | `3022` | cluster service, node port, load balancer, and ingress port |
+| edge.containerPort | int | `3022` | cluster service target port on the container |
+| edge.enabled | bool | `true` | enable the edge listener in the router config |
+| edge.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| edge.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| edge.service.annotations | string | `nil` | service annotations |
+| edge.service.enabled | bool | `true` | create a cluster service for the edge listener |
+| edge.service.labels | string | `nil` | service labels |
+| edge.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| enrollJwtFile | string | `"enrollment.jwt"` | provided to helm install as set value and consumed by init script to perform router enrollment |
+| execMountDir | string | `"/usr/local/bin"` | read-only mountpoint for executables (must be in image's executable search PATH) |
+| identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
+| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
+| image.command | list | `["ziti","router","run"]` | deployment container command |
+| image.pullPolicy | string | `"Always"` | deployment image pull policy |
+| image.repository | string | `"docker.io/openziti/ziti-router"` | container image tag for deployment |
+| initScriptFile | string | `"ziti-router-init.bash"` | exec by Helm post-install hook |
+| linkListeners.transport.advertisedHost | string | `nil` | DNS name that other routers will use to form transport links with this router |
+| linkListeners.transport.advertisedPort | int | `6004` | cluster service, node port, load balancer, and ingress port |
+| linkListeners.transport.containerPort | int | `6004` | cluster service target port on the container |
+| linkListeners.transport.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| linkListeners.transport.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| linkListeners.transport.service.annotations | string | `nil` | service annotations |
+| linkListeners.transport.service.enabled | bool | `true` | create a cluster service for the router transport link listener |
+| linkListeners.transport.service.labels | string | `nil` | service labels |
+| linkListeners.transport.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| nodeSelector | object | `{}` | deployment template spec node selector |
+| persistence.VolumeName | string | `nil` | PVC volume name |
+| persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
+| persistence.annotations | object | `{}` | annotations for the PVC |
+| persistence.enabled | bool | `true` | required: place a storage claim for the ctrl endpoints state file |
+| persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled: true If defined, PVC must be created manually before volume will be bound |
+| persistence.size | string | `"50Mi"` | 50Mi is plenty for this state file  |
+| persistence.storageClass | string | `""` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
+| podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
+| podSecurityContext | object | `{"fsGroup":65534}` | deployment template spec security context |
+| podSecurityContext.fsGroup | int | `65534` | this is the GID of "nobody" in the RedHat UBI minimal container image. This was added when troubleshooting a persistent volume permission error, and I don't know if it's necessary. |
+| resources | object | `{}` | deployment container resources |
+| securityContext | string | `nil` | deployment container security context |
+| tolerations | list | `[]` | deployment template spec tolerations |
+| tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host | tproxy | proxy | none |
+| tunnel.resolver | string | `"none"` | built-in nameserver configuration, e.g. udp://127.1.2.3:53 |
+| tunnel.services | list | `[]` | list of service-name:tcp-port pairs if mode "proxy" |
 
 ## TODO's
 
