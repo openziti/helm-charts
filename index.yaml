@@ -65,6 +65,17 @@ entries:
   reflect:
   - apiVersion: v2
     appVersion: 0.0.4
+    created: "2023-02-23T17:21:38.995630569Z"
+    description: Deploy a pod running the Ziti-embeded version of go-httpbin, a REST
+      API server.
+    digest: 778b4e326a9e590ec252d82de9289c7a111a272defc1ec68d79ccffeac651951
+    name: reflect
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/reflect-0.3.3/reflect-0.3.3.tgz
+    version: 0.3.3
+  - apiVersion: v2
+    appVersion: 0.0.4
     created: "2023-02-21T13:03:17.174263813-05:00"
     description: A Helm chart for Kubernetes
     digest: bf53b72ed4b47be05147902f29c82f4cc14e048086177fcbb38c255f83d59e67
@@ -106,4 +117,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.2/ziti-host-0.3.2.tgz
     version: 0.3.2
-generated: "2023-02-23T17:17:17.258502984Z"
+generated: "2023-02-23T17:21:38.995643869Z"
