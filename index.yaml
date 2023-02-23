@@ -84,6 +84,41 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/reflect-0.3.1/reflect-0.3.1.tgz
     version: 0.3.1
+  ziti-console:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2023-02-23T17:30:13.170484844Z"
+    description: Deploy OpenZiti console as kubernetes service
+    digest: 186b8371b6f699ebfa645ef4a0568994ff9c93f756cea421f78f648471f85528
+    name: ziti-console
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.1.1/ziti-console-0.1.1.tgz
+    version: 0.1.1
+  ziti-controller:
+  - apiVersion: v3
+    appVersion: 0.27.5
+    created: "2023-02-23T17:30:13.432717011Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.4.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: d4bc8ba0d439223dec7f26e4a372d4c2325ede14d6d0462d4db5b90ac9c7e117
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-0.1.1/ziti-controller-0.1.1.tgz
+    version: 0.1.1
   ziti-host:
   - apiVersion: v2
     appVersion: 0.20.20
@@ -117,4 +152,15 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.2/ziti-host-0.3.2.tgz
     version: 0.3.2
-generated: "2023-02-23T17:21:38.995643869Z"
+  ziti-router:
+  - apiVersion: v2
+    appVersion: 0.27.5
+    created: "2023-02-23T17:30:13.659059728Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 84bafcc4e9a7f1211d188474d981b5eb8bdafbc6562c457c47aa32ec82a0e50f
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.1/ziti-router-0.1.1.tgz
+    version: 0.1.1
+generated: "2023-02-23T17:30:13.659072528Z"
