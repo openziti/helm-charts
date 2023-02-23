@@ -16,5 +16,5 @@ jobs:
       with:
         # recursively generate README.md for all charts in comma-sep list of
         # parent dirs
-        working-dirs: charts
+        search-roots: charts
         git-push: "true"
