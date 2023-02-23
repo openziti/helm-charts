@@ -1,6 +1,6 @@
 apiVersion: v2
 name: ziti-host
-kubeVersion: >= 1.20.0
+kubeVersion: ">= 1.20.0"
 description: Host OpenZiti services with a tunneler pod
 # .Chart.name
 # A chart can be either an 'application' or a 'library' chart.
