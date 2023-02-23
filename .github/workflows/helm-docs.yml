@@ -1,0 +1,20 @@
+name: Generate helm docs
+on:
+  # manual trigger only until fix error in https://github.com/openziti/helm-charts/actions/runs/4247913693/jobs/7386484488
+  pull_request:
+  workflow_dispatch:
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Render helm docs inside the README.md and push changes back to PR branch
+      uses: netfoundry/helm-docs-action@v1
+      with:
+        # recursively generate README.md for all charts in comma-sep list of
+        # parent dirs
+        search-roots: charts
+        git-push: "true"

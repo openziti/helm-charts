@@ -1,0 +1,121 @@
+{{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-edge
+  labels:
+  {{- include "ziti-router.labels" . | nindent 4 }}
+  {{- with .Values.edge.service.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.edge.service.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $type := default "ClusterIP" .Values.edge.service.type }}
+  type: {{ $type }}
+  {{- if eq $type "ClusterIP" }}
+  {{- with .Values.edge.service.clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  {{- else if eq $type "LoadBalancer" }}
+  {{- with .Values.edge.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with .Values.edge.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.edge.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.edge.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.edge.service.sessionAffinity }}
+  {{- with .Values.edge.service.sessionAffinityConfig }}
+  sessionAffinityConfig:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.edge.service.externalIPs }}
+  externalIPs:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.edge.service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ . }}
+  {{- end }}
+  ports:
+    - port: {{ .Values.edge.advertisedPort }}
+      targetPort: {{ .Values.edge.containerPort }}
+      protocol: TCP
+      name: edge
+      {{- if (eq $type "NodePort") }}
+      nodePort: {{ .Values.edge.advertisedPort }}
+      {{- end }}
+  selector:
+    {{- include "ziti-router.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: "ziti-router"
+{{- end }}
+
+{{- if .Values.linkListeners.transport.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-transport
+  labels:
+  {{- include "ziti-router.labels" . | nindent 4 }}
+  {{- with .Values.linkListeners.transport.service.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.linkListeners.transport.service.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $type := default "ClusterIP" .Values.linkListeners.transport.service.type }}
+  type: {{ $type }}
+  {{- if eq $type "ClusterIP" }}
+  {{- with .Values.linkListeners.transport.service.clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  {{- else if eq $type "LoadBalancer" }}
+  {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with .Values.linkListeners.transport.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.linkListeners.transport.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.linkListeners.transport.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.linkListeners.transport.service.sessionAffinity }}
+  {{- with .Values.linkListeners.transport.service.sessionAffinityConfig }}
+  sessionAffinityConfig:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.linkListeners.transport.service.externalIPs }}
+  externalIPs:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.linkListeners.transport.service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ . }}
+  {{- end }}
+  ports:
+    - port: {{ .Values.linkListeners.transport.advertisedPort }}
+      targetPort: {{ .Values.linkListeners.transport.containerPort }}
+      protocol: TCP
+      name: transport
+      {{- if (eq $type "NodePort") }}
+      nodePort: {{ .Values.linkListeners.transport.port }}
+      {{- end }}
+  selector:
+    {{- include "ziti-router.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: "ziti-router"
+{{- end }}

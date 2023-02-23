@@ -1,0 +1,51 @@
+{{- if .Values.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-console.fullname" . }}
+  labels:
+  {{- include "ziti-console.labels" . | nindent 4 }}
+  {{- with .Values.ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- with .Values.ingress.tls }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- if and .paths (gt (len (default list .paths)) 0) -}}
+          {{- range .paths }}
+          - path: {{ .path | quote }}
+            pathType: {{ default "Prefix" .pathType }}
+            backend:
+              service:
+                name: {{ include "ziti-console.fullname" $ }}
+                port:
+                  name: {{ $.Values.service.name }}
+          {{- end }}
+          {{- else }}
+          - path: /
+            pathType: "Prefix"
+            backend:
+              service:
+                name: {{ include "ziti-console.fullname" $ }}
+                port:
+                  name: {{ $.Values.service.name }}
+          {{- end }}
+    {{- end }}
+{{- end }}

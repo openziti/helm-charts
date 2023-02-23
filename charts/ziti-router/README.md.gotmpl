@@ -1,0 +1,137 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Minimal Installation
+
+After adding the charts repo to Helm, then you may install the chart in the same cluster where the controller is running by using the cluster-internal service of the control plane endpoint. This default values used in this minimal approach is suitable for a Kubernetes distribution like K3S or Minikube that configures pass-through TLS for Service resources of type LoadBalancer. 
+
+```bash
+# get a router enrollment token from the controller's management API
+ziti edge create edge-router router1 \
+  --role-attributes default --tunneler-enabled --jwt-output-file /tmp/router1.jwt
+
+# subscribe to the openziti Helm repo
+helm repo add openziti https://openziti.github.io/helm-charts/
+
+# install the router chart
+helm install \
+  --namespace ziti-router --create-namespace --generate-name \
+  openziti/ziti-router \
+    --set-file enrollmentJwt=/tmp/router1.jwt \
+    --set advertisedHost=ziti-router.example.com \
+    --set ctrl.endpoint=ziti-controller-ctrl.ziti-controller.svc:6262 
+```
+
+You must supply some values when you install the chart:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+|enrollmentJwt|string|nil|the router enrollment token from the Ziti management API|
+|advertisedHost|string|nil|the DNS name that edge clients will resolve to reach this router's edge listener|
+|ctrl.endpoint|string|nil|the DNS name:port of the router control plane endpoint provided by the Ziti controller|
+
+## Managed Kubernetes Installation
+
+Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because edge clients authenticate to the router with client certificates. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
+
+This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/).
+
+Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
+
+```bash
+# subscribe to ingress-nginx
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
+
+# install ingress-nginx
+helm install \
+  --namespace ingress-nginx --create-namespace --generate-name \
+  ingress-nginx/ingress-nginx \
+    --set controller.extraArgs.enable-ssl-passthrough=true 
+```
+
+Create a Helm chart values file for this router chart.
+
+```yaml
+# /tmp/router-values.yml
+ctrl:
+  endpoint: ziti-controller-ctrl.ziti-controller.svc:6262 
+advertisedHost: ziti-router.example.com
+edge:
+  advertisedPort: 443
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.allow-http: "false"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nginx.ingress.kubernetes.io/secure-backends: "true"
+enrollmentJwt: " "
+```
+
+Now upgrade your router chart release with the values file.
+
+```bash
+helm upgrade \
+  --namespace ziti-router ziti-router-123456789 \
+  openziti/ziti-router \
+    --values /tmp/router-values.yml
+```
+
+## Router Transport Links
+
+The minimal installation guided you to install a router in the same cluster as the controller, and the managed Kubernetes upgrade guided you to expose the router's edge listener as a pass-through TLS Ingress. Building on those concepts, let's expand your mesh of Ziti routers. For this you will need to configure router link listeners, i.e. router-to-router links. This is accomplished in this chart by setting some additional values.
+
+Merge the following with your router values.
+
+```yaml
+linkListeners:
+  transport:
+    advertisedHost: ziti-router-links.example.com
+    advertisedPort: 443
+    service:
+      enabled: true
+      type: ClusterIP
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        kubernetes.io/ingress.allow-http: "false"
+        nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+        nginx.ingress.kubernetes.io/secure-backends: "true"
+```
+
+Notice that we've chosen a distinct DNS name for this new ingress. This allows us to have any number of 443/tcp virtual servers on the same IP address. You may find it convenient to delegate a DNS zone with a wildcard record resolving to your Nginx LoadBalancer IP.
+
+Now upgrade your router chart release with the merged values file.
+
+```bash
+helm upgrade \
+  --namespace ziti-router ziti-router-123456789 \
+  openziti/ziti-router \
+    --values /tmp/router-values.yml
+```
+
+## Values Reference
+
+{{ template "chart.valuesTable" . }}
+
+## TODO's
+
+* replicas - does it make sense? afaik every replica needs it's own identity - how does this fit in?
+* lower CA / Cert livetime; refresh certificates on update
+
+<!-- generated with helm-docs -->
