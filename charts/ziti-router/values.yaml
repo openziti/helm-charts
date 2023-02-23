@@ -1,0 +1,194 @@
+
+ctrl:
+  # -- required control plane endpoint
+  endpoint: # ctrl.example.com:6262
+
+# common advertise-host for transport and edge - can also be specified individually
+# via `edge.advertisedHost` and `transport.advertisedHost`
+# advertisedHost: router11.ziti.example.com
+
+
+# Certificate signing request basic data
+csr:
+  # country: US
+  # province: NC
+  # locality: Charlotte
+  # organization: NetFoundry
+  # organizationalUnit: Ziti
+  sans:
+  # # you could specify additional SANS here - configurations from advertise hosts and
+  # # service's will be collected automatically
+  # -- additional DNS SANs
+    dns: []
+  #     - my.additional.host
+  # -- additional IP SANs
+    ip: []
+  #     - "192.168.10.0"
+
+
+# listen for router links
+linkListeners:
+  transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
+    # -- cluster service target port on the container
+    containerPort: 6004
+    # -- DNS name that other routers will use to form transport links with this router
+    advertisedHost: #router11-links.ziti.example.com
+    # -- cluster service, node port, load balancer, and ingress port
+    advertisedPort: 6004
+    service:
+      # -- create a cluster service for the router transport link listener
+      enabled: true
+      # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+      type: ClusterIP
+      # -- service labels
+      labels:
+      # -- service annotations
+      annotations:
+    ingress:
+      # -- create an ingress for the cluster service
+      enabled: false
+      # -- ingress annotations, e.g., to configure ingress-nginx
+      annotations:
+
+# listen for edge clients
+edge:
+  # -- enable the edge listener in the router config
+  enabled: true
+  # -- cluster service target port on the container
+  containerPort: 3022
+  # -- DNS name that edge clients will use to reach this router's edge listener
+  advertisedHost: #router11-edge.ziti.example.com
+  # -- cluster service, node port, load balancer, and ingress port
+  advertisedPort: 3022
+  service:
+    # -- create a cluster service for the edge listener
+    enabled: true
+    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+    type: LoadBalancer
+    # -- service labels
+    labels:
+    # -- service annotations
+    annotations:
+  ingress:
+    # -- create an ingress for the cluster service
+    enabled: false
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations:
+
+tunnel:
+  # -- run mode for the router's built-in tunnel component: host | tproxy | proxy | none
+  mode: host
+  # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
+  resolver: none
+  # lanIf: eth0   # interface device name for tproxy?
+  # -- list of service-name:tcp-port pairs if mode "proxy"
+  services: []
+
+# -- read-only mountpoint for executables (must be in image's executable search PATH)
+execMountDir:     /usr/local/bin
+# -- exec by Helm post-install hook
+initScriptFile:   ziti-router-init.bash
+# -- provided to helm install as set value and consumed by init script to perform router enrollment
+enrollJwtFile:    enrollment.jwt
+# -- read-only mountpoint for router identity secret specified in deployment for use by router run container
+identityMountDir: /etc/ziti/identity
+# -- writeable mountpoint where read-only config file is projected to allow router
+# to write ./endpoints statefile in same dir
+configMountDir:   /etc/ziti/config
+# -- filename of router config YAML
+configFile:       ziti-router.yaml
+
+image:
+  # -- container image tag for deployment
+  repository: docker.io/openziti/ziti-router
+  # -- deployment image pull policy
+  pullPolicy: Always
+  # pullSecrets:
+  # command: ["sh", "-c", "while true; do sleep 86400; done"]
+  # -- deployment container command
+  command: ["ziti", "router", "run"]
+  # The templates inside this list are evalated by the tpl funtion in the
+  # deployment template because Helm values can not be directly referenced
+  # inside the Values.yaml file (because it's just a data structure, not a
+  # template).
+  # -- deployment container command args and opts
+  args: [ "{{ .Values.configMountDir }}/{{ .Values.configFile }}"]
+
+# deployment DNS policy
+dnsPolicy: ClusterFirstWithHostNet
+
+# nameOverride: ""
+# fullnameOverride: ""
+
+# -- annotations to apply to all pods deployed by this chart
+podAnnotations: {}
+
+# -- deployment template spec security context
+podSecurityContext:
+  # -- this is the GID of "nobody" in the RedHat UBI minimal container image.
+  # This was added when troubleshooting a persistent volume permission error,
+  # and I don't know if it's necessary.
+  fsGroup: 65534
+
+# -- deployment container security context
+securityContext:
+  # capabilities:
+  #   add:
+  #     - NET_ADMIN
+
+# -- deployment container resources
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# -- deployment template spec node selector
+nodeSelector: {}
+#  kubernetes.io/role: master
+
+# -- deployment template spec tolerations
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+# -- deployment template spec affinity
+affinity: {}
+
+## Enable persistence using Persistent Volume Claims
+## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+##
+persistence:
+  # -- required: place a storage claim for the ctrl endpoints state file
+  enabled: true
+  # -- annotations for the PVC
+  annotations: {}
+
+  # -- A manually managed Persistent Volume and Claim
+  # Requires persistence.enabled: true
+  # If defined, PVC must be created manually before volume will be bound
+  existingClaim: ""
+
+  ## minio data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # -- Storage class of PV to bind. By default it looks for the default storage class.
+  # If the PV uses a different storage class, specify that here.
+  storageClass: ""
+  # -- PVC volume name
+  VolumeName:
+  # -- PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed)
+  accessMode: ReadWriteOnce
+  # -- 50Mi is plenty for this state file 
+  size: 50Mi

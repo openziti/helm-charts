@@ -1,0 +1,180 @@
+# ziti-router
+
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+
+Host an OpenZiti router in Kubernetes
+
+## Minimal Installation
+
+After adding the charts repo to Helm, then you may install the chart in the same cluster where the controller is running by using the cluster-internal service of the control plane endpoint. This default values used in this minimal approach is suitable for a Kubernetes distribution like K3S or Minikube that configures pass-through TLS for Service resources of type LoadBalancer.
+
+```bash
+# get a router enrollment token from the controller's management API
+ziti edge create edge-router router1 \
+  --role-attributes default --tunneler-enabled --jwt-output-file /tmp/router1.jwt
+
+# subscribe to the openziti Helm repo
+helm repo add openziti https://openziti.github.io/helm-charts/
+
+# install the router chart
+helm install \
+  --namespace ziti-router --create-namespace --generate-name \
+  openziti/ziti-router \
+    --set-file enrollmentJwt=/tmp/router1.jwt \
+    --set advertisedHost=ziti-router.example.com \
+    --set ctrl.endpoint=ziti-controller-ctrl.ziti-controller.svc:6262
+```
+
+You must supply some values when you install the chart:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+|enrollmentJwt|string|nil|the router enrollment token from the Ziti management API|
+|advertisedHost|string|nil|the DNS name that edge clients will resolve to reach this router's edge listener|
+|ctrl.endpoint|string|nil|the DNS name:port of the router control plane endpoint provided by the Ziti controller|
+
+## Managed Kubernetes Installation
+
+Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because edge clients authenticate to the router with client certificates. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
+
+This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/).
+
+Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
+
+```bash
+# subscribe to ingress-nginx
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
+
+# install ingress-nginx
+helm install \
+  --namespace ingress-nginx --create-namespace --generate-name \
+  ingress-nginx/ingress-nginx \
+    --set controller.extraArgs.enable-ssl-passthrough=true
+```
+
+Create a Helm chart values file for this router chart.
+
+```yaml
+# /tmp/router-values.yml
+ctrl:
+  endpoint: ziti-controller-ctrl.ziti-controller.svc:6262
+advertisedHost: ziti-router.example.com
+edge:
+  advertisedPort: 443
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.allow-http: "false"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nginx.ingress.kubernetes.io/secure-backends: "true"
+enrollmentJwt: " "
+```
+
+Now upgrade your router chart release with the values file.
+
+```bash
+helm upgrade \
+  --namespace ziti-router ziti-router-123456789 \
+  openziti/ziti-router \
+    --values /tmp/router-values.yml
+```
+
+## Router Transport Links
+
+The minimal installation guided you to install a router in the same cluster as the controller, and the managed Kubernetes upgrade guided you to expose the router's edge listener as a pass-through TLS Ingress. Building on those concepts, let's expand your mesh of Ziti routers. For this you will need to configure router link listeners, i.e. router-to-router links. This is accomplished in this chart by setting some additional values.
+
+Merge the following with your router values.
+
+```yaml
+linkListeners:
+  transport:
+    advertisedHost: ziti-router-links.example.com
+    advertisedPort: 443
+    service:
+      enabled: true
+      type: ClusterIP
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        kubernetes.io/ingress.allow-http: "false"
+        nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+        nginx.ingress.kubernetes.io/secure-backends: "true"
+```
+
+Notice that we've chosen a distinct DNS name for this new ingress. This allows us to have any number of 443/tcp virtual servers on the same IP address. You may find it convenient to delegate a DNS zone with a wildcard record resolving to your Nginx LoadBalancer IP.
+
+Now upgrade your router chart release with the merged values file.
+
+```bash
+helm upgrade \
+  --namespace ziti-router ziti-router-123456789 \
+  openziti/ziti-router \
+    --values /tmp/router-values.yml
+```
+
+## Values Reference
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | deployment template spec affinity |
+| configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
+| configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints statefile in same dir |
+| csr.sans.dns | list | `[]` | additional DNS SANs |
+| csr.sans.ip | list | `[]` | additional IP SANs |
+| ctrl.endpoint | string | `nil` | required control plane endpoint |
+| dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
+| edge.advertisedHost | string | `nil` | DNS name that edge clients will use to reach this router's edge listener |
+| edge.advertisedPort | int | `3022` | cluster service, node port, load balancer, and ingress port |
+| edge.containerPort | int | `3022` | cluster service target port on the container |
+| edge.enabled | bool | `true` | enable the edge listener in the router config |
+| edge.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| edge.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| edge.service.annotations | string | `nil` | service annotations |
+| edge.service.enabled | bool | `true` | create a cluster service for the edge listener |
+| edge.service.labels | string | `nil` | service labels |
+| edge.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| enrollJwtFile | string | `"enrollment.jwt"` | provided to helm install as set value and consumed by init script to perform router enrollment |
+| execMountDir | string | `"/usr/local/bin"` | read-only mountpoint for executables (must be in image's executable search PATH) |
+| identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
+| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
+| image.command | list | `["ziti","router","run"]` | deployment container command |
+| image.pullPolicy | string | `"Always"` | deployment image pull policy |
+| image.repository | string | `"docker.io/openziti/ziti-router"` | container image tag for deployment |
+| initScriptFile | string | `"ziti-router-init.bash"` | exec by Helm post-install hook |
+| linkListeners.transport.advertisedHost | string | `nil` | DNS name that other routers will use to form transport links with this router |
+| linkListeners.transport.advertisedPort | int | `6004` | cluster service, node port, load balancer, and ingress port |
+| linkListeners.transport.containerPort | int | `6004` | cluster service target port on the container |
+| linkListeners.transport.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| linkListeners.transport.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| linkListeners.transport.service.annotations | string | `nil` | service annotations |
+| linkListeners.transport.service.enabled | bool | `true` | create a cluster service for the router transport link listener |
+| linkListeners.transport.service.labels | string | `nil` | service labels |
+| linkListeners.transport.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| nodeSelector | object | `{}` | deployment template spec node selector |
+| persistence.VolumeName | string | `nil` | PVC volume name |
+| persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
+| persistence.annotations | object | `{}` | annotations for the PVC |
+| persistence.enabled | bool | `true` | required: place a storage claim for the ctrl endpoints state file |
+| persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled: true If defined, PVC must be created manually before volume will be bound |
+| persistence.size | string | `"50Mi"` | 50Mi is plenty for this state file  |
+| persistence.storageClass | string | `""` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
+| podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
+| podSecurityContext | object | `{"fsGroup":65534}` | deployment template spec security context |
+| podSecurityContext.fsGroup | int | `65534` | this is the GID of "nobody" in the RedHat UBI minimal container image. This was added when troubleshooting a persistent volume permission error, and I don't know if it's necessary. |
+| resources | object | `{}` | deployment container resources |
+| securityContext | string | `nil` | deployment container security context |
+| tolerations | list | `[]` | deployment template spec tolerations |
+| tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host | tproxy | proxy | none |
+| tunnel.resolver | string | `"none"` | built-in nameserver configuration, e.g. udp://127.1.2.3:53 |
+| tunnel.services | list | `[]` | list of service-name:tcp-port pairs if mode "proxy" |
+
+## TODO's
+
+* replicas - does it make sense? afaik every replica needs it's own identity - how does this fit in?
+* lower CA / Cert livetime; refresh certificates on update
+
+<!-- generated with helm-docs -->

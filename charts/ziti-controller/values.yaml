@@ -1,0 +1,244 @@
+# Default values for ziti-controller.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+ctrlPlane:
+  # -- cluster service target port on the container
+  containerPort: 6262
+  # -- global DNS name by which routers can resolve a reachable IP for this
+  # service: default is cluster service DNS name which assumes all routers are
+  # inside the same cluster
+  advertisedHost:
+  # -- cluster service, node port, load balancer, and ingress port
+  advertisedPort: 6262
+  service:
+    # -- create a cluster service for the deployment
+    enabled: true
+    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+    type: ClusterIP  # this can be cluster-internal unless there are routers outside the cluster
+  ingress:
+    # -- create an ingress for the cluster service
+    enabled: false
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations:
+  # -- kind and name of alternative issuer for the controller's identity
+  alternativeIssuer:
+    # -- type of alternative issuer for the controller's identity: Issuer, ClusterIssuer
+    # kind:
+    # -- metadata name of the alternative issuer
+    # name:
+
+clientApi:
+  # -- cluster service target port on the container
+  containerPort: 1280
+  # -- global DNS name by which routers can resolve a reachable IP for this service
+  advertisedHost:
+  # -- cluster service, node port, load balancer, and ingress port
+  advertisedPort: 1280
+  service:
+    # -- create a cluster service for the deployment
+    enabled: true
+    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+    type: LoadBalancer  # this is the only service that really needs to be exposed
+  ingress:
+    # -- create an ingress for the cluster service
+    enabled: false
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations:
+
+managementApi:
+  # -- cluster service target port on the container
+  containerPort: &mgmtPort 1281
+  # -- cluster service, node port, load balancer, and ingress port
+  advertisedPort: *mgmtPort
+  service:
+    # -- create a cluster service for the deployment
+    enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
+    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+    type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
+
+prometheus:
+  # -- cluster service target port on the container
+  containerPort: &prometheusPort 9090
+  # -- cluster service, node port, load balancer, and ingress port
+  advertisedPort: *prometheusPort
+  service:
+    # -- create a cluster service for the deployment
+    enabled: false
+    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+    type: ClusterIP
+
+ca:
+  # Note: The renewBefore and duration fields must be specified using a Go
+  # time.Duration string format, which does not allow the d (days) suffix.
+  # You must specify these values using s, m, and h suffixes instead.
+  # duration: 2160h # 90d
+  # renewBefore: 360h # 15d
+  # -- Go time.Duration string format
+  duration: 87840h # 3660d / 10 y
+  # -- Go time.Duration string format
+  renewBefore: 720h # 30d
+
+cert:
+  # Note: The renewBefore and duration fields must be specified using a Go
+  # time.Duration string format, which does not allow the d (days) suffix.
+  # You must specify these values using s, m, and h suffixes instead.
+  # TODO lower this value!
+  # duration: 2160h   # 90d
+  # renewBefore: 360h # 15d
+  # -- Go time.Duration string format
+  duration: 87840h    # 3660d / 10 y
+  # -- Go time.Duration string format
+  renewBefore: 720h   # 30d
+
+# you can enable these if you want to use roots of trust that are separate from
+# the main identity used by the ctrl plane
+edgeSignerPki:
+  # -- generate a separate PKI root of trust for the edge signer CA
+  enabled: false
+webBindingPki:
+  # -- generate a separate PKI root of trust for web bindings, i.e., client,
+  # management, and prometheus APIs
+  enabled: false
+
+image:
+  # -- container image tag for app deployment
+  repository: docker.io/openziti/ziti-controller
+  # -- deployment image pull policy
+  pullPolicy: Always
+  # -- container command
+  command: ["ziti", "controller", "run"]
+  # command: ["bash", "-c", "while true; do sleep 1; done"]
+  # -- container command options and args
+  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
+
+# -- a directory included in the init and run containers' executable search path
+execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
+# -- exec by init container
+initScriptFile: ziti-controller-init.bash
+# -- read-only mountpoint where configFile and various read-only identity dirs are projected
+configMountDir: /etc/ziti
+# -- filename of the controller configuration file
+configFile:     ziti-controller.yaml
+# -- writeable mountpoint where the controller will create dbFile during init
+dataMountDir:   /persistent
+# -- name of the BoltDB file
+dbFile:         ctrl.db
+# -- read-only mountpoint for run container to read the ctrl plane trust bundle created during init
+ctrlPlaneCaDir: ctrl-plane-cas
+# -- filename of the ctrl plane trust bundle
+ctrlPlaneCasFile: ctrl-plane-cas.crt
+
+# nameOverride: ""
+# fullnameOverride: ""
+
+# -- annotations to apply to all pods deployed by this chart
+podAnnotations: {}
+
+# -- deployment template spec security context
+podSecurityContext:
+  # -- this is the GID of "nobody" in the RedHat UBI minimal container image.
+  # This was added when troubleshooting a persistent volume permission error,
+  # and I don't know if it's necessary.
+  fsGroup: 65534
+
+# -- deployment container security context
+securityContext: {}
+  # capabilities:
+  #   add:
+  #     - NET_ADMIN
+
+# -- deployment container resources
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# -- deployment template spec node selector
+nodeSelector: {}
+#  kubernetes.io/role: master
+
+# -- deployment template spec tolerations
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+# -- deployment template spec affinity
+affinity: {}
+
+highAvailability:
+  # -- Ziti controller HA mode
+  mode: standalone
+  # -- Ziti controller HA swarm replicas
+  replicas: 1
+
+## Enable persistence using Persistent Volume Claims
+## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+##
+persistence:
+  # -- required: place a storage claim for the BoltDB persistent volume
+  enabled: true
+  # -- annotations for the PVC
+  annotations: {}
+
+  # -- A manually managed Persistent Volume and Claim Requires
+  # persistence.enabled=true. If defined, PVC must be created manually before
+  # volume will be bound.
+  existingClaim: ""
+
+  ## minio data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # -- Storage class of PV to bind. By default it looks for the default storage class.
+  # If the PV uses a different storage class, specify that here.
+  storageClass:
+  # -- PVC volume name
+  VolumeName:
+  # -- PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed)
+  accessMode: ReadWriteOnce
+  # -- 2GiB is enough for tens of thousands of entities, but feel free to make it larger
+  size: 2Gi
+
+# A note about sub-charts: these values may serve as a partial reference for
+# configuring the charts on which this chart depends. However, I wasn't able to
+# get dependency solving working with Helm, which doesn't install depenencies
+# first the way I expected. For now, it's necessary to express the dependency
+# with Terraform or some other external configuration system.
+cert-manager:
+  # -- install the cert-manager subchart to provide CRDs Certificate, Issuer
+  enabled: true
+  # -- clean up secret when certificate is deleted
+  enableCertificateOwnerRef: true
+  # -- CRDs must be applied in advance of installing the parent chart
+  installCRDs: false
+trust-manager:
+  # -- install the trust-manager subchart to provide CRD Bundle
+  enabled: true
+  app:
+    trust:
+      # -- trust-manager needs to be configured to trust the namespace in which
+      # the controller is deployed so that it will create the Bundle resource
+      # for the ctrl plane trust bundle
+      namespace: ziti-controller
+  crds:
+    # -- CRDs must be applied in advance of installing the parent chart
+    enabled: false
+ingress-nginx:
+  # -- recommended: install the ingress-nginx subchart (may be necessary for managed k8s)
+  enabled: false
+  controller:
+    extraArgs:
+      # -- configure subchart ingress-nginx to enable the pass-through TLS feature
+      enable-ssl-passthrough: "true"

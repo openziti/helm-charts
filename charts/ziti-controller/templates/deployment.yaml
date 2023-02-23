@@ -1,0 +1,190 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+    app.kubernetes.io/component: "ziti-controller"
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ziti-controller.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: "ziti-controller"
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ziti-controller.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: "ziti-controller"
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      initContainers:
+        - name: {{ .Chart.Name }}-init
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          command: ["{{ .Values.initScriptFile }}"]
+          volumeMounts:
+            - mountPath: {{ .Values.execMountDir }}/{{ .Values.initScriptFile }}
+              name: ziti-controller-configmap
+              subPath: {{ .Values.initScriptFile }}
+            - mountPath: {{ .Values.dataMountDir }}
+              name: data
+            - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
+              name: ziti-controller-configmap
+              subPath: {{ .Values.configFile }}
+            - mountPath: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
+              name: ziti-controller-ctrl-plane-cas
+              readOnly: true
+            - mountPath: {{ .Values.configMountDir }}/ctrl-plane-identity/
+              name: cert-ctrl-plane-identity
+              readOnly: true
+            {{- if (eq .Values.edgeSignerPki.enabled true) }}
+            - mountPath: {{ .Values.configMountDir }}/edge-signer/
+              name: cert-edge-signer
+              readOnly: true
+            {{- else }}
+            - mountPath: {{ .Values.configMountDir }}/ctrl-plane-intermediate/
+              name: cert-ctrl-plane-intermediate
+              readOnly: true
+            {{- end }}
+            {{- if (eq .Values.webBindingPki.enabled true) }}
+            - mountPath: {{ .Values.configMountDir }}/web-identity/
+              name: cert-web-identity
+              readOnly: true
+            {{- end }}
+          env:
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-user
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-password
+            - name: ZITI_CTRL_PLANE_CA
+              value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
+            - name: PFXLOG_NO_JSON
+              value: "true"
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: client
+            containerPort: {{ .Values.clientApi.containerPort }}
+          - name: controller
+            containerPort: {{ .Values.ctrlPlane.containerPort }}
+          - name: mgmt-api
+            containerPort: {{ .Values.managementApi.containerPort }}
+          {{- if .Values.prometheus.enabled }}
+          - name: prometheus
+            containerPort: {{ .Values.prometheus.containerPort }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{ if .Values.image.command }}
+          command:
+          {{- range .Values.image.command }}
+            - {{ . | quote }}
+          {{- end }}
+          {{ end }}
+          args:
+            {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+          env:
+            - name: PFXLOG_NO_JSON
+              value: "true"
+            - name: ZITI_CTRL_PLANE_CA
+              value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
+          volumeMounts:
+            - mountPath: {{ .Values.dataMountDir }}
+              name: data
+            - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
+              name: ziti-controller-configmap
+              subPath: {{ .Values.configFile }}
+            - mountPath: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
+              name: ziti-controller-ctrl-plane-cas
+              readOnly: true
+            - mountPath: {{ .Values.configMountDir }}/ctrl-plane-identity/
+              name: cert-ctrl-plane-identity
+              readOnly: true
+            {{- if (eq .Values.edgeSignerPki.enabled true) }}
+            - mountPath: {{ .Values.configMountDir }}/edge-signer/
+              name: cert-edge-signer
+              readOnly: true
+            {{- else }}
+            - mountPath: {{ .Values.configMountDir }}/ctrl-plane-intermediate/
+              name: cert-ctrl-plane-intermediate
+              readOnly: true
+            {{- end }}
+            {{- if (eq .Values.webBindingPki.enabled true) }}
+            - mountPath: {{ .Values.configMountDir }}/web-identity/
+              name: cert-web-identity
+              readOnly: true
+            {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: ziti-controller-configmap
+          configMap:
+            name: {{ include "ziti-controller.fullname" . }}-config
+            items:
+              - key: {{ .Values.initScriptFile }}
+                path: {{ .Values.initScriptFile }}
+                mode: 0555
+              - key: {{ .Values.configFile }}
+                path: {{ .Values.configFile }}
+                mode: 0444
+        # ctrl-plane-cas is created by init script
+        - name: ziti-controller-ctrl-plane-cas
+          configMap:
+            name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
+            defaultMode: 0444
+        - name: cert-ctrl-plane-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
+        {{- if (eq .Values.edgeSignerPki.enabled true) }}
+        - name: cert-edge-signer
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+        {{- else }}
+        - name: cert-ctrl-plane-intermediate
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
+        {{- end }}
+        {{- if (eq .Values.webBindingPki.enabled true) }}
+        - name: cert-web-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
+        {{- end }}
+        - name: data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-controller.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}

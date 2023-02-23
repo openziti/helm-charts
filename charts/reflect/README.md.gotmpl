@@ -1,0 +1,29 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+This chart provides a simple byte echoing server for demos and testing Ziti. You may read more about how this app can be used in [the PrometheuZ tutorial](https://docs.openziti.io/blog/zitification/prometheus/part2/#deploy-reflectz-1).
+
+```bash
+helm install reflectz openziti-test-kitchen/reflect \
+    --set-file reflectIdentity="/tmp/prometheus/kubeB.reflect.id.json" \
+    --set serviceName="kubeB.reflect.svc" \
+    --set prometheusServiceName="kubeB.reflect.scrape.svc"
+```
+
+## Values Reference
+
+{{ template "chart.valuesTable" . }}
+
+<!-- generated with helm-docs -->

@@ -1,51 +1,63 @@
-# Default values for ziti-host.
+# Default values for ziti-console.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 ingress:
-  enabled: false
-
-persistence:
   enabled: true
-  accessMode: ReadWriteOnce
-  size: 100Mi
+  ingressClassName: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: 'nginx'
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  labels: {}
+  hosts:
+    - host: ziti-console.domain.tld
+      paths:
+        - path: "/"
+          pathType: Prefix
+  tls: []
+
+httpContainerPort: &httpContainerPort 1408
+
+ports:
+  - name: http
+    containerPort: *httpContainerPort
+
+service:
+  enabled: true
+  port: *httpContainerPort
+  name: http
+  type: ClusterIP
+  labels: {}
+  annotations: {}
+
+settings:
+  edgeControllers: []
+  fabricControllers: []
+
 
 image:
-  repository: openziti/ziti-host
-#  pullPolicy: Never
+  repository: openziti/zac
   pullPolicy: Always
 #  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-#  tag: helmtest
+  # tag: 0.26.11
 #   command: ["sh", "-c", "while true; do sleep 11; done"]
-  args: []  # the ziti-host image execs "ziti-edge-tunnel run-host" to only host, not intercept/proxy, no DNS
+  args: []
+  pullSecrets: []
+  # command: ["node", "/usr/src/app/server.js"]
+  command: ["node", "/usr/src/app/server.js", "debug"]
 
-dnsPolicy: ClusterFirstWithHostNet
-
-secret: {}
-  # Use an existing secret name
-  # existingSecretName: ""
-
-imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
 
-hostNetwork: False
-securityContext: {}
+securityContext:
   # capabilities:
   #   add:
   #     - NET_ADMIN
@@ -62,7 +74,6 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-ports: []
 
 nodeSelector: {}
 #  kubernetes.io/role: master

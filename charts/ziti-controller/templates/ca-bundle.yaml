@@ -1,0 +1,21 @@
+---
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
+spec:
+  sources:
+    - secret:
+        name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
+        key: tls.crt
+    {{- if (eq .Values.edgeSignerPki.enabled true) }}
+    - secret:
+        name: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+        key: tls.crt
+    {{- end }}
+  target:
+    configMap:
+      key: {{ .Values.ctrlPlaneCasFile }}
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: {{ .Release.Namespace }}

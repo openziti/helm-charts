@@ -1,0 +1,69 @@
+#######
+# CA that is used by the controller to issue edge identities (x509 certificates).
+# This CA's cert and key must be configured as .edge.enrollment.signingCert. The
+# controller will issue client and server certificates during router enrollment,
+# and client certificates during identity enrollment. The edge signer's
+# certificate must be appended to the trust bundle that is configured for the
+# router control plane's identity in .identity.ca
+######
+{{- if (eq .Values.edgeSignerPki.enabled true) }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-edge-root-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-edge-root
+  secretName: {{ include "ziti-controller.fullname" . }}-edge-root-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-edge-root-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "ziti-controller.fullname" . }}-edge-root-secret
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-edge-signer-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-edge-signer
+  secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-root-issuer
+
+{{- end }}

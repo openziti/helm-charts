@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+
+import sys
+sys.path.insert(0, '/tmp/kubernetes-client')
+
+from kubernetes import client, config
+
+def main():
+    # config.load_incluster_config()
+    config.load_kube_config()  # FIXME: load config from pod after testing
+
+    v1 = client.CoreV1Api()
+    print("Listing secrets:")
+    ret = v1.update_namespaced_secret(namespace="ziti-router", watch=False)
+    for i in ret.items:
+        print("%s\t%s\t%s" %
+                (i.type, i.metadata.namespace, i.metadata.name))
+
+
+if __name__ == '__main__':
+    main()

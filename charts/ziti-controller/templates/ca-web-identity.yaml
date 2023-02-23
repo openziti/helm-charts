@@ -1,0 +1,153 @@
+#######
+# CA that issues the server certificate for web bindings like the edge client API,
+# edge management API
+######
+{{- if (eq .Values.webBindingPki.enabled true) }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-root-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-web-root
+  secretName: {{ include "ziti-controller.fullname" . }}-web-root-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-root-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "ziti-controller.fullname" . }}-web-root-secret
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-intermediate-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-web-intermediate
+  secretName: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
+  isCA: true
+  duration: {{ .Values.ca.duration }}
+  renewBefore: {{ .Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-web-root-issuer
+
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-identity-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: ziti-controller-web-identity
+  secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
+  isCA: false
+  duration: {{ .Values.cert.duration }}
+  renewBefore: {{ .Values.cert.renewBefore }}
+  privateKey:
+# It seems OSX has problems validating ECDSA tokens.. :-/
+#    algorithm: ECDSA
+#    size: 256
+    algorithm: RSA
+    size: 4096
+  usages:
+    - client auth # remove when we fix #ClientCertKeyReuseIssue
+    - server auth
+    - digital signature
+    - content commitment
+    - key encipherment
+  # At least one of a DNS Name, URI, or IP address is required.
+  dnsNames:
+    - localhost
+    - ziti-controller
+    {{- if .Values.clientApi.service.enabled }}
+    - {{ include "ziti-controller.fullname" . }}-client
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
+    {{- if .Values.clientApi.advertisedHost }}
+    - {{ .Values.clientApi.advertisedHost }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.managementApi.service.enabled }}
+    - {{ include "ziti-controller.fullname" . }}-mgmt
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
+    {{- end }}
+    {{- if .Values.managementApi.advertisedHost }}
+    - {{ .Values.managementApi.advertisedHost }}
+    {{- end }}
+  # uris:
+  #   - spiffe://cluster.local/ns/sandbox/sa/example
+  ipAddresses:
+    - 127.0.0.1
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+
+# #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
+# via the same private key - I currenlty have no Idea how to solve this with CertManager
+# ---
+# # the controller's client certificate
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: ziti-ctrl-client
+# spec:
+#   isCA: false
+#   commonName: ziti-ctrl-client
+#   secretName: ziti-controller-client-cert-secret
+#   privateKey:
+#     algorithm: ECDSA
+#     size: 256
+#   usages:
+#     - client auth
+#   issuerRef:
+#     kind: Issuer
+#     name: ziti-controller-intermediate-ca-issuer
+{{- end }}

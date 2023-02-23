@@ -1,0 +1,158 @@
+---
+# Chart name: {{- .Chart.Name }} {{- .Values.nameOverride }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-config
+  labels:
+    {{- include "ziti-router.labels" . | nindent 4 }}
+data:
+  # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
+  {{ .Values.initScriptFile }}: |-
+    #!/usr/bin/env bash
+    set -euo pipefail -x
+
+    mkdir -v ${ZITI_ROUTER_IDENTITY_DIR}
+
+    ziti router enroll \
+      {{ .Values.configMountDir }}/{{ .Values.configFile }} \
+      --jwt {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }}
+
+    kubectl -n {{ .Release.Namespace }} create secret generic \
+      {{ include "ziti-router.fullname" . }}-identity \
+      --from-file=client.crt="${ZITI_ROUTER_IDENTITY_DIR}/client.crt" \
+      --from-file=tls.key="${ZITI_ROUTER_IDENTITY_DIR}/tls.key" \
+      --from-file=tls.crt="${ZITI_ROUTER_IDENTITY_DIR}/tls.crt" \
+      --from-file=ca.crt="${ZITI_ROUTER_IDENTITY_DIR}/ca.crt"
+
+  {{ .Values.configFile }}: |-
+    v: 3
+
+    # this dir is a var because the value is a writeable tmp dir during
+    #  enrollment and a read-only mountpoint when running
+    identity:
+      cert:        ${ZITI_ROUTER_IDENTITY_DIR}/client.crt
+      server_cert: ${ZITI_ROUTER_IDENTITY_DIR}/tls.crt
+      key:         ${ZITI_ROUTER_IDENTITY_DIR}/tls.key
+      ca:          ${ZITI_ROUTER_IDENTITY_DIR}/ca.crt
+
+    ctrl:
+      # router control plane API (:6262)
+      endpoint:    tls:{{ required "You must set .Values.ctrl.endpoint to the control plane advertised address. Try adding --set ctrl.endpoint=ziti-controller.example.com:6262 to your Helm command" .Values.ctrl.endpoint }}
+
+    link:
+      dialers:
+        - binding: transport
+      # When 'transport' is disabled this means we are a 'private' router
+      {{- if .Values.linkListeners.transport.service.enabled }}
+      listeners:
+        - binding:          transport
+          bind:             tls:0.0.0.0:{{ .Values.linkListeners.transport.containerPort }}
+          advertise:        tls:{{ required "You must set either linkListeners.transport.advertisedHost or advertisedHost to the address to advertise for this router's transport listener. Try adding --set advertisedHost=router11.ziti.example.org to your Helm command" (coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost) }}:{{ .Values.linkListeners.transport.advertisedPort }}
+          options:
+            outQueueSize:   4
+      {{- end }}
+    {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "none" )) (eq .Values.edge.enabled true) }}
+    listeners:
+    # bindings of edge and tunnel requires an "edge" section below
+    {{- if (eq .Values.edge.enabled true) }}
+      - binding: edge
+        address: tls:0.0.0.0:{{ .Values.edge.containerPort }}
+        options:
+            advertise: {{ required "You must set either .Values.advertisedHost or .Values.edge.advertisedHost to the <host/ip> to advertise for this router. Try adding --set edge.advertisedHost=router.zitinetwork.example.org to your Helm command" (coalesce .Values.edge.advertisedHost .Values.advertisedHost) }}:{{ .Values.edge.advertisedPort }}
+            connectTimeoutMs: 1000
+            getSessionTimeout: 60
+    {{- end }}
+    {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "none" ) }}
+      - binding: tunnel
+        options:
+            mode: {{ .Values.tunnel.mode }}
+          {{- if eq .Values.tunnel.mode "tproxy" }}
+            resolver: {{ .Values.tunnel.resolver }}
+            lanIf: {{ .Values.tunnel.lanIf }}
+          {{- else if eq .Values.tunnel.mode "proxy" }}
+            services:
+            {{- include .Values.tunnel.services . | nindent 14 }}
+          {{- end }}
+    {{- end }}
+    {{- end }}
+
+    edge:
+        csr:
+          {{- if .Values.csr.country }}
+            country: {{ .Values.csr.country }}
+          {{- end }}
+          {{- if .Values.csr.province }}
+            province: {{ .Values.csr.province }}
+          {{- end }}
+          {{- if .Values.csr.locality }}
+            locality: {{ .Values.csr.locality }}
+          {{- end }}
+          {{- if .Values.csr.organization }}
+            organization: {{ .Values.csr.organization }}
+          {{- end }}
+          {{- if .Values.csr.organizationalUnit }}
+            organizationalUnit: {{ .Values.csr.organizationalUnit }}
+          {{- end }}
+            sans:
+                dns:
+                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+                    - localhost
+                    {{- if .Values.advertisedHost }}
+                    - {{ .Values.advertisedHost }}
+                    {{- end }}
+                    {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
+                    - {{ .Values.edge.advertisedHost }}
+                    {{- end }}
+                    {{- if and .Values.linkListeners.transport.service.enabled .Values.linkListeners.transport.advertisedHost }}
+                    - {{ .Values.linkListeners.transport.advertisedHost }}
+                    {{- end }}
+                  {{- end }}
+                  {{- range .Values.csr.sans.dns }}
+                    - {{ . | quote }}
+                  {{- end }}
+                ip:
+                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+                    - 127.0.0.1
+                  {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
+                      {{- with .Values.edge.service.loadBalancerIP }}
+                    - {{ . }}
+                      {{- end }}
+                      {{- with .Values.edge.service.externalIPs }}
+                        {{- toYaml . | nindent 4 }}
+                      {{- end }}
+                  {{- end }}
+                  {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
+                      {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
+                    - {{ . }}
+                      {{- end }}
+                      {{- with .Values.linkListeners.transport.service.externalIPs }}
+                        {{- toYaml . | nindent 4 }}
+                      {{- end }}
+                  {{- end }}
+                  {{- end }}
+                  {{- range .Values.csr.sans.ip }}
+                    - {{ . | quote }}
+                  {{- end }}
+
+    #transport:
+    #  ws:
+    #    writeTimeout: 10
+    #    readTimeout: 5
+    #    idleTimeout: 5
+    #    pongTimeout: 60
+    #    pingInterval: 54
+    #    handshakeTimeout: 10
+    #    readBufferSize: 4096
+    #    writeBufferSize: 4096
+    #    enableCompression: true
+    #    server_cert: ~/.ziti/config/certs/192.168.10.11.server.chain.cert
+    #    key: ~/.ziti/config/certs/192.168.10.11.key
+
+    forwarder:
+        latencyProbeInterval: 10
+        xgressDialQueueLength: 1000
+        xgressDialWorkerCount: 128
+        linkDialQueueLength: 1000
+        linkDialWorkerCount: 32
