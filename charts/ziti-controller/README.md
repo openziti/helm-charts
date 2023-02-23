@@ -21,26 +21,16 @@ This chart runs a Ziti controller in Kubernetes. It uses the custom resources pr
 
 ## Requirements
 
-This chart requires Certificate, Issuer, and Bundle resources to be applied before installing the chart. Sub-charts `cert-manager`, and `trust-manager` will not be installed automatically, but their values may serve as a reference.
+This chart requires Certificate, Issuer, and Bundle resources to be applied before installing the chart. Sub-charts `cert-manager`, and `trust-manager` will be installed automatically. You may disable the sub-charts if you wish to provide these resources separately, but if you do so then please use the sub-chart values at the foot of [Values.yaml](./Values.yaml) to ensure those charts are correctly configured.
+
+### Install Required Custom Resource Definitions
+
+This step satisfies Helm's requirement that the CRDs used in the umbrella chart
+already exist in Kubernetes before installing the controller chart.
 
 ```bash
-# subscribe to the cert-manager repo
-helm repo add cert-manager https://charts.jetstack.io
-
-# install cert-manager with CRDs
-helm install \
-    --namespace cert-manager --create-namespace --generate-name \
-    cert-manager/cert-manager \
-        --set installCRDs=true
-
-# create the namespace where ziti-controller will be installed
-kubectl create namespace ziti-controller
-
-# install trust-manager with trusted namespace where ziti-controller will be installed
-helm install \
-    --namespace cert-manager --generate-name \
-    cert-manager/trust-manager \
-        --set app.trust.namespace=ziti-controller
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
+kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.4.0/deploy/crds/trust.cert-manager.io_bundles.yaml
 ```
 
 ## Minimal Installation
@@ -176,7 +166,8 @@ edgeSignerPki:
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
-| cert-manager.enabled | bool | `false` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
+| cert-manager.enabled | bool | `true` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
+| cert-manager.installCRDs | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | cert.duration | string | `"87840h"` | Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | Go time.Duration string format |
 | clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
@@ -188,7 +179,7 @@ edgeSignerPki:
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | configFile | string | `"ziti-controller.yaml"` | filename of the controller configuration file |
 | configMountDir | string | `"/etc/ziti"` | read-only mountpoint where configFile and various read-only identity dirs are projected |
-| ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
+| ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | int | `6262` | cluster service, node port, load balancer, and ingress port |
 | ctrlPlane.alternativeIssuer | string | `nil` | kind and name of alternative issuer for the controller's identity |
 | ctrlPlane.containerPort | int | `6262` | cluster service target port on the container |
@@ -234,7 +225,8 @@ edgeSignerPki:
 | securityContext | object | `{}` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
 | trust-manager.app.trust.namespace | string | `"ziti-controller"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
-| trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
+| trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
+| trust-manager.enabled | bool | `true` | install the trust-manager subchart to provide CRD Bundle |
 | webBindingPki.enabled | bool | `false` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 
 ## TODO's
