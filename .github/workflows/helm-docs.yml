@@ -1,8 +1,8 @@
 name: Generate helm docs
 on:
   # manual trigger only until fix error in https://github.com/openziti/helm-charts/actions/runs/4247913693/jobs/7386484488
+  pull_request:
   workflow_dispatch:
-  # - pull_request
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -14,7 +14,6 @@ jobs:
     - name: Render helm docs inside the README.md and push changes back to PR branch
       uses: shaybentk/helm-docs-action@v0.0.1
       with:
-        # search is recursive, so add to this comma-sep list until all charts
-        # have templates, then change to ./charts
-        working-dir: ./charts/ziti-controller
+        # recursively generate README.md for all charts
+        working-dir: charts
         git-push: "true"

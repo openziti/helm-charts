@@ -49,6 +49,6 @@ These charts help cluster workloads access or provide a Ziti service.
 1. Clone this repo.
 1. Optionally, to customize the generated README.md file, add a helm-docs template named README.md.gotmpl.
 1. Send PR targeting main.
-1. Merging to main runs GitHub Actions to package and index the charts, generate REAME.md, and publish to GitHub Pages.
+1. Merging to main runs GitHub Actions to package and index the charts, generate REAME.md with helm-docs, and publish to GitHub Pages.
 
 You may verify changes are present in the Helm index: https://docs.openziti.io/helm-charts/index.yaml.
