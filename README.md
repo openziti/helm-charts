@@ -7,43 +7,36 @@ These files are published from [a GitHub repo](https://github.com/openziti/helm-
 ## Add this repo to Helm
 
 ```bash
-❯ helm repo add openziti https://docs.openziti.io/helm-charts/                                                                                               
+$ helm repo add openziti https://docs.openziti.io/helm-charts/
 "openziti" has been added to your repositories                         
 ```
 
 ## Search for available charts in this repo
 
 ```bash
-❯ helm search repo openziti
+$ helm search repo openziti
 NAME                    CHART VERSION   APP VERSION     DESCRIPTION                                       
 openziti/prometheus     0.0.11          0.0.13          Prometheus is a monitoring system and time seri...
 openziti/reflect        0.3.0           0.0.4           A Helm chart for Kubernetes                       
 openziti/ziti-host      0.1.0           0.19.11         Host OpenZiti services with a tunneler pod                 
 ```
 
-## Charts
+## Charts for Workloads
 
-### `ziti-controller`
+These charts help cluster workloads access or provide a Ziti service.
 
-This chart deploys a `ziti controller` into your cluster. It rely's on https://cert-manager.io/ for certificate deployment and requies [cert-manager already being installed on your cluster](https://cert-manager.io/docs/installation/)
+* [`ziti-host`](./charts/ziti-host/README.md): Ziti tunnel pod for hosting services (ingress only)
+* `ziti-node`: [*coming soon*] Ziti tunnel daemonset for accessing services (intercept node egress)
+## Charts for Self-Hosting Ziti
 
-### `ziti-host`
+* [`ziti-controller`](./charts/ziti-controller/README.md)
+* [`ziti-router`](./charts/ziti-router/README.md)
+* [`ziti-console`](./charts/ziti-console/README.md)
 
-This chart deploys a pod running `ziti-edge-tunnel run-host`. This is the Linux tunneler in hosting mode. This is useful for hosting Ziti services. For example, you may install this chart once per cluster namespace and host each namespace's cluster services with the respective tunneler identity that you supplied when the chart was installed. The identity is stored as a Kubernetes Secret. For more information about the Linux tunneler please reference [the docs](https://docs.openziti.io/docs/reference/tunnelers/linux/).
+## Charts that Deploy a Ziti-enabled Application
 
-```bash
-helm install ziti-host openziti/ziti-host --set-file zitiIdentity=/tmp/myAcmeIdentity.json
-```
+* [`httpbin`](./charts/httpbin/README.md)
 
-### `httpbin`
-
-This chart deploys a pod running the Ziti-embeded version of go-httpbin, a REST API server.
-
-```bash
-helm install httpbinz-release1 openziti/httpbin \
-     --set zitiServiceName="my httpbin service" \
-     --set-file zitiIdentity=./my-ziti-identity.json
-```
 
 ### `prometheus`
 

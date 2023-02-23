@@ -176,3 +176,5 @@ helm upgrade \
 
 * replicas - does it make sense? afaik every replica needs it's own identity - how does this fit in?
 * lower CA / Cert livetime; refresh certificates on update
+
+<!-- generated with helm-docs -->

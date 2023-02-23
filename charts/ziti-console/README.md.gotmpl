@@ -13,11 +13,11 @@
 
 {{ template "chart.requirementsSection" . }}
 
-## Installation
+## Minimal Installation
 
 This chart deploys a pod running `ziti-console`, [the OpenZiti console](https://github.com/openziti/ziti-console/).
 
-After adding the charts repo to Helm then you may install the chart. You must supply some useful defaults, i.e. the name the console listens on. For a sample you might have a look into the [Quickstart Scenario](../../README.md#quickstart-scenario)
+After adding the charts repo to Helm then you may install the chart. You must supply some values, i.e. the name the console listens on.
 
 This is this sample from the quickstart:
 
@@ -27,9 +27,9 @@ helm install quickstart-console ziti-console \
      --set "ingress.hosts[0].host=quickstart-console.<example.org>" \
      --set "ingress.annotations.traefik\.ingress\.kubernetes\.io/router\.entrypoints=websecure" \
      --set "ingress.labels.ingressMethod=traefik"
-    #  --set "settings.edgeControllers[0].name=quickstart" \
-    #  --set "settings.edgeControllers[0].url=https://quickstart-controller-mgmt:1281" \
-    #  --set "settings.edgeControllers[0].default=true" \
+    --set "settings.edgeControllers[0].name=quickstart" \
+    --set "settings.edgeControllers[0].url=https://quickstart-controller-mgmt:1281" \
+    --set "settings.edgeControllers[0].default=true" \
 
 ```
 
@@ -57,3 +57,5 @@ settings:
       url: https://quickstart-controller-mgmt:1281
       default: true
 ```
+
+<!-- generated with helm-docs -->
