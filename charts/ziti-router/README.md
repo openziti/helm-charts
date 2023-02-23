@@ -168,7 +168,7 @@ helm upgrade \
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host | tproxy | proxy | none |
+| tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
 | tunnel.resolver | string | `"none"` | built-in nameserver configuration, e.g. udp://127.1.2.3:53 |
 | tunnel.services | list | `[]` | list of service-name:tcp-port pairs if mode "proxy" |
 
