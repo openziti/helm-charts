@@ -14,6 +14,7 @@ jobs:
     - name: Render helm docs inside the README.md and push changes back to PR branch
       uses: netfoundry/helm-docs-action@v1
       with:
-        # recursively generate README.md for all charts
-        working-dir: charts
+        # recursively generate README.md for all charts in comma-sep list of
+        # parent dirs
+        working-dirs: charts
         git-push: "true"
