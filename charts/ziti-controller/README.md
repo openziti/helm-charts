@@ -3,7 +3,17 @@
 
 ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
-Host OpenZiti controller on your cluster
+Host an OpenZiti controller in Kubernetes
+
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+|  | cert-manager | ~1.11.0 |
+|  | ingress-nginx | ~4.5.2 |
+|  | trust-manager | ~0.4.0 |
+
+Note that ingress-nginx is not strictly required, but the chart is parameterized to allow for conveniently declaring pass-through TLS.
 
 ## Overview
 
@@ -133,69 +143,71 @@ edgeSignerPki:
 
 ## Values Reference
 
-## Values
-
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | `{}` |  |
-| ca.duration | string | `"87840h"` |  |
-| ca.renewBefore | string | `"720h"` |  |
-| cert.duration | string | `"87840h"` |  |
-| cert.renewBefore | string | `"720h"` |  |
-| clientApi.advertisedPort | int | `1280` |  |
-| clientApi.containerPort | int | `1280` |  |
-| clientApi.ingress.annotations | object | `{}` |  |
-| clientApi.ingress.enabled | bool | `false` |  |
-| clientApi.service.enabled | bool | `true` |  |
-| clientApi.service.type | string | `"LoadBalancer"` |  |
-| configFile | string | `"ziti-controller.yaml"` |  |
-| configMountDir | string | `"/etc/ziti"` |  |
-| ctrlPlane.advertisedPort | int | `6262` |  |
-| ctrlPlane.containerPort | int | `6262` |  |
-| ctrlPlane.ingress.annotations | object | `{}` |  |
-| ctrlPlane.ingress.enabled | bool | `false` |  |
-| ctrlPlane.service.enabled | bool | `true` |  |
-| ctrlPlane.service.type | string | `"ClusterIP"` |  |
-| ctrlPlaneCaDir | string | `"ctrl-plane-cas"` |  |
-| ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` |  |
-| dataMountDir | string | `"/persistent"` |  |
-| dbFile | string | `"ctrl.db"` |  |
-| edgeSignerPki.enabled | bool | `false` |  |
-| execMountDir | string | `"/usr/local/bin"` |  |
-| fullnameOverride | string | `""` |  |
-| image.args[0] | string | `"{{ .Values.configMountDir }}/{{ .Values.configFile }}"` |  |
-| image.args[1] | string | `"--verbose"` |  |
-| image.command[0] | string | `"ziti"` |  |
-| image.command[1] | string | `"controller"` |  |
-| image.command[2] | string | `"run"` |  |
-| image.pullPolicy | string | `"Always"` |  |
-| image.repository | string | `"openziti/ziti-controller"` |  |
-| initScriptFile | string | `"ziti-controller-init.bash"` |  |
-| managementApi.advertisedPort | int | `1281` |  |
-| managementApi.containerPort | int | `1281` |  |
-| managementApi.service.enabled | bool | `false` |  |
-| managementApi.service.type | string | `"ClusterIP"` |  |
-| mode | string | `"standalone"` |  |
-| nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
-| persistence.VolumeName | string | `""` |  |
-| persistence.accessMode | string | `"ReadWriteOnce"` |  |
-| persistence.annotations | object | `{}` |  |
-| persistence.enabled | bool | `true` |  |
-| persistence.existingClaim | string | `""` |  |
-| persistence.size | string | `"2Gi"` |  |
-| persistence.storageClass | string | `""` |  |
-| podAnnotations | object | `{}` |  |
-| podSecurityContext.fsGroup | int | `65534` |  |
-| prometheus.advertisedPort | int | `9090` |  |
-| prometheus.containerPort | int | `9090` |  |
-| prometheus.service.enabled | bool | `false` |  |
-| prometheus.service.type | string | `"ClusterIP"` |  |
-| replicas | int | `1` |  |
-| resources | object | `{}` |  |
-| securityContext | object | `{}` |  |
-| tolerations | list | `[]` |  |
-| webBindingPki.enabled | bool | `false` |  |
+| affinity | object | `{}` | deployment template spec affinity |
+| ca.duration | string | `"87840h"` | Go time.Duration string format |
+| ca.renewBefore | string | `"720h"` | Go time.Duration string format |
+| cert-manager.enabled | bool | `true` | required: install the cert-manager subchart |
+| cert.duration | string | `"87840h"` | Go time.Duration string format |
+| cert.renewBefore | string | `"720h"` | Go time.Duration string format |
+| clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
+| clientApi.advertisedPort | int | `1280` | cluster service, node port, load balancer, and ingress port |
+| clientApi.containerPort | int | `1280` | cluster service target port on the container |
+| clientApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| clientApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
+| clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| configFile | string | `"ziti-controller.yaml"` | filename of the controller configuration file |
+| configMountDir | string | `"/etc/ziti"` | read-only mountpoint where configFile and various read-only identity dirs are projected |
+| ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
+| ctrlPlane.advertisedPort | int | `6262` | cluster service, node port, load balancer, and ingress port |
+| ctrlPlane.alternativeIssuer.kind | string | `nil` | type of alternative issuer for the controller's identity: Issuer, ClusterIssuer |
+| ctrlPlane.alternativeIssuer.name | string | `nil` | metadata name of the alternative issuer |
+| ctrlPlane.containerPort | int | `6262` | cluster service target port on the container |
+| ctrlPlane.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| ctrlPlane.service.enabled | bool | `true` | create a cluster service for the deployment |
+| ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| ctrlPlaneCaDir | string | `"ctrl-plane-cas"` | read-only mountpoint for run container to read the ctrl plane trust bundle created during init |
+| ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` | filename of the ctrl plane trust bundle |
+| dataMountDir | string | `"/persistent"` | writeable mountpoint where the controller will create dbFile during init |
+| dbFile | string | `"ctrl.db"` | name of the BoltDB file |
+| edgeSignerPki.enabled | bool | `false` | generate a separate PKI root of trust for the edge signer CA |
+| execMountDir | string | `"/usr/local/bin"` | a directory included in the init and run containers' executable search path |
+| highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
+| highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
+| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}","--verbose"]` | container command options and args |
+| image.command | list | `["ziti","controller","run"]` | container command |
+| image.pullPolicy | string | `"Always"` | deployment image pull policy |
+| image.repository | string | `"docker.io/openziti/ziti-controller"` | container image tag for app deployment |
+| ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
+| ingress-nginx.enabled | bool | `false` | recommended: install the ingress-nginx subchart (may be necessary for managed k8s) |
+| initScriptFile | string | `"ziti-controller-init.bash"` | exec by init container |
+| managementApi.advertisedPort | int | `1281` | cluster service, node port, load balancer, and ingress port |
+| managementApi.containerPort | int | `1281` | cluster service target port on the container |
+| managementApi.service.enabled | bool | `false` | create a cluster service for the deployment |
+| managementApi.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| nodeSelector | object | `{}` | deployment template spec node selector |
+| persistence.VolumeName | string | `nil` | PVC volume name |
+| persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
+| persistence.annotations | object | `{}` | annotations for the PVC |
+| persistence.enabled | bool | `true` | required: place a storage claim with for the BoltDB persistent volume |
+| persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled=true. If defined, PVC must be created manually before volume will be bound. |
+| persistence.size | string | `"2Gi"` | 2GiB is enough for tens of thousands of entities, but feel free to make it larger |
+| persistence.storageClass | string | `nil` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
+| podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
+| podSecurityContext | object | `{"fsGroup":65534}` | deployment template spec security context |
+| podSecurityContext.fsGroup | int | `65534` | this is the GID of "nobody" in the RedHat UBI minimal container image. This was added when troubleshooting a persistent volume permission error, and I don't know if it's necessary. |
+| prometheus.advertisedPort | int | `9090` | cluster service, node port, load balancer, and ingress port |
+| prometheus.containerPort | int | `9090` | cluster service target port on the container |
+| prometheus.service.enabled | bool | `false` | create a cluster service for the deployment |
+| prometheus.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| resources | object | `{}` | deployment container resources |
+| securityContext | object | `{}` | deployment container security context |
+| tolerations | list | `[]` | deployment template spec tolerations |
+| trust-manager.enabled | bool | `true` | required: install the trust-manager subchart |
+| webBindingPki.enabled | bool | `false` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 
 ## TODO's
 

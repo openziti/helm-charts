@@ -1,16 +1,18 @@
-apiVersion: v2
+apiVersion: v3
 name: ziti-controller
-description: Host OpenZiti controller on your cluster
-# .Chart.name
-# A chart can be either an 'application' or a 'library' chart.
-#
-# Application charts are a collection of templates that can be packaged into versioned archives
-# to be deployed.
-#
-# Library charts provide useful utilities or functions for the chart developer. They're included as
-# a dependency of application charts to inject those utilities and functions into the rendering
-# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+description: Host an OpenZiti controller in Kubernetes
 type: application
+dependencies:
+  - name: cert-manager
+    version: ~1.11.0
+    repo: https://charts.jetstack.io
+  - name: trust-manager
+    version: ~0.4.0
+    repo: https://charts.jetstack.io
+  - name: ingress-nginx
+    version: ~4.5.2
+    repo: https://kubernetes.github.io/ingress-nginx/
+    condition: ingress-nginx.enabled
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.

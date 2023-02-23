@@ -62,8 +62,8 @@ spec:
     algorithm: ECDSA
     size: 256
   issuerRef:
-    {{- if .Values.ctrlPlane.issuer }}
-      {{- with .Values.ctrlPlane.issuer }}
+    {{- if .Values.ctrlPlane.alternativeIssuer }}
+      {{- with .Values.ctrlPlane.alternativeIssuer }}
         {{- toYaml . | nindent 4 }}
       {{- end }}
     {{- else }}
