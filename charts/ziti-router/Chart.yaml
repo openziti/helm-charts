@@ -1,6 +1,6 @@
 apiVersion: v2
 name: ziti-router
-description: Host OpenZiti router as kubernetes service
+description: Host an OpenZiti router in Kubernetes
 # .Chart.name
 # A chart can be either an 'application' or a 'library' chart.
 #

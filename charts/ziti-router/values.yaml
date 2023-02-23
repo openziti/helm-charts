@@ -1,10 +1,7 @@
-# Default values for ziti-router.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
-# required controller endpoint
-controller:
-  endpoint: ""
+ctrl:
+  # -- required control plane endpoint
+  endpoint: # ctrl.example.com:6262
 
 # common advertise-host for transport and edge - can also be specified individually
 # via `edge.advertisedHost` and `transport.advertisedHost`
@@ -36,7 +33,7 @@ linkListeners:
     advertisedPort: 6004
     service:
       enabled: true
-      type: LoadBalancer
+      type: ClusterIP
       labels: {}
       annotations: {}
     ingress:

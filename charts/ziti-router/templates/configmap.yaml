@@ -60,7 +60,7 @@ data:
       - binding: edge
         address: tls:0.0.0.0:{{ .Values.edge.containerPort }}
         options:
-            advertise: {{ required "You must set .Values.edge.advertisedHost to the <host/ip> to advertise for this router. Try adding --set edge.advertisedHost=router.zitinetwork.example.org to your Helm command" .Values.edge.advertisedHost }}:{{ .Values.edge.advertisedPort }}
+            advertise: {{ required "You must set either .Values.advertisedHost or .Values.edge.advertisedHost to the <host/ip> to advertise for this router. Try adding --set edge.advertisedHost=router.zitinetwork.example.org to your Helm command" (coalesce .Values.edge.advertisedHost .Values.advertisedHost) }}:{{ .Values.edge.advertisedPort }}
             connectTimeoutMs: 1000
             getSessionTimeout: 60
     {{- end }}
