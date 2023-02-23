@@ -76,7 +76,7 @@ edge:
     annotations:
 
 tunnel:
-  # -- run mode for the router's built-in tunnel component: host | tproxy | proxy | none
+  # -- run mode for the router's built-in tunnel component: host, tproxy, proxy, or none
   mode: host
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
