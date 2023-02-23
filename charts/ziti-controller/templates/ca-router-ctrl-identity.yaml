@@ -116,7 +116,7 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster.local
-    - {{ .Values.ctrlPlane.advertisedHost }}
+    - {{ .Values.ctrlPlane.advertisedHost | default (printf "%s-ctrl.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}
     {{- if and .Values.clientApi.service.enabled (not .Values.webBindingPki.enabled) }}
     - {{ include "ziti-controller.fullname" . }}-client
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
