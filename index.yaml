@@ -15,6 +15,16 @@ entries:
     version: 1.3.1
   httpbin:
   - apiVersion: v2
+    appVersion: latest
+    created: "2023-02-24T22:41:58.898929847Z"
+    description: Run the Ziti fork of go-httpbin
+    digest: bd5abab75d0c5f722da8d6f1e8db11ca791955de44c1be4e50e002d80ac031b2
+    name: httpbin
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/httpbin-0.1.3/httpbin-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v2
     created: "2023-02-23T20:36:17.524382798-05:00"
     description: Run the Ziti fork of go-httpbin
     digest: 750ae5f46ef133fd10b48cf46675e3e647838a422d4fe9fba04e384462437ef1
@@ -24,6 +34,17 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/httpbin-0.1.1/httpbin-0.1.1.tgz
     version: 0.1.1
   reflect:
+  - apiVersion: v2
+    appVersion: 0.0.4
+    created: "2023-02-24T22:41:59.03518575Z"
+    description: Deploy a pod running the Ziti-embeded version of go-httpbin, a REST
+      API server.
+    digest: e693ee18c76cd8cf09b0f69b142fc201f04a74601816b22e361d1c539d9c0eae
+    name: reflect
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/reflect-0.3.4/reflect-0.3.4.tgz
+    version: 0.3.4
   - apiVersion: v2
     appVersion: 0.0.4
     created: "2023-02-23T20:36:17.620604783-05:00"
@@ -126,4 +147,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.3/ziti-router-0.1.3.tgz
     version: 0.1.3
-generated: "2023-02-24T22:10:47.936025307Z"
+generated: "2023-02-24T22:41:59.035220252Z"
