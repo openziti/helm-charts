@@ -3,9 +3,10 @@ ctrl:
   # -- required control plane endpoint
   endpoint: # ctrl.example.com:6262
 
-# common advertise-host for transport and edge - can also be specified individually
-# via `edge.advertisedHost` and `linkListeners.transport.advertisedHost`
-advertisedHost: router11.ziti.example.com
+# -- common advertise-host for transport and edge listeners can also be
+# specified separately via `edge.advertisedHost` and
+# `linkListeners.transport.advertisedHost`
+advertisedHost:
 
 
 # Certificate signing request basic data
