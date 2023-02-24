@@ -17,10 +17,14 @@ $ helm repo add openziti https://docs.openziti.io/helm-charts/
 
 ```bash
 $ helm search repo openziti
-NAME                    CHART VERSION   APP VERSION     DESCRIPTION                                       
-openziti/prometheus     0.0.11          0.0.13          Prometheus is a monitoring system and time seri...
-openziti/reflect        0.3.0           0.0.4           A Helm chart for Kubernetes                       
-openziti/ziti-host      0.1.0           0.19.11         Host OpenZiti services with a tunneler pod                 
+NAME                            CHART VERSION   APP VERSION     DESCRIPTION                                       
+openziti/ziti-controller        0.1.2           0.27.5          Host an OpenZiti controller in Kubernetes         
+openziti/ziti-router            0.1.3           0.27.5          Host an OpenZiti router in Kubernetes             
+openziti/ziti-console           0.1.1           latest          Deploy OpenZiti console as kubernetes service     
+openziti/ziti-host              0.3.5           0.20.20         Host OpenZiti services with a tunneler pod        
+openziti/hello-toy              1.3.1           latest          Run the lightweight toy web server, optionally ...
+openziti/httpbin                0.1.2           latest          Run the Ziti fork of go-httpbin                   
+openziti/reflect                0.3.3           0.0.4           Deploy a pod running the Ziti-embeded version o...
 ```
 
 ## Chart Highlights
