@@ -1,0 +1,150 @@
+apiVersion: v1
+entries:
+  hello-toy:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2023-02-23T20:36:17.438151879-05:00"
+    description: 'Run the lightweight toy web server, optionally with a custom service
+      domain name in cluster DNS e.g.   helm install my-toy-release openziti/hello-toy
+      --set serviceDomainName=my-toy-service-dns '
+    digest: 2e2842fd5dd2ce70ca787455c0ffb0760910c33e44d83b8ab5c094c24640d54c
+    name: hello-toy
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/hello-toy-1.3.1/hello-toy-1.3.1.tgz
+    version: 1.3.1
+  httpbin:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2023-02-24T22:41:58.898929847Z"
+    description: Run the Ziti fork of go-httpbin
+    digest: bd5abab75d0c5f722da8d6f1e8db11ca791955de44c1be4e50e002d80ac031b2
+    name: httpbin
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/httpbin-0.1.3/httpbin-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v2
+    created: "2023-02-23T20:36:17.524382798-05:00"
+    description: Run the Ziti fork of go-httpbin
+    digest: 750ae5f46ef133fd10b48cf46675e3e647838a422d4fe9fba04e384462437ef1
+    name: httpbin
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/httpbin-0.1.1/httpbin-0.1.1.tgz
+    version: 0.1.1
+  reflect:
+  - apiVersion: v2
+    appVersion: 0.0.4
+    created: "2023-02-24T22:41:59.03518575Z"
+    description: Deploy a pod running the Ziti-embeded version of go-httpbin, a REST
+      API server.
+    digest: e693ee18c76cd8cf09b0f69b142fc201f04a74601816b22e361d1c539d9c0eae
+    name: reflect
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/reflect-0.3.4/reflect-0.3.4.tgz
+    version: 0.3.4
+  - apiVersion: v2
+    appVersion: 0.0.4
+    created: "2023-02-23T20:36:17.620604783-05:00"
+    description: Deploy a pod running the Ziti-embeded version of go-httpbin, a REST
+      API server.
+    digest: 80a7085bfca7c0c6bf635879af212fb9cdf632369f5ed46112ad06b2d41b550a
+    name: reflect
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/reflect-0.3.3/reflect-0.3.3.tgz
+    version: 0.3.3
+  ziti-console:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2023-02-23T20:36:17.709610141-05:00"
+    description: Deploy OpenZiti console as kubernetes service
+    digest: d227c1cd691592e84869219de70239c906eee0e26ba6e103687aab35b8c0d3db
+    name: ziti-console
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.1.1/ziti-console-0.1.1.tgz
+    version: 0.1.1
+  ziti-controller:
+  - apiVersion: v3
+    appVersion: 0.27.5
+    created: "2023-02-24T12:55:00.559203562Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.4.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: 6c3878b5c877052a76888eb63ff8372a9401a730802fbec2c9388b6d1f238b29
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-0.1.3/ziti-controller-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v3
+    appVersion: 0.27.5
+    created: "2023-02-23T20:36:17.85148509-05:00"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.4.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: 4daa87db0e03c10cb1d71ba665c5f007557ccd79f11c64abf6c9858a42e460fe
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-0.1.2/ziti-controller-0.1.2.tgz
+    version: 0.1.2
+  ziti-host:
+  - apiVersion: v2
+    appVersion: 0.20.20
+    created: "2023-02-23T20:36:17.939429077-05:00"
+    description: Host OpenZiti services with a tunneler pod
+    digest: 49b2c3dbb09c0f01085ceb99684fb61e353a70e6100556712dfce69ca7f452a0
+    kubeVersion: '>= 1.20.0'
+    name: ziti-host
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.5/ziti-host-0.3.5.tgz
+    version: 0.3.5
+  ziti-router:
+  - apiVersion: v2
+    appVersion: 0.27.5
+    created: "2023-02-24T22:10:47.936006807Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 2afd219759b7ec3a962b6218dcf10beaa1c4eeca7646d0bc8704c4aa818eccdb
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.4/ziti-router-0.1.4.tgz
+    version: 0.1.4
+  - apiVersion: v2
+    appVersion: 0.27.5
+    created: "2023-02-23T20:36:18.032913777-05:00"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 01e8eb3b39f1f977383aa175fd036183fb56ca6ead767a5c556494b649b8083c
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.3/ziti-router-0.1.3.tgz
+    version: 0.1.3
+generated: "2023-02-24T22:41:59.035220252Z"
