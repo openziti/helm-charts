@@ -1,6 +1,9 @@
 name: Bump Changed Charts' Versions
 on:
   pull_request:
+    types:
+      - opened
+      - edited
   workflow_dispatch:
 jobs:
   chart-version-checker:
