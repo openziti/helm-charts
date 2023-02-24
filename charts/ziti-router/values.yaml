@@ -4,8 +4,8 @@ ctrl:
   endpoint: # ctrl.example.com:6262
 
 # common advertise-host for transport and edge - can also be specified individually
-# via `edge.advertisedHost` and `transport.advertisedHost`
-# advertisedHost: router11.ziti.example.com
+# via `edge.advertisedHost` and `linkListeners.transport.advertisedHost`
+advertisedHost: router11.ziti.example.com
 
 
 # Certificate signing request basic data
@@ -88,8 +88,10 @@ tunnel:
 execMountDir:     /usr/local/bin
 # -- exec by Helm post-install hook
 initScriptFile:   ziti-router-init.bash
-# -- provided to helm install as set value and consumed by init script to perform router enrollment
-enrollJwtFile:    enrollment.jwt
+# -- projected subpath where the enrollment token will be mounted
+enrollJwtFile: enrollment.jwt
+# -- enrollment one time token from the controller's management API
+enrollmentJwt:
 # -- read-only mountpoint for router identity secret specified in deployment for use by router run container
 identityMountDir: /etc/ziti/identity
 # -- writeable mountpoint where read-only config file is projected to allow router

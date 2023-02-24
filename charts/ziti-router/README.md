@@ -1,6 +1,6 @@
 # ziti-router
 
-![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
 Host an OpenZiti router in Kubernetes
 
@@ -120,6 +120,7 @@ helm upgrade \
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| advertisedHost | string | `"router11.ziti.example.com"` |  |
 | affinity | object | `{}` | deployment template spec affinity |
 | configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
 | configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints statefile in same dir |
@@ -137,7 +138,8 @@ helm upgrade \
 | edge.service.enabled | bool | `true` | create a cluster service for the edge listener |
 | edge.service.labels | string | `nil` | service labels |
 | edge.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| enrollJwtFile | string | `"enrollment.jwt"` | provided to helm install as set value and consumed by init script to perform router enrollment |
+| enrollJwtFile | string | `"enrollment.jwt"` | projected subpath where the enrollment token will be mounted |
+| enrollmentJwt | string | `nil` | enrollment one time token from the controller's management API |
 | execMountDir | string | `"/usr/local/bin"` | read-only mountpoint for executables (must be in image's executable search PATH) |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
 | image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |

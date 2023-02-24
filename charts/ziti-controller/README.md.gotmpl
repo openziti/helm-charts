@@ -48,7 +48,8 @@ You must supply one value when you install the chart.
 helm install \
     --namespace ziti-controller ziti-controller-minimal1 \
     openziti/ziti-controller \
-        --set clientApi.advertisedHost="ziti-controller-minimal.example.com"
+        --set clientApi.advertisedHost="ziti-controller-minimal.example.com" \
+        --set client.ApiadvertisedPort="443"
 ```
 
 A default admin user and password will be generated and saved to a secret during installation. The credentials can be retrieved using this command:
