@@ -1,0 +1,26 @@
+name: Bump Changed Charts' Versions
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  chart-version-checker:
+    strategy:
+      matrix:
+        charts:
+          - hello-toy
+          - httpbin
+          - reflect
+          - ziti-console
+          - ziti-controller
+          - ziti-host
+          - ziti-router
+    runs-on: ubuntu-latest
+    steps:
+    - uses: netfoundry/chart-version-bumper-action@main
+      with:
+        chart_dir: ./charts/${{ matrix.charts }}
+
+# grant write permission to GITHUB_TOKEN for version bumper to push commits to current branch
+permissions:
+  contents: write
+
