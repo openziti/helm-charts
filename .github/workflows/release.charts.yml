@@ -30,3 +30,11 @@ jobs:
           charts_dir: charts
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Push READMEs to gh-pages
+        uses: netfoundry/git-push-action@main
+        with:
+          email: ${{ github.actor }}@github.com
+          name: ${{ github.actor }}
+          message: "auto-pushed to GH Pages from main"
+          branch: gh-pages
