@@ -1,6 +1,5 @@
 name: Generate helm docs
 on:
-  # manual trigger only until fix error in https://github.com/openziti/helm-charts/actions/runs/4247913693/jobs/7386484488
   pull_request:
   workflow_dispatch:
 jobs:
