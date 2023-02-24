@@ -110,6 +110,8 @@ spec:
               value: "true"
             - name: ZITI_CTRL_PLANE_CA
               value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
+            - name: HOME
+              value: /tmp
           volumeMounts:
             - mountPath: {{ .Values.dataMountDir }}
               name: data
