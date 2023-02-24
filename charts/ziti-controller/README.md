@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.1.3](https://img.shields.io/badge/Version-0.1.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -55,14 +55,17 @@ helm install \
 
 A default admin user and password will be generated and saved to a secret during installation. The credentials can be retrieved using this command:
 
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
 ```bash
 kubectl get secret \
     -n ziti-controller ziti-controller-minimal1-admin-secret \
     -o go-template='{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}'
 ```
+<!-- {% endraw %} -->
 
 You may log in the `ziti` CLI with one command or omit the `-p` part to prompt:
 
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
 ```bash
 ziti edge login ziti-controller-minimal.example.com:1280 \
     --yes \
@@ -73,6 +76,7 @@ ziti edge login ziti-controller-minimal.example.com:1280 \
                 -o go-template='{{index .data "admin-password" | base64decode }}'
         )
 ```
+<!-- {% endraw %} -->
 
 ## Managed Kubernetes Installation
 
