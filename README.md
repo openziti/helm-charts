@@ -51,10 +51,10 @@ These charts help cluster workloads access or provide a Ziti service.
 ## Contribute
 
 1. Clone this repo.
-1. Optionally, to customize the auto-generated README.md file, add a helm-docs template named README.md.gotmpl.
+1. Optionally, to customize the auto-generated README.md file, add a helm-docs template named README.md.gotmpl in the chart directory.
 1. Send PR targeting main.
 1. Wait for GitHub bot to generate Helm docs in your PR branch, or run `helm-docs --chart-search-root ./charts/my-new-chart/` locally
-1. Merging to main runs GitHub Actions to package and index the charts and publish the new Helm repo index to GitHub Pages.
-1. An admin must manually merge main:gh-pages to publish READMEs. Be careful not to clobber `/index.yaml` on the gh-pages branch.
+1. Wait for GitHub bot to bump chart versions if necessary, i.e., if anything in the chart dir changed and the chart version is already released.
+1. Merging to main runs GitHub Actions to package and index the charts and publish the new Helm repo index and READMEs to GitHub Pages.
 
 You may verify changes are present in the Helm index: https://docs.openziti.io/helm-charts/index.yaml.
