@@ -1,9 +1,6 @@
-name: Generate helm docs
+name: Generate Helm docs
 on:
-  pull_request:
-    types:
-      - opened
-      - edited
+  workflow_call:
   workflow_dispatch:
 jobs:
   docs:

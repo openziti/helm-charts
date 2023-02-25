@@ -19,11 +19,12 @@ jobs:
           - ziti-router
     runs-on: ubuntu-latest
     steps:
-    - uses: netfoundry/chart-version-bumper-action@main
-      with:
-        chart_dir: ./charts/${{ matrix.charts }}
+      - name: Bump Chart Versions if Changed
+        id: bumper
+        uses: netfoundry/chart-version-bumper-action@main
+        with:
+          chart_dir: ./charts/${{ matrix.charts }}
 
 # grant write permission to GITHUB_TOKEN for version bumper to push commits to current branch
 permissions:
   contents: write
-
