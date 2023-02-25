@@ -23,7 +23,7 @@ This chart runs a Ziti controller in Kubernetes. It uses the custom resources pr
 
 ## Requirements
 
-This chart requires Certificate, Issuer, and Bundle resources to be applied before installing the chart. Sub-charts `cert-manager`, and `trust-manager` will be installed automatically. You may disable the sub-charts if you wish to provide these resources separately, but if you do so then please use the sub-chart values at the foot of [Values.yaml](./Values.yaml) to ensure those charts are correctly configured.
+This chart requires Certificate, Issuer, and Bundle resources to be applied before installing the chart. Sub-charts `cert-manager`, and `trust-manager` will be installed automatically. You may disable the sub-charts if you wish to provide these resources separately, but if you do so then please use the sub-chart values at the foot of Values.yaml to ensure those charts are correctly configured.
 
 ### Install Required Custom Resource Definitions
 
