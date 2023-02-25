@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-post-install-job
+  name: {{ .Release.Name }}-post-upgrade-job
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
@@ -10,7 +10,7 @@ metadata:
   annotations:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-upgrade
     "helm.sh/hook-weight": "-5"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
@@ -32,13 +32,17 @@ spec:
       restartPolicy: Never
       serviceAccountName: {{ include "ziti-router.fullname" . }}-hook-serviceaccount
       containers:
-      - name: post-install-job
+      - name: post-upgrade-job
         image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
           - name: ZITI_ROUTER_IDENTITY_DIR
             value: /tmp/ziti-router-identity
           - name: PFXLOG_NO_JSON
+            value: "true"
+          # used by init script to branch on the condition where the identity
+          # secret already exists
+          - name: HELM_UPGRADE
             value: "true"
         volumeMounts:
           - mountPath: {{ .Values.execMountDir }}/{{ .Values.initScriptFile }}

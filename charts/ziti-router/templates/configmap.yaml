@@ -11,13 +11,32 @@ data:
   # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
   {{ .Values.initScriptFile }}: |-
     #!/usr/bin/env bash
-    set -euo pipefail -x
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+    set -o xtrace
+
+    if kubectl -n {{ .Release.Namespace }} get secret \
+      {{ include "ziti-router.fullname" . }}-identity &>/dev/null; then
+      if [[ ${HELM_UPGRADE:-} == true ]]; then
+        echo 'INFO: no-op because secret exists and is Helm upgrade'
+        # exit without error so Helm will delete the post-upgrade hook Job
+        exit 0
+      else
+        echo 'ERROR: secret exists: "{{ include "ziti-router.fullname" . }}-identity"' >&2
+        # this should never happen because Helm deletes the secret with pre-uninstall hook
+        exit 1
+      fi
+    else
+      echo "INFO: identity secret does not exist, attempting router enrollment"
+    fi
 
     mkdir -v ${ZITI_ROUTER_IDENTITY_DIR}
 
     ziti router enroll \
       {{ .Values.configMountDir }}/{{ .Values.configFile }} \
-      --jwt {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }}
+      --jwt {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }} \
+      --verbose
 
     kubectl -n {{ .Release.Namespace }} create secret generic \
       {{ include "ziti-router.fullname" . }}-identity \
@@ -25,6 +44,22 @@ data:
       --from-file=tls.key="${ZITI_ROUTER_IDENTITY_DIR}/tls.key" \
       --from-file=tls.crt="${ZITI_ROUTER_IDENTITY_DIR}/tls.crt" \
       --from-file=ca.crt="${ZITI_ROUTER_IDENTITY_DIR}/ca.crt"
+
+  {{ .Values.deleteIdentityScriptFile }}: |-
+    #!/usr/bin/env bash
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+    set -o xtrace
+
+    if kubectl -n {{ .Release.Namespace }} get secret \
+      {{ include "ziti-router.fullname" . }}-identity &>/dev/null; then
+      kubectl -n {{ .Release.Namespace }} delete secret \
+        {{ include "ziti-router.fullname" . }}-identity
+    else
+      echo "INFO: no-op because identity secret does not exist"
+      exit 0
+    fi
 
   {{ .Values.configFile }}: |-
     v: 3
@@ -44,12 +79,14 @@ data:
     link:
       dialers:
         - binding: transport
-      # When 'transport' is disabled this means we are a 'private' router
+      # When 'transport' is disabled this means we are a 'private' router, i.e.,
+      # not providing incoming links to other routers. Private routers still
+      # join the mesh, but only form outgoing links.
       {{- if .Values.linkListeners.transport.service.enabled }}
       listeners:
         - binding:          transport
           bind:             tls:0.0.0.0:{{ .Values.linkListeners.transport.containerPort }}
-          advertise:        tls:{{ required "You must set either linkListeners.transport.advertisedHost or advertisedHost to the address to advertise for this router's transport listener. Try adding --set advertisedHost=router11.ziti.example.org to your Helm command" (coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost) }}:{{ .Values.linkListeners.transport.advertisedPort }}
+          advertise:        tls:{{ coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost (printf "%s-transport.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ .Values.linkListeners.transport.advertisedPort }}
           options:
             outQueueSize:   4
       {{- end }}
