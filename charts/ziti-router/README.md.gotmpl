@@ -80,15 +80,16 @@ edge:
       kubernetes.io/ingress.allow-http: "false"
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
       nginx.ingress.kubernetes.io/secure-backends: "true"
-enrollmentJwt: " "
 ```
 
 Now upgrade your router chart release with the values file.
 
 ```bash
+# will attempt enrollment again if it failed initially
 helm upgrade \
   --namespace ziti-router ziti-router-123456789 \
   openziti/ziti-router \
+    --set-file enrollmentJwt=/tmp/router1.jwt \
     --values /tmp/router-values.yml
 ```
 
@@ -101,7 +102,7 @@ Merge the following with your router values.
 ```yaml
 linkListeners:
   transport:
-    advertisedHost: ziti-router-links.example.com
+    advertisedHost: router1-transport.example.com
     advertisedPort: 443
     service:
       enabled: true
@@ -123,6 +124,7 @@ Now upgrade your router chart release with the merged values file.
 helm upgrade \
   --namespace ziti-router ziti-router-123456789 \
   openziti/ziti-router \
+    --set-file enrollmentJwt=/tmp/router1.jwt \
     --values /tmp/router-values.yml
 ```
 

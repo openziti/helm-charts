@@ -31,11 +31,11 @@ csr:
 linkListeners:
   transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
     # -- cluster service target port on the container
-    containerPort: 6004
-    # -- DNS name that other routers will use to form transport links with this router
-    advertisedHost: #router11-links.ziti.example.com
+    containerPort: 10080
+    # -- DNS name that other routers will use to form mesh transport links with this router. Default is cluster-internal service DNS name:port.
+    advertisedHost: #router11-transport.router-namespace.svc:443
     # -- cluster service, node port, load balancer, and ingress port
-    advertisedPort: 6004
+    advertisedPort: 10080
     service:
       # -- create a cluster service for the router transport link listener
       enabled: true
@@ -89,6 +89,8 @@ tunnel:
 execMountDir:     /usr/local/bin
 # -- exec by Helm post-install hook
 initScriptFile:   ziti-router-init.bash
+# -- exec by Helm post-delete hook
+deleteIdentityScriptFile: delete-identity.bash
 # -- projected subpath where the enrollment token will be mounted
 enrollJwtFile: enrollment.jwt
 # -- enrollment one time token from the controller's management API
