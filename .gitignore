@@ -26,4 +26,5 @@ __snapshot__
 # Unit test for helm
 __snapshot__
 .cr-release-packages/
+.cr-index/
 Chart.lock
