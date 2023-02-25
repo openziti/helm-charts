@@ -1,4 +1,4 @@
-name: Release Charts
+name: Release Helm Charts
 
 on:
   push:
@@ -6,7 +6,12 @@ on:
       - main
 
 jobs:
+  helm_docs:
+    name: Generate Helm docs
+    uses: ./.github/workflows/helm-docs.yml
   release:
+    name: Release Helm Charts
+    needs: helm_docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
