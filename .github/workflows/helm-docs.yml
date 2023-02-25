@@ -1,6 +1,10 @@
 name: Generate Helm docs
 on:
-  workflow_call:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
   workflow_dispatch:
 jobs:
   docs:
