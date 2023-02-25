@@ -3,65 +3,91 @@
 # Declare variables to be passed into your templates.
 
 ingress:
-  enabled: true
+  # -- create an ingress for the cluster service
+  enabled: false
+  # -- "nginx" if using ingress-nginx
   ingressClassName: ""
+  # -- ingress annotations for the ingress controller
   annotations: {}
-    # kubernetes.io/ingress.class: 'nginx'
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  # -- ingress labels
   labels: {}
   hosts:
-    - host: ziti-console.domain.tld
+    # -- DNS names the ingress should recognize at the non-TLS listener
+    - host:  # ziti-console.example.com
       paths:
         - path: "/"
           pathType: Prefix
+  # -- DNS names the ingress should recognize at the TLS listener and secret name
   tls: []
-
-httpContainerPort: &httpContainerPort 1408
-
-ports:
-  - name: http
-    containerPort: *httpContainerPort
+    # - hosts:
+    #   - ziti-console.example.com
+    #   secretName: myziti-console-tls-secret  # {helm release name}-tls-secret
 
 service:
+  # -- create a cluster service for the deployment
   enabled: true
-  port: *httpContainerPort
-  name: http
+  # -- port for the server to bind and cluster service to target
+  containerPort: 1408
+  # -- port for the cluster service, load balancer, nodeport, and ingress to advertise
+  advertisedPort: 80
+  # -- symbolic name of the cluster service port
+  portName: http
+  # -- choose ClusterIP, NodePort, or LoadBalancer
   type: ClusterIP
+  # -- cluster service labels
   labels: {}
+  # -- cluster service annotations
   annotations: {}
 
 settings:
+  # -- Ziti Edge Mgmt APIs to pre-configure
   edgeControllers: []
+    # - name: Ziti Edge Mgmt API
+    #   # URL of controller's mgmt API cluster service
+    #   url: https://myziti-controller-client.ziti-controller.svc:443
+    #   # or https://myziti-controller-mgmt.ziti-controller.svc:443 if mgmt API is separate
+    #   default: true
+  # -- Ziti Fabric Mgmt APIs to pre-configure
   fabricControllers: []
 
-
 image:
+  # -- app container image to deploy 
   repository: openziti/zac
+  # -- deployment image pull policy
   pullPolicy: Always
 #  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   # tag: 0.26.11
 #   command: ["sh", "-c", "while true; do sleep 11; done"]
+  # -- app run command args
   args: []
+  # -- app image registry credential
   pullSecrets: []
   # command: ["node", "/usr/src/app/server.js"]
+  # -- app run command
   command: ["node", "/usr/src/app/server.js", "debug"]
 
+# -- release name override
 nameOverride: ""
+# -- release fullname override
 fullnameOverride: ""
 
+# -- annotations to apply to all pods
 podAnnotations: {}
 
+# -- deployment pod security context
 podSecurityContext:
   runAsUser: 1000
   runAsGroup: 1000
   fsGroup: 1000
 
+# -- deployment container security context
 securityContext:
   # capabilities:
   #   add:
   #     - NET_ADMIN
 
+# -- deployment container resources
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -74,15 +100,18 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-
+# -- deployment pod node selector
 nodeSelector: {}
 #  kubernetes.io/role: master
 
+# -- deployment pod tolerations
 tolerations: []
   # - key: node-role.kubernetes.io/master
   #   operator: Exists
   #   effect: NoSchedule
 
+# -- deployment pod node affinity
 affinity: {}
 
+# -- deployment pod replicas
 replicas: 1

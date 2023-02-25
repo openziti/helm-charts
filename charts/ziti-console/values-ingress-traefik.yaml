@@ -1,0 +1,19 @@
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    # DNS name for ingress on 80/tcp
+    - host: # myziti-console.zitik8s
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  labels:
+    ingressMethod: traefik
+
+settings:
+  edgeControllers:
+    - name: Ziti Edge Mgmt API
+      # URL of controller's mgmt API cluster service
+      url:  # e.g. https://myziti-controller-client.ziti-controller.svc:443 
+            # or https://myziti-controller-mgmt.ziti-controller.svc:443 if mgmt API is separate
+      default: true
+
