@@ -1,0 +1,24 @@
+
+ctrl:
+  # DNS name:port of the Ziti "ctrl" server, i.e., the router control plane
+  endpoint:  # ziti-controller-ctrl.ziti-controller.svc:443
+
+#
+## services and ingresses
+#
+
+edge:
+  # DNS name edge clients and other routers will use to reach this router
+  advertisedHost:  # router1.zitik8s
+  # TCP port to pair with advertisedHost
+  advertisedPort: 443
+  service:
+    enabled: true
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.allow-http: "false"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nginx.ingress.kubernetes.io/secure-backends: "true"
