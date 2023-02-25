@@ -4,6 +4,10 @@ ingress:
   hosts:
     # DNS name for ingress on 80/tcp
     - host: # myziti-console.zitik8s
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  labels:
+    ingressMethod: traefik
 
 settings:
   edgeControllers:

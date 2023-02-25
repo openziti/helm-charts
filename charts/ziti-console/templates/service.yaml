@@ -46,12 +46,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+    - port: {{ .Values.service.advertisedPort }}
+      targetPort: {{ .Values.service.containerPort }}
       protocol: TCP
-      name: {{ .Values.service.name }}
+      name: {{ .Values.service.portName }}
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.service.port }}
+      nodePort: {{ .Values.service.advertisedPort }}
       {{- end }}
   selector:
     {{- include "ziti-console.selectorLabels" . | nindent 4 }}
