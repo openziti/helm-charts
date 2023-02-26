@@ -102,20 +102,36 @@ webBindingPki:
   enabled: false
 
 image:
+  # -- alternative homedir for ephemeral, writeable storage
+  homedir: /tmp
   # -- container image tag for app deployment
   repository: docker.io/openziti/ziti-controller
   # -- deployment image pull policy
   pullPolicy: Always
-  # -- container command
+  # -- container entrypoint command
   command: ["ziti", "controller", "run"]
-  # command: ["bash", "-c", "while true; do sleep 1; done"]
-  # -- container command options and args
+  # -- args for the entrypoint command
   args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
+  admin: 
+    # -- image for the admin container
+    repository: docker.io/openziti/ziti-cli
+    # -- entrypoint command for the admin container
+    command:
+      - bash
+      - -c
+      - |
+        while true; do 
+          sleep 1; 
+        done
+    # -- args for the admin container entrypoint command
+    args: []
 
 # -- a directory included in the init and run containers' executable search path
 execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
 # -- exec by init container
 initScriptFile: ziti-controller-init.bash
+# -- admin profile script file
+zitiLoginScript: zitiLogin
 # -- read-only mountpoint where configFile and various read-only identity dirs are projected
 configMountDir: /etc/ziti
 # -- filename of the controller configuration file
