@@ -33,19 +33,7 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
-          #  disabled probes because go-httpbin does not listen on underlay at all when ENABLE_ZITI
-          # livenessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
-          # readinessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
+          ports: []  # no ports because server listens only on Ziti overlay
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
