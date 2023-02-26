@@ -5,6 +5,8 @@ on:
       - '**'
     tags-ignore:
       - '**'
+    branches-ignore:
+      - main
   workflow_dispatch:
 jobs:
   docs:
