@@ -72,7 +72,7 @@ spec:
               path: {{ include "ziti-host.fullname" . }}-identity.json
           {{- else }}
             secretName: {{ include "ziti-host.fullname" . }}-identity
-            defaultMode: 0400
+            defaultMode: 0444
             items:
             - key: persisted-identity
               path: {{ include "ziti-host.fullname" . }}-identity.json
