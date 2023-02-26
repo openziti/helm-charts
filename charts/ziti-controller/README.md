@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.1.5](https://img.shields.io/badge/Version-0.1.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.1.6](https://img.shields.io/badge/Version-0.1.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -21,6 +21,12 @@ Note that ingress-nginx is not strictly required, but the chart is parameterized
 This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. Delete the controller pod after an upgrade for the new controller configuration to take effect.
 
 ## Requirements
+
+### Add the OpenZiti Charts Repo to Helm
+
+```bash
+helm repo add openziti https://docs.openziti.io/helm-charts/
+```
 
 This chart requires Certificate, Issuer, and Bundle resources to be applied before installing the chart. Sub-charts `cert-manager`, and `trust-manager` will be installed automatically. You may disable the sub-charts if you wish to provide these resources separately, but if you do so then please use the sub-chart values at the foot of Values.yaml to ensure those charts are correctly configured.
 
