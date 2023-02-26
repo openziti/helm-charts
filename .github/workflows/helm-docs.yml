@@ -14,7 +14,7 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.ref }}
 
-    - name: Render helm docs inside the README.md and push changes back to PR branch
+    - name: Render helm docs inside the README.md and push changes back to branch
       uses: netfoundry/helm-docs-action@v1
       with:
         # recursively generate README.md for all charts in comma-sep list of
