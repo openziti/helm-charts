@@ -5,6 +5,12 @@
 
 Deploy OpenZiti console as kubernetes service
 
+## Add the OpenZiti Charts Repo to Helm
+
+```bash
+helm repo add openziti https://docs.openziti.io/helm-charts/
+```
+
 ## Minimal Installation
 
 This chart deploys a pod running `ziti-console`, [the OpenZiti console](https://github.com/openziti/ziti-console/).
