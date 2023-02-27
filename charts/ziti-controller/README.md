@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.1.6](https://img.shields.io/badge/Version-0.1.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.1.7](https://img.shields.io/badge/Version-0.1.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -209,8 +209,12 @@ edgeSignerPki:
 | execMountDir | string | `"/usr/local/bin"` | a directory included in the init and run containers' executable search path |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
-| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}","--verbose"]` | container command options and args |
-| image.command | list | `["ziti","controller","run"]` | container command |
+| image.admin.args | list | `[]` | args for the admin container entrypoint command |
+| image.admin.command | list | `["bash","-c","while true; do \n  sleep 1; \ndone\n"]` | entrypoint command for the admin container |
+| image.admin.repository | string | `"docker.io/openziti/ziti-cli"` | image for the admin container |
+| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}","--verbose"]` | args for the entrypoint command |
+| image.command | list | `["ziti","controller","run"]` | container entrypoint command |
+| image.homedir | string | `"/tmp"` | alternative homedir for ephemeral, writeable storage |
 | image.pullPolicy | string | `"Always"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image tag for app deployment |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
@@ -242,6 +246,7 @@ edgeSignerPki:
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | trust-manager.enabled | bool | `true` | install the trust-manager subchart to provide CRD Bundle |
 | webBindingPki.enabled | bool | `false` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
+| zitiLoginScript | string | `"zitiLogin"` | admin profile script file |
 
 ## TODO's
 
