@@ -98,12 +98,12 @@ ingress:
 | image.pullPolicy | string | `"Always"` | deployment image pull policy |
 | image.pullSecrets | list | `[]` | app image registry credential |
 | image.repository | string | `"openziti/zac"` | app container image to deploy  |
+| ingress.advertisedHost | string | `nil` | DNS name the ingress should use for the console service |
 | ingress.annotations | object | `{}` | ingress annotations for the ingress controller |
 | ingress.enabled | bool | `false` | create an ingress for the cluster service |
-| ingress.hosts[0] | object | `{"host":null,"paths":[{"path":"/","pathType":"Prefix"}]}` | DNS names the ingress should recognize at the non-TLS listener |
 | ingress.ingressClassName | string | `""` | "nginx" if using ingress-nginx |
 | ingress.labels | object | `{}` | ingress labels |
-| ingress.tls | list | `[]` | DNS names the ingress should recognize at the TLS listener and secret name |
+| ingress.tlsSecret | string | `nil` | enable TLS ingress by specifying the name of the secret with the tls.crt, tls.key, etc. for the server cert |
 | nameOverride | string | `""` | release name override |
 | nodeSelector | object | `{}` | deployment pod node selector |
 | podAnnotations | object | `{}` | annotations to apply to all pods |
