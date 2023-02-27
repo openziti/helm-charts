@@ -94,7 +94,7 @@ ingress:
 | affinity | object | `{}` | deployment pod node affinity |
 | fullnameOverride | string | `""` | release fullname override |
 | image.args | list | `[]` | app run command args |
-| image.command | list | `["node","/usr/src/app/server.js","debug"]` | app run command |
+| image.command | list | `["node","/usr/src/app/server.js"]` | app run command |
 | image.pullPolicy | string | `"Always"` | deployment image pull policy |
 | image.pullSecrets | list | `[]` | app image registry credential |
 | image.repository | string | `"openziti/zac"` | app container image to deploy  |
@@ -107,7 +107,9 @@ ingress:
 | nameOverride | string | `""` | release name override |
 | nodeSelector | object | `{}` | deployment pod node selector |
 | podAnnotations | object | `{}` | annotations to apply to all pods |
-| podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsUser":1000}` | deployment pod security context |
+| podSecurityContext.fsGroup | int | `1000` | volume mount filesystem group owner |
+| podSecurityContext.runAsGroup | int | `1000` | effective GID |
+| podSecurityContext.runAsUser | int | `1000` | effective UID |
 | replicas | int | `1` | deployment pod replicas |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
