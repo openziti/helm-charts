@@ -3,4 +3,4 @@ appVersion: latest
 description: Deploy OpenZiti console as kubernetes service
 name: ziti-console
 type: application
-version: 0.2.2
+version: 0.2.3
