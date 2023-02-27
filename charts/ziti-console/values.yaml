@@ -56,9 +56,9 @@ image:
   args: []
   # -- app image registry credential
   pullSecrets: []
-  # command: ["node", "/usr/src/app/server.js"]
   # -- app run command
-  command: ["node", "/usr/src/app/server.js", "debug"]
+  command: ["node", "/usr/src/app/server.js"]
+  # command: ["node", "/usr/src/app/server.js", "debug"]
 
 # -- release name override
 nameOverride: ""
@@ -68,10 +68,12 @@ fullnameOverride: ""
 # -- annotations to apply to all pods
 podAnnotations: {}
 
-# -- deployment pod security context
 podSecurityContext:
+  # -- effective UID
   runAsUser: 1000
+  # -- effective GID
   runAsGroup: 1000
+  # -- volume mount filesystem group owner
   fsGroup: 1000
 
 # -- deployment container security context
