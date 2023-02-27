@@ -33,5 +33,5 @@ spec:
               service:
                 name: {{ include "ziti-console.fullname" . }}
                 port:
-                  name: {{ .Values.service.name }}
+                  name: {{ .Values.service.portName }}
 {{- end }}
