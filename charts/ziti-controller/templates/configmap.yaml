@@ -22,12 +22,9 @@ data:
     fi
 
   {{ .Values.zitiLoginScript }}: |-
-    {{- if .Values.managementApi.service.enabled }}
-    ZITI_MGMT={{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.managementApi.advertisedPort }}
-    {{- else }}
-    ZITI_MGMT={{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.clientApi.advertisedPort }}
-    {{- end }}
-    ziti edge login "${ZITI_MGMT}" --yes --username "${ZITI_ADMIN_USER}" --password "${ZITI_ADMIN_PASSWORD}"
+    ziti edge login "${ZITI_MGMT_API}" --yes \
+      --username "${ZITI_ADMIN_USER}" \
+      --password "${ZITI_ADMIN_PASSWORD}"
 
   {{ .Values.configFile }}: |-
     v: 3
