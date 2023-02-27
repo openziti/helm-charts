@@ -17,35 +17,21 @@ spec:
   {{- if .Values.ingress.ingressClassName }}
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- if .Values.ingress.certSecret }}
   tls:
-    {{- with .Values.ingress.tls }}
-      {{- toYaml . | nindent 4 }}
-    {{- end }}
+    - hosts:
+      - {{ .Values.ingress.advertisedHost | quote }}
+      secretName: {{ .Values.ingress.tlsSecret }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ .Values.ingress.advertisedHost | quote }}
       http:
         paths:
-          {{- if and .paths (gt (len (default list .paths)) 0) -}}
-          {{- range .paths }}
-          - path: {{ .path | quote }}
-            pathType: {{ default "Prefix" .pathType }}
-            backend:
-              service:
-                name: {{ include "ziti-console.fullname" $ }}
-                port:
-                  name: {{ $.Values.service.name }}
-          {{- end }}
-          {{- else }}
           - path: /
             pathType: "Prefix"
             backend:
               service:
-                name: {{ include "ziti-console.fullname" $ }}
+                name: {{ include "ziti-console.fullname" . }}
                 port:
-                  name: {{ $.Values.service.name }}
-          {{- end }}
-    {{- end }}
+                  name: {{ .Values.service.portName }}
 {{- end }}
