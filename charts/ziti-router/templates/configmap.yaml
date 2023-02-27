@@ -56,8 +56,10 @@ data:
       {{ include "ziti-router.fullname" . }}-identity &>/dev/null; then
       kubectl -n {{ .Release.Namespace }} delete secret \
         {{ include "ziti-router.fullname" . }}-identity
+      sleep 60
     else
       echo "INFO: no-op because identity secret does not exist"
+      sleep 60
       exit 0
     fi
 
