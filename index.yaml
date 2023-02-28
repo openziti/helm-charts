@@ -366,6 +366,17 @@ entries:
     version: 0.1.2
   ziti-host:
   - apiVersion: v2
+    appVersion: 0.20.21
+    created: "2023-02-28T15:27:21.981307021Z"
+    description: Host OpenZiti services with a tunneler pod
+    digest: 11dc84d94a79e793df4452b9356c6fc4a27cfbd2486aec7ccded630b42713bb3
+    kubeVersion: '>= 1.20.0'
+    name: ziti-host
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.4.0/ziti-host-0.4.0.tgz
+    version: 0.4.0
+  - apiVersion: v2
     appVersion: 0.20.20
     created: "2023-02-26T16:59:22.393841199Z"
     description: Host OpenZiti services with a tunneler pod
@@ -460,4 +471,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.3/ziti-router-0.1.3.tgz
     version: 0.1.3
-generated: "2023-02-28T15:26:41.10610528Z"
+generated: "2023-02-28T15:27:21.981452222Z"
