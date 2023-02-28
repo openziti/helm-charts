@@ -16,6 +16,16 @@ entries:
   httpbin:
   - apiVersion: v2
     appVersion: latest
+    created: "2023-02-28T15:24:03.811872597Z"
+    description: Run the Ziti fork of go-httpbin
+    digest: 7bfaa5c50e1d1bf74c5311b73a23e9190e79880507fc7ecd67e2b0439f1f6fea
+    name: httpbin
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/httpbin-0.1.7/httpbin-0.1.7.tgz
+    version: 0.1.7
+  - apiVersion: v2
+    appVersion: latest
     created: "2023-02-26T18:17:56.436292835Z"
     description: Run the Ziti fork of go-httpbin
     digest: a243f71f39d34d4bd8dc16a60acf0674608a91a13e1e004520b50b58ad690e26
@@ -405,4 +415,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.3/ziti-router-0.1.3.tgz
     version: 0.1.3
-generated: "2023-02-28T15:01:13.24823622Z"
+generated: "2023-02-28T15:24:03.811966999Z"
