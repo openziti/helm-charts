@@ -122,6 +122,16 @@ entries:
   ziti-console:
   - apiVersion: v2
     appVersion: latest
+    created: "2023-02-28T15:01:13.248180019Z"
+    description: Deploy OpenZiti console as kubernetes service
+    digest: bdd1699f4c7b26cd4e10b9e4d412edb958e630a10de1f0d12a76a2f0d8a31d6a
+    name: ziti-console
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.2.4/ziti-console-0.2.4.tgz
+    version: 0.2.4
+  - apiVersion: v2
+    appVersion: latest
     created: "2023-02-27T05:41:03.614332575Z"
     description: Deploy OpenZiti console as kubernetes service
     digest: 265640a3b29eb08bd972ec10f04b7192823e2d0b5c1c4fe81b179c745dcc9324
@@ -395,4 +405,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.3/ziti-router-0.1.3.tgz
     version: 0.1.3
-generated: "2023-02-27T05:41:03.614394175Z"
+generated: "2023-02-28T15:01:13.24823622Z"
