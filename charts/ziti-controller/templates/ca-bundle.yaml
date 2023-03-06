@@ -8,10 +8,16 @@ spec:
     - secret:
         name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
         key: tls.crt
+    - secret:
+        name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
+        key: ca.crt
     {{- if (eq .Values.edgeSignerPki.enabled true) }}
     - secret:
         name: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
         key: tls.crt
+    - secret:
+        name: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+        key: ca.crt
     {{- end }}
   target:
     configMap:
