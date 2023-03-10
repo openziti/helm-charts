@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.1.10](https://img.shields.io/badge/Version-0.1.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.1.11](https://img.shields.io/badge/Version-0.1.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -187,6 +187,7 @@ edgeSignerPki:
 | clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | clientApi.advertisedPort | int | `1280` | cluster service, node port, load balancer, and ingress port |
 | clientApi.containerPort | int | `1280` | cluster service target port on the container |
+| clientApi.dnsNames | list | `[]` | additional DNS SANs |
 | clientApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
 | clientApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
@@ -197,6 +198,7 @@ edgeSignerPki:
 | ctrlPlane.advertisedPort | int | `6262` | cluster service, node port, load balancer, and ingress port |
 | ctrlPlane.alternativeIssuer | string | `nil` | kind and name of alternative issuer for the controller's identity |
 | ctrlPlane.containerPort | int | `6262` | cluster service target port on the container |
+| ctrlPlane.dnsNames | list | `[]` | additional DNS SANs |
 | ctrlPlane.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | ctrlPlane.service.enabled | bool | `true` | create a cluster service for the deployment |
@@ -223,6 +225,7 @@ edgeSignerPki:
 | managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | int | `1281` | cluster service, node port, load balancer, and ingress port |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
+| managementApi.dnsNames | list | `[]` | additional DNS SANs |
 | managementApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
 | managementApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | managementApi.service.enabled | bool | `false` | create a cluster service for the deployment |
