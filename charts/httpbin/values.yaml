@@ -4,6 +4,11 @@
 
 replicaCount: 1
 
+# -- Ziti identity contents as JSON
+zitiIdentity:
+# -- Ziti identity JSON as base64 encoding
+zitiIdentityEncoding:
+
 image:
   repository: openziti/go-httpbin
   pullPolicy: IfNotPresent
