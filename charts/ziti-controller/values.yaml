@@ -27,6 +27,8 @@ ctrlPlane:
     # kind:
     # -- metadata name of the alternative issuer
     # name:
+  # -- additional DNS SANs
+  dnsNames: []
 
 clientApi:
   # -- cluster service target port on the container
@@ -45,6 +47,8 @@ clientApi:
     enabled: false
     # -- ingress annotations, e.g., to configure ingress-nginx
     annotations:
+  # -- additional DNS SANs
+  dnsNames: []
 
 managementApi:
   # -- cluster service target port on the container
@@ -63,6 +67,8 @@ managementApi:
     enabled: false
     # -- ingress annotations, e.g., to configure ingress-nginx
     annotations:
+  # -- additional DNS SANs
+  dnsNames: []
 
 prometheus:
   # -- cluster service target port on the container
