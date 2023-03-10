@@ -49,6 +49,8 @@ clientApi:
 managementApi:
   # -- cluster service target port on the container
   containerPort: &mgmtPort 1281
+  # -- global DNS name by which routers can resolve a reachable IP for this service
+  advertisedHost:
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: *mgmtPort
   service:
@@ -56,6 +58,11 @@ managementApi:
     enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
+  ingress:
+    # -- create an ingress for the cluster service
+    enabled: false
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations:
 
 prometheus:
   # -- cluster service target port on the container

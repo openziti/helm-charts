@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.1.9](https://img.shields.io/badge/Version-0.1.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.1.10](https://img.shields.io/badge/Version-0.1.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -220,8 +220,11 @@ edgeSignerPki:
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | recommended: install the ingress-nginx subchart (may be necessary for managed k8s) |
 | initScriptFile | string | `"ziti-controller-init.bash"` | exec by init container |
+| managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | int | `1281` | cluster service, node port, load balancer, and ingress port |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
+| managementApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| managementApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | managementApi.service.enabled | bool | `false` | create a cluster service for the deployment |
 | managementApi.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | nodeSelector | object | `{}` | deployment template spec node selector |
