@@ -15,7 +15,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-edge-root
+  commonName: {{ include "ziti-controller.fullname" . }}-edge-root
   secretName: {{ include "ziti-controller.fullname" . }}-edge-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -50,7 +50,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-edge-signer
+  commonName: {{ include "ziti-controller.fullname" . }}-edge-signer
   secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -65,5 +65,36 @@ spec:
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-edge-root-issuer
+
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-admin-client-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  isCA: false
+  commonName: {{ include "ziti-controller.fullname" . }}-admin
+  secretName: {{ include "ziti-controller.fullname" . }}-admin-client-cert-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  usages:
+    - client auth
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
 
 {{- end }}

@@ -260,7 +260,7 @@ trust-manager:
       # -- trust-manager needs to be configured to trust the namespace in which
       # the controller is deployed so that it will create the Bundle resource
       # for the ctrl plane trust bundle
-      namespace: ziti-controller
+      namespace: ziti
   crds:
     # -- CRDs must be applied in advance of installing the parent chart
     enabled: false
