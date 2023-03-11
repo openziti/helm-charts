@@ -19,6 +19,14 @@ spec:
         name: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
         key: ca.crt
     {{- end }}
+    {{- if (eq .Values.webBindingPki.enabled true) }}
+    - secret:
+        name: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
+        key: tls.crt
+    - secret:
+        name: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
+        key: ca.crt
+    {{- end }}
   target:
     configMap:
       key: {{ .Values.ctrlPlaneCasFile }}
