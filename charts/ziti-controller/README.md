@@ -248,7 +248,7 @@ edgeSignerPki:
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| trust-manager.app.trust.namespace | string | `"ziti-controller"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
+| trust-manager.app.trust.namespace | string | `"ziti"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | trust-manager.enabled | bool | `true` | install the trust-manager subchart to provide CRD Bundle |
 | webBindingPki.enabled | bool | `false` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
