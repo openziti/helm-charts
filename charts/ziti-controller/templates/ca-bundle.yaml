@@ -19,7 +19,7 @@ spec:
     # this secret holds the default admin's client cert whose issuer is the edge
     # signer intermediate CA
     - secret:
-        name: {{ include "ziti-controller.fullname" . }}-admin-client-cert
+        name: {{ include "ziti-controller.fullname" . }}-admin-client-secret
         key: ca.crt
     # this secret holds the edge signer intermediate CA's cert whose issuer is
     # the edge signer root CA
@@ -31,7 +31,7 @@ spec:
     # this secret holds the web identity's server cert whose issuer is the web
     # intermediate CA
     - secret:
-        name: {{ include "ziti-controller.fullname" . }}-web-identity-cert
+        name: {{ include "ziti-controller.fullname" . }}-web-identity-secret
         key: ca.crt
     # this secret holds the web intermediate CA's certificate whose issuer is
     # the web root CA

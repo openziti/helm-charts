@@ -87,7 +87,7 @@ metadata:
 spec:
   isCA: false
   commonName: {{ include "ziti-controller.fullname" . }}-admin
-  secretName: {{ include "ziti-controller.fullname" . }}-admin-client-cert-secret
+  secretName: {{ include "ziti-controller.fullname" . }}-admin-client-secret
   privateKey:
     algorithm: ECDSA
     size: 256
