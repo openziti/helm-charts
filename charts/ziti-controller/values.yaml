@@ -10,7 +10,7 @@ ctrlPlane:
   # inside the same cluster
   advertisedHost:
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: 6262
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: true
@@ -36,7 +36,7 @@ clientApi:
   # -- global DNS name by which routers can resolve a reachable IP for this service
   advertisedHost:
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: 1280
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: true
@@ -52,11 +52,11 @@ clientApi:
 
 managementApi:
   # -- cluster service target port on the container
-  containerPort: &mgmtPort 1281
+  containerPort: 1281
   # -- global DNS name by which routers can resolve a reachable IP for this service
   advertisedHost:
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: *mgmtPort
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
@@ -72,9 +72,9 @@ managementApi:
 
 prometheus:
   # -- cluster service target port on the container
-  containerPort: &prometheusPort 9090
+  containerPort: 9090
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: *prometheusPort
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: false
@@ -108,11 +108,11 @@ cert:
 # the main identity used by the ctrl plane
 edgeSignerPki:
   # -- generate a separate PKI root of trust for the edge signer CA
-  enabled: false
+  enabled: true
 webBindingPki:
   # -- generate a separate PKI root of trust for web bindings, i.e., client,
   # management, and prometheus APIs
-  enabled: false
+  enabled: true
 
 image:
   # -- alternative homedir for ephemeral, writeable storage
@@ -124,7 +124,7 @@ image:
   # -- container entrypoint command
   command: ["ziti", "controller", "run"]
   # -- args for the entrypoint command
-  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
+  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]
   admin: 
     # -- image for the admin container
     repository: docker.io/openziti/ziti-cli
@@ -134,7 +134,7 @@ image:
       - -c
       - |
         while true; do 
-          sleep 1; 
+          sleep 10;
         done
     # -- args for the admin container entrypoint command
     args: []
@@ -247,14 +247,14 @@ persistence:
 # with Terraform or some other external configuration system.
 cert-manager:
   # -- install the cert-manager subchart to provide CRDs Certificate, Issuer
-  enabled: true
+  enabled: false
   # -- clean up secret when certificate is deleted
   enableCertificateOwnerRef: true
   # -- CRDs must be applied in advance of installing the parent chart
   installCRDs: false
 trust-manager:
   # -- install the trust-manager subchart to provide CRD Bundle
-  enabled: true
+  enabled: false
   app:
     trust:
       # -- trust-manager needs to be configured to trust the namespace in which
