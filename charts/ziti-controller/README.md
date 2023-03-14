@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.1.12](https://img.shields.io/badge/Version-0.1.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -180,12 +180,12 @@ edgeSignerPki:
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
-| cert-manager.enabled | bool | `true` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
+| cert-manager.enabled | bool | `false` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
 | cert-manager.installCRDs | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | cert.duration | string | `"87840h"` | Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | Go time.Duration string format |
 | clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
-| clientApi.advertisedPort | int | `1280` | cluster service, node port, load balancer, and ingress port |
+| clientApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | clientApi.containerPort | int | `1280` | cluster service target port on the container |
 | clientApi.dnsNames | list | `[]` | additional DNS SANs |
 | clientApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
@@ -195,7 +195,7 @@ edgeSignerPki:
 | configFile | string | `"ziti-controller.yaml"` | filename of the controller configuration file |
 | configMountDir | string | `"/etc/ziti"` | read-only mountpoint where configFile and various read-only identity dirs are projected |
 | ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
-| ctrlPlane.advertisedPort | int | `6262` | cluster service, node port, load balancer, and ingress port |
+| ctrlPlane.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | ctrlPlane.alternativeIssuer | string | `nil` | kind and name of alternative issuer for the controller's identity |
 | ctrlPlane.containerPort | int | `6262` | cluster service target port on the container |
 | ctrlPlane.dnsNames | list | `[]` | additional DNS SANs |
@@ -207,14 +207,14 @@ edgeSignerPki:
 | ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` | filename of the ctrl plane trust bundle |
 | dataMountDir | string | `"/persistent"` | writeable mountpoint where the controller will create dbFile during init |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
-| edgeSignerPki.enabled | bool | `false` | generate a separate PKI root of trust for the edge signer CA |
+| edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
 | execMountDir | string | `"/usr/local/bin"` | a directory included in the init and run containers' executable search path |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
 | image.admin.args | list | `[]` | args for the admin container entrypoint command |
-| image.admin.command | list | `["bash","-c","while true; do \n  sleep 1; \ndone\n"]` | entrypoint command for the admin container |
+| image.admin.command | list | `["bash","-c","while true; do \n  sleep 10;\ndone\n"]` | entrypoint command for the admin container |
 | image.admin.repository | string | `"docker.io/openziti/ziti-cli"` | image for the admin container |
-| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}","--verbose"]` | args for the entrypoint command |
+| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homedir | string | `"/tmp"` | alternative homedir for ephemeral, writeable storage |
 | image.pullPolicy | string | `"Always"` | deployment image pull policy |
@@ -223,7 +223,7 @@ edgeSignerPki:
 | ingress-nginx.enabled | bool | `false` | recommended: install the ingress-nginx subchart (may be necessary for managed k8s) |
 | initScriptFile | string | `"ziti-controller-init.bash"` | exec by init container |
 | managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
-| managementApi.advertisedPort | int | `1281` | cluster service, node port, load balancer, and ingress port |
+| managementApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
 | managementApi.dnsNames | list | `[]` | additional DNS SANs |
 | managementApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
@@ -241,7 +241,7 @@ edgeSignerPki:
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":65534}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `65534` | this is the GID of "nobody" in the RedHat UBI minimal container image. This was added when troubleshooting a persistent volume permission error, and I don't know if it's necessary. |
-| prometheus.advertisedPort | int | `9090` | cluster service, node port, load balancer, and ingress port |
+| prometheus.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
 | prometheus.service.enabled | bool | `false` | create a cluster service for the deployment |
 | prometheus.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
@@ -250,8 +250,8 @@ edgeSignerPki:
 | tolerations | list | `[]` | deployment template spec tolerations |
 | trust-manager.app.trust.namespace | string | `"ziti"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
-| trust-manager.enabled | bool | `true` | install the trust-manager subchart to provide CRD Bundle |
-| webBindingPki.enabled | bool | `false` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
+| trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
+| webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 | zitiLoginScript | string | `"zitiLogin"` | admin profile script file |
 
 ## TODO's

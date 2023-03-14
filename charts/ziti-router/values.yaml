@@ -35,7 +35,7 @@ linkListeners:
     # -- DNS name that other routers will use to form mesh transport links with this router. Default is cluster-internal service DNS name:port.
     advertisedHost: #router11-transport.router-namespace.svc:443
     # -- cluster service, node port, load balancer, and ingress port
-    advertisedPort: 10080
+    advertisedPort: 443
     service:
       # -- create a cluster service for the router transport link listener
       enabled: true
@@ -60,12 +60,12 @@ edge:
   # -- DNS name that edge clients will use to reach this router's edge listener
   advertisedHost: #router11-edge.ziti.example.com
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: 3022
+  advertisedPort: 443
   service:
     # -- create a cluster service for the edge listener
     enabled: true
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
-    type: LoadBalancer
+    type: ClusterIP
     # -- service labels
     labels:
     # -- service annotations
