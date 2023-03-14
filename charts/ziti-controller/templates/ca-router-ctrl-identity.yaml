@@ -10,12 +10,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-root-cert
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-default-root
-  secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
+  commonName: ziti-controller-ctrl-plane-root
+  secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -34,12 +34,12 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
 
 ---
 apiVersion: cert-manager.io/v1
@@ -68,7 +68,7 @@ spec:
       {{- end }}
     {{- else }}
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
+    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
     {{- end }}
 
 ---
