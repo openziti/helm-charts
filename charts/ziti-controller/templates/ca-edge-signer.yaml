@@ -85,9 +85,11 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  isCA: false
   commonName: {{ include "ziti-controller.fullname" . }}-admin
   secretName: {{ include "ziti-controller.fullname" . }}-admin-client-secret
+  isCA: false
+  duration: {{ .Values.edgeSignerPki.admin_client_cert.duration }}
+  renewBefore: {{ .Values.edgeSignerPki.admin_client_cert.renewBefore }}
   privateKey:
     algorithm: ECDSA
     size: 256
