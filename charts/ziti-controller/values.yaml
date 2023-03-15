@@ -99,9 +99,9 @@ cert:
   # TODO lower this value!
   # duration: 2160h   # 90d
   # renewBefore: 360h # 15d
-  # -- Go time.Duration string format
+  # -- server certificate duration as Go time.Duration string format
   duration: 87840h    # 3660d / 10 y
-  # -- Go time.Duration string format
+  # -- rewnew server certificates before expiry as Go time.Duration string format
   renewBefore: 720h   # 30d
 
 # you can enable these if you want to use roots of trust that are separate from
@@ -109,6 +109,12 @@ cert:
 edgeSignerPki:
   # -- generate a separate PKI root of trust for the edge signer CA
   enabled: true
+  admin_client_cert:
+    # -- admin client certificate duration as Go time.Duration
+    duration: 8760h
+    # -- renew admin client certificate before expiry as Go time.Duration
+    renewBefore: 720h
+
 webBindingPki:
   # -- generate a separate PKI root of trust for web bindings, i.e., client,
   # management, and prometheus APIs
