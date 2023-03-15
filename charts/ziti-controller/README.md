@@ -182,8 +182,8 @@ edgeSignerPki:
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
 | cert-manager.enabled | bool | `false` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
 | cert-manager.installCRDs | bool | `false` | CRDs must be applied in advance of installing the parent chart |
-| cert.duration | string | `"87840h"` | Go time.Duration string format |
-| cert.renewBefore | string | `"720h"` | Go time.Duration string format |
+| cert.duration | string | `"87840h"` | server certificate duration as Go time.Duration string format |
+| cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
 | clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | clientApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | clientApi.containerPort | int | `1280` | cluster service target port on the container |
@@ -207,6 +207,8 @@ edgeSignerPki:
 | ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` | filename of the ctrl plane trust bundle |
 | dataMountDir | string | `"/persistent"` | writeable mountpoint where the controller will create dbFile during init |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
+| edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
+| edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
 | execMountDir | string | `"/usr/local/bin"` | a directory included in the init and run containers' executable search path |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
