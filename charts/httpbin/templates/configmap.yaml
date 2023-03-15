@@ -1,0 +1,63 @@
+{{- if .Values.enrollmentJwt }}
+---
+# Chart name: {{- .Chart.Name }} {{- .Values.nameOverride }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "httpbin.fullname" . }}-config
+  labels:
+    {{- include "httpbin.labels" . | nindent 4 }}
+data:
+  # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
+  {{ .Values.initScriptFile }}: |-
+    #!/usr/bin/env bash
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+    set -o xtrace
+
+    if kubectl -n {{ .Release.Namespace }} get secret \
+      {{ include "httpbin.fullname" . }}-identity &>/dev/null; then
+      if [[ ${HELM_UPGRADE:-} == true ]]; then
+        echo 'INFO: no-op because secret exists and is Helm upgrade'
+        # exit without error so Helm will delete the post-upgrade hook Job
+        exit 0
+      else
+        echo 'ERROR: secret exists: "{{ include "httpbin.fullname" . }}-identity"' >&2
+        # this should never happen because Helm deletes the secret with pre-uninstall hook
+        exit 1
+      fi
+    else
+      echo "INFO: identity secret does not exist, attempting enrollment"
+    fi
+
+    mkdir -v /tmp/ziti
+
+    ziti edge enroll \
+      --jwt /etc/ziti/id.jwt \
+      --out /tmp/ziti/id.json
+      --verbose
+
+    kubectl -n {{ .Release.Namespace }} create secret generic \
+      {{ include "httpbin.fullname" . }}-identity \
+      --from-file=ZITI_IDENTITY=/tmp/ziti/id.json
+
+  {{ .Values.deleteIdentityScriptFile }}: |-
+    #!/usr/bin/env bash
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+    set -o xtrace
+
+    if kubectl -n {{ .Release.Namespace }} get secret \
+      {{ include "httpbin.fullname" . }}-identity &>/dev/null; then
+      kubectl -n {{ .Release.Namespace }} delete secret \
+        {{ include "httpbin.fullname" . }}-identity
+      echo "INFO: Finished cleaning up identity. Job will self-destruct in 20s."
+      sleep 20
+    else
+      echo "INFO: no-op because identity secret does not exist. Job will self-destruct in 20s."
+      sleep 20
+      exit 0
+    fi
+{{- end -}}

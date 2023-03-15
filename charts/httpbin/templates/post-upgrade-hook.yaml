@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-post-upgrade-job
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  completions: 1
+  template:
+    metadata:
+      name: {{ .Release.Name }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- include "ziti-router.labels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "ziti-router.fullname" . }}-hook-serviceaccount
+      containers:
+      - name: post-upgrade-job
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+          - name: ZITI_ROUTER_IDENTITY_DIR
+            value: /tmp/ziti-router-identity
+          - name: PFXLOG_NO_JSON
+            value: "true"
+          # used by init script to branch on the condition where the identity
+          # secret already exists
+          - name: HELM_UPGRADE
+            value: "true"
+        volumeMounts:
+          - mountPath: {{ .Values.execMountDir }}/{{ .Values.initScriptFile }}
+            name: ziti-router-config
+            subPath: {{ .Values.initScriptFile }}
+          - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
+            name: ziti-router-config
+            subPath: {{ .Values.configFile }}
+          - mountPath: {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }}
+            name: ziti-router-jwt
+            subPath: {{ .Values.enrollJwtFile }}
+            readOnly: true
+        command: ["{{ .Values.initScriptFile }}"]
+        # command: ["sh", "-c", "while true; do sleep 86400; done"]
+      volumes:
+        - name: ziti-router-config
+          configMap:
+            name: {{ include "ziti-router.fullname" . }}-config
+            items:
+              - key: {{ .Values.initScriptFile }}
+                path: {{ .Values.initScriptFile }}
+                mode: 0555
+              - key: {{ .Values.configFile }}
+                path: {{ .Values.configFile }}
+                mode: 0444
+        - name: ziti-router-jwt
+          secret:
+            secretName: {{ include "ziti-router.fullname" . }}-jwt
+            defaultMode: 0444
+            items:
+            - key: enrollmentJwt
+              path: {{ .Values.enrollJwtFile }}

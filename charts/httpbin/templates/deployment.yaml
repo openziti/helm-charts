@@ -24,7 +24,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "httpbin.serviceAccountName" . }}
+      # serviceAccountName: {{ include "httpbin.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -44,6 +44,12 @@ spec:
               value: "true"
             - name: ZITI_SERVICE_NAME
               value: {{ required "You must specify the Ziti service name. Try adding --set zitiServiceName=\"my httpbin service\" to your Helm command." .Values.zitiServiceName }}
+            - name: ZITI_IDENTITY
+              value: /etc/ziti/id.json
+          volumeMounts:
+            - mountPath: /etc/ziti/id.json
+              name: ziti-identity
+              readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -56,3 +62,8 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: ziti-identity
+          secret:
+            secretName: {{ include "httpbin.fullname" . }}-identity
+            defaultMode: 0444
