@@ -96,3 +96,8 @@ zitiIdentity:
 
 # -- Ziti one-time enrollment token as JWT, you can send this or the enrolled identity in 'zitiIdentity'
 zitiEnrollment:
+
+# -- exec by Helm post-install hook
+initScriptFile:   ziti-init.bash
+# -- exec by Helm post-delete hook
+deleteIdentityScriptFile: delete-identity.bash

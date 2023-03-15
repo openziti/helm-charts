@@ -17,10 +17,20 @@
 
 This chart deploys a pod running the Ziti-embeded version of go-httpbin, a REST API server.
 
+Install with an enrollment token to generate a private key in-place.
+
 ```bash
-helm install httpbinz-release1 openziti/httpbin \
+helm install httpbinz openziti/httpbin \
      --set zitiServiceName="my httpbin service" \
-     --set-file zitiEnrollment=./my-ziti-identity.jwt
+     --set-file zitiEnrollment=id.jwt
+```
+
+Install with an enrolled identity.
+
+```bash
+helm install httpbinz openziti/httpbin \
+     --set zitiServiceName="my httpbin service" \
+     --set-file zitiIdentity=id.json
 ```
 
 ## Values Reference

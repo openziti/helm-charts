@@ -1,4 +1,4 @@
-{{- if .Values.enrollmentJwt }}
+{{- if .Values.zitiEnrollment }}
 ---
 # Chart name: {{- .Chart.Name }} {{- .Values.nameOverride }}
 apiVersion: v1
@@ -35,12 +35,12 @@ data:
 
     ziti edge enroll \
       --jwt /etc/ziti/id.jwt \
-      --out /tmp/ziti/id.json
+      --out /tmp/ziti/id.json \
       --verbose
 
     kubectl -n {{ .Release.Namespace }} create secret generic \
       {{ include "httpbin.fullname" . }}-identity \
-      --from-file=ZITI_IDENTITY=/tmp/ziti/id.json
+      --from-file=ziti_identity_json=/tmp/ziti/id.json
 
   {{ .Values.deleteIdentityScriptFile }}: |-
     #!/usr/bin/env bash

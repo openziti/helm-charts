@@ -1,3 +1,5 @@
+{{- if .Values.zitiEnrollment }}
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -23,30 +25,33 @@ spec:
         app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-        {{- include "ziti-router.labels" . | nindent 8 }}
+        {{- include "httpbin.labels" . | nindent 8 }}
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
       restartPolicy: Never
-      serviceAccountName: {{ include "ziti-router.fullname" . }}-hook-serviceaccount
+      serviceAccountName: {{ include "httpbin.fullname" . }}-hook-serviceaccount
       containers:
-      - name: pre-install-job
-        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+      - name: pre-delete-job
+        image: {{ .Values.zitiImage.repository }}
+        imagePullPolicy: {{ .Values.zitiImage.pullPolicy }}
         env:
+          - name: PFXLOG_NO_JSON
+            value: "true"
         volumeMounts:
-          - mountPath: {{ .Values.execMountDir }}/{{ .Values.deleteIdentityScriptFile }}
-            name: ziti-router-config
+          - name: httpbin-config
+            mountPath: /usr/local/bin/{{ .Values.deleteIdentityScriptFile }}
             subPath: {{ .Values.deleteIdentityScriptFile }}
+            readOnly: true
         command: ["{{ .Values.deleteIdentityScriptFile }}"]
-        # command: ["sh", "-c", "while true; do sleep 86400; done"]
       volumes:
-        - name: ziti-router-config
+        - name: httpbin-config
           configMap:
-            name: {{ include "ziti-router.fullname" . }}-config
+            name: {{ include "httpbin.fullname" . }}-config
             items:
               - key: {{ .Values.deleteIdentityScriptFile }}
                 path: {{ .Values.deleteIdentityScriptFile }}
                 mode: 0555
+{{- end -}}

@@ -47,8 +47,9 @@ spec:
             - name: ZITI_IDENTITY
               value: /etc/ziti/id.json
           volumeMounts:
-            - mountPath: /etc/ziti/id.json
-              name: ziti-identity
+            - name: ziti-identity
+              mountPath: /etc/ziti/id.json
+              subPath: id.json
               readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -67,3 +68,6 @@ spec:
           secret:
             secretName: {{ include "httpbin.fullname" . }}-identity
             defaultMode: 0444
+            items:
+            - key: ziti_identity_json
+              path: id.json
