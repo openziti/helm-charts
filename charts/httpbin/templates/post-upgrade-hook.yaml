@@ -40,6 +40,10 @@ spec:
         env:
           - name: PFXLOG_NO_JSON
             value: "true"
+          # used by init script to branch on the condition where the identity
+          # secret already exists
+          - name: HELM_UPGRADE
+            value: "true"
         volumeMounts:
           - name: httpbin-config
             mountPath: /usr/local/bin/{{ .Values.initScriptFile }}
