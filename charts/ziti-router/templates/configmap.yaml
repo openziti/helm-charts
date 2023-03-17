@@ -57,10 +57,10 @@ data:
       kubectl -n {{ .Release.Namespace }} delete secret \
         {{ include "ziti-router.fullname" . }}-identity
       echo "INFO: Finished cleaning up router identity. Job will self-destruct in 20s."
-      sleep 20
+      sleep 10
     else
       echo "INFO: no-op because identity secret does not exist. Job will self-destruct in 20s."
-      sleep 20
+      sleep 10
       exit 0
     fi
 
