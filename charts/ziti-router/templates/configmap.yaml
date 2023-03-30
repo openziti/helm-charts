@@ -113,7 +113,9 @@ data:
             lanIf: {{ .Values.tunnel.lanIf }}
           {{- else if eq .Values.tunnel.mode "proxy" }}
             services:
-            {{- include .Values.tunnel.services . | nindent 14 }}
+            {{- range .Values.tunnel.services }}
+              - {{ . | quote }}
+            {{- end }}
           {{- end }}
     {{- end }}
     {{- end }}
