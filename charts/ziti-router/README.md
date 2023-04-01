@@ -209,6 +209,7 @@ tunnel:
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
+| tunnel.additionalK8sServices | list | `[]` | Kubernetes services created additionally of the "default" proxy listener service if mode "proxy" |
 | tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
 | tunnel.proxyAdditionalK8sServices | list | `[]` | additional Kubernetes services created additionally to the "default" proxy listener service, only if mode is "proxy" |
 | tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | default Kubernetes service object listening to proxy ports defined in "proxyServices", only if tunnel mode is "proxy" |
