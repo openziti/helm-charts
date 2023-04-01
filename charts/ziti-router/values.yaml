@@ -82,8 +82,24 @@ tunnel:
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
   # lanIf: eth0   # interface device name for tproxy?
-  # -- list of service-name:tcp-port pairs if mode "proxy"
-  services: []
+  # -- default service listening to open ports defined in "proxyServices" if mode "proxy"
+  service:
+    enabled: true
+    type: ClusterIP
+  # -- Kubernetes services created additionally of the "default" proxy listener service if mode "proxy"
+  additionalK8sServices: []
+    #- name: myservice
+    #  type: ClusterIP
+  # -- list of definitions to configure proxy services and according kubernetes services for these if mode "proxy"
+  proxyServices: []
+    #  # -- name of the Openziti service to forward data to
+    #- zitiService: my_service.svc
+    #  # -- port the router opens to listen for data
+    #  listenPort: 8443
+    #  # -- port the kubernetes service uses as listen port
+    #  servicePort: 80
+    #  # -- name suffix when not using the "default" proxy tunnel service, see above: "additionalK8sServices"
+    #  k8sservice: myservice
 
 # -- read-only mountpoint for executables (must be in image's executable search PATH)
 execMountDir:     /usr/local/bin

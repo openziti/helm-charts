@@ -113,8 +113,8 @@ data:
             lanIf: {{ .Values.tunnel.lanIf }}
           {{- else if eq .Values.tunnel.mode "proxy" }}
             services:
-            {{- range .Values.tunnel.services }}
-              - {{ . | quote }}
+            {{- range .Values.tunnel.proxyServices }}
+              - "{{ .zitiService }}:{{ .listenPort }}"
             {{- end }}
           {{- end }}
     {{- end }}
