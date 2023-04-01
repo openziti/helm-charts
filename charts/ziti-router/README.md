@@ -181,9 +181,11 @@ helm upgrade \
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
+| tunnel.additionalK8sServices | list | `[]` | Kubernetes services created additionally of the "default" proxy listener service if mode "proxy" |
 | tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
+| tunnel.proxyServices | list | `[]` | list of definitions to configure proxy services and according kubernetes services for these if mode "proxy" |
 | tunnel.resolver | string | `"none"` | built-in nameserver configuration, e.g. udp://127.1.2.3:53 |
-| tunnel.services | list | `[]` | list of service-name:tcp-port pairs if mode "proxy" |
+| tunnel.service | object | `{"enabled":true,"type":"ClusterIP"}` | default service listening to open ports defined in "proxyServices" if mode "proxy" |
 
 ## TODO's
 

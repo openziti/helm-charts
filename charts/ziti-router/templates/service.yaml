@@ -119,3 +119,136 @@ spec:
     {{- include "ziti-router.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: "ziti-router"
 {{- end }}
+
+{{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) .Values.tunnel.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-proxy-default
+  labels:
+  {{- include "ziti-router.labels" . | nindent 4 }}
+  {{- with .Values.tunnel.service.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.tunnel.service.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $type := default "ClusterIP" .Values.tunnel.service.type }}
+  type: {{ $type }}
+  {{- if eq $type "ClusterIP" }}
+  {{- with .Values.tunnel.service.clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  {{- else if eq $type "LoadBalancer" }}
+  {{- with .Values.tunnel.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with .Values.tunnel.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.tunnel.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.tunnel.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.tunnel.service.sessionAffinity }}
+  {{- with .Values.tunnel.service.sessionAffinityConfig }}
+  sessionAffinityConfig:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.tunnel.service.externalIPs }}
+  externalIPs:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.tunnel.service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ . }}
+  {{- end }}
+  ports:
+  {{- range .Values.tunnel.proxyServices }}
+    {{- if or (not .k8sservice) (ne .k8sservice "default") }}
+    - port: {{ .servicePort }}
+      targetPort: {{ .listenPort }}
+      protocol: {{ .serviceProtocol | default "TCP" }}
+      name: {{ regexReplaceAll "\\W+" .zitiService "-" }}
+      {{- if and (eq $type "NodePort") .serviceNodePort }}
+      nodePort: {{ .serviceNodePort }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  selector:
+    {{- include "ziti-router.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: "ziti-router"
+{{- end }}
+
+{{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) (gt (len .Values.tunnel.additionalK8sServices) 0) }}
+{{- $root := . }}
+{{- range .Values.tunnel.additionalK8sServices }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ziti-router.fullname" $root }}-proxy-{{ .name }}
+  labels:
+  {{- include "ziti-router.labels" $root | nindent 4 }}
+  {{- with .labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $type := default "ClusterIP" .type }}
+  type: {{ $type }}
+  {{- if eq $type "ClusterIP" }}
+  {{- with .clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  {{- else if eq $type "LoadBalancer" }}
+  {{- with .loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with .externalTrafficPolicy }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
+  {{- with .loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if .sessionAffinity }}
+  sessionAffinity: {{ .sessionAffinity }}
+  {{- with .sessionAffinityConfig }}
+  sessionAffinityConfig:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- with .externalIPs }}
+  externalIPs:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ . }}
+  {{- end }}
+  ports:
+  {{- $service_name := .name }}
+  {{- range $root.Values.tunnel.proxyServices }}
+    {{- if and .k8sservice (eq .k8sservice $service_name) }}
+    - port: {{ .servicePort }}
+      targetPort: {{ .listenPortPort }}
+      protocol: {{ .serviceProtocol | default "TCP" }}
+      name: {{ regexReplaceAll "\\W+" .zitiService "-" }}
+      {{- if and (eq $type "NodePort") .serviceNodePort }}
+      nodePort: {{ .serviceNodePort }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  selector:
+    {{- include "ziti-router.selectorLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: "ziti-router"
+{{- end }}
+{{- end }}
