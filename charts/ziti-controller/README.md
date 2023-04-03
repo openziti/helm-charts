@@ -243,9 +243,12 @@ edgeSignerPki:
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":65534}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `65534` | this is the GID of "nobody" in the RedHat UBI minimal container image. This was added when troubleshooting a persistent volume permission error, and I don't know if it's necessary. |
+| prometheus.advertisedHost | string | `""` | DNS name to advertise in place of the default internal cluster name built from the Helm release name |
 | prometheus.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
+| prometheus.service.annotations | object | `{}` | annotations for the service |
 | prometheus.service.enabled | bool | `false` | create a cluster service for the deployment |
+| prometheus.service.labels | object | `{"prometheus.openziti.io/scrape":"true"}` | labels for the service |
 | prometheus.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
