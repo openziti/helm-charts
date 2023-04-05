@@ -14,6 +14,12 @@
 
 {{ template "chart.requirementsSection" . }}
 
+## Add the OpenZiti Charts Repo to Helm
+
+```bash
+helm repo add openziti https://docs.openziti.io/helm-charts/
+```
+
 ## Minimal Installation
 
 This chart deploys a pod running `ziti-console`, [the OpenZiti console](https://github.com/openziti/ziti-console/).
@@ -32,13 +38,13 @@ Although simple, using the LoadBalancer type may not be ideal for a variety of r
 
 ## Ingress-Nginx Sample Values
 
+You can merge these ingress-nginx values when you install or upgrade.
+
 ```yaml
 ingress:
   enabled: true
   ingressClassName: nginx
-  hosts:
-    # DNS name for ingress on 80/tcp
-    - host: # myziti-console.zitik8s
+  advertisedHost: myziti-console.zitik8s
 
 settings:
   edgeControllers:
@@ -56,9 +62,8 @@ This is a minimal `values.yaml` sample for an k3s-enviroment using traefik as in
 ```yaml
 ingress:
   enabled: true
-  hosts:
-    # DNS name for ingress on 80/tcp
-    - host: myziti-console.zitik8s
+  ingressClassName: nginx
+  advertisedHost: myziti-console.zitik8s
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
   labels:
@@ -71,6 +76,7 @@ settings:
       url: https://myziti-controller-client.ziti-controller.svc:443 
       # or https://myziti-controller-mgmt.ziti-controller.svc:443 if mgmt API is separate
       default: true
+
 ```
 
 ## TLS with Cert Manager
@@ -82,12 +88,8 @@ ingress:
   ingressClassName: nginx
   annotations:
     cert-manager.io/cluster-issuer: my-letsencrypt-issuer
-  hosts:
-    - host: myziti-console.example.com
-  tls:
-    - hosts:
-      - myziti-console.example.com
-      secretName: myziti-console-tls-secret  # {helm release name}-tls-secret
+  advertisedHost: myziti-console.example.com
+  tlsSecret: myziti-console-tls-secret  # secret managed by issuer
 ```
 
 ## Values Reference

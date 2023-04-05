@@ -1,0 +1,72 @@
+{{- if .Values.zitiEnrollment }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-post-upgrade-job
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  completions: 1
+  template:
+    metadata:
+      name: {{ .Release.Name }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- include "httpbin.labels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "httpbin.fullname" . }}-hook-serviceaccount
+      containers:
+      - name: post-upgrade-job
+        image: {{ .Values.zitiImage.repository }}
+        imagePullPolicy: {{ .Values.zitiImage.pullPolicy }}
+        env:
+          - name: PFXLOG_NO_JSON
+            value: "true"
+          # used by init script to branch on the condition where the identity
+          # secret already exists
+          - name: HELM_UPGRADE
+            value: "true"
+        volumeMounts:
+          - name: httpbin-config
+            mountPath: /usr/local/bin/{{ .Values.initScriptFile }}
+            subPath: {{ .Values.initScriptFile }}
+            readOnly: true
+          - name: ziti-jwt
+            mountPath: /etc/ziti/id.jwt
+            subPath: id.jwt
+            readOnly: true
+        command: ["{{ .Values.initScriptFile }}"]
+      volumes:
+        - name: httpbin-config
+          configMap:
+            name: {{ include "httpbin.fullname" . }}-config
+            items:
+              - key: {{ .Values.initScriptFile }}
+                path: {{ .Values.initScriptFile }}
+                mode: 0555
+        - name: ziti-jwt
+          secret:
+            secretName: {{ include "httpbin.fullname" . }}-enrollment
+            defaultMode: 0444
+            items:
+            - key: ziti_enrollment_jwt
+              path: id.jwt
+{{- end -}}

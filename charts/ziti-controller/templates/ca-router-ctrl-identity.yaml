@@ -10,12 +10,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-root-cert
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-default-root
-  secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
+  commonName: ziti-controller-ctrl-plane-root
+  secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
   renewBefore: {{ .Values.ca.renewBefore }}
@@ -34,12 +34,12 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-default-root-secret
+    secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
 
 ---
 apiVersion: cert-manager.io/v1
@@ -68,7 +68,7 @@ spec:
       {{- end }}
     {{- else }}
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-default-root-issuer
+    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
     {{- end }}
 
 ---
@@ -117,6 +117,11 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster.local
     - {{ .Values.ctrlPlane.advertisedHost | default (printf "%s-ctrl.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}
+    {{- if .Values.ctrlPlane.dnsNames }}
+      {{- range .Values.ctrlPlane.dnsNames }}
+    - {{ . | quote }}
+      {{- end }}
+    {{- end }}
     {{- if and .Values.clientApi.service.enabled (not .Values.webBindingPki.enabled) }}
     - {{ include "ziti-controller.fullname" . }}-client
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
@@ -124,6 +129,11 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
     - {{ .Values.clientApi.advertisedHost }}
+      {{- if .Values.clientApi.dnsNames }}
+        {{- range .Values.clientApi.dnsNames }}
+    - {{ . | quote }}
+        {{- end }}
+      {{- end }}
     {{- end }}
     {{- if and .Values.managementApi.service.enabled (not .Values.webBindingPki.enabled) }}
     - {{ include "ziti-controller.fullname" . }}-mgmt
@@ -131,9 +141,14 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
-    {{- if .Values.managementApi.advertisedHost }}
+      {{- if .Values.managementApi.advertisedHost }}
     - {{ .Values.managementApi.advertisedHost }}
-    {{- end }}
+      {{- end }}
+      {{- if .Values.managementApi.dnsNames }}
+        {{- range .Values.managementApi.dnsNames }}
+    - {{ . | quote }}
+        {{- end }}
+      {{- end }}
     {{- end }}
   # uris:
   #   - spiffe://cluster.local/ns/sandbox/sa/example
@@ -142,24 +157,3 @@ spec:
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
-
-# #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
-# via the same private key - I currenlty have no Idea how to solve this with CertManager
-# ---
-# # the controller's client certificate
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
-# metadata:
-#   name: ziti-controller-client
-# spec:
-#   isCA: false
-#   commonName: ziti-controller-client
-#   secretName: ziti-controller-client-cert-secret
-#   privateKey:
-#     algorithm: ECDSA
-#     size: 256
-#   usages:
-#     - client auth
-#   issuerRef:
-#     kind: Issuer
-#     name: ziti-controller-intermediate-ca-issuer

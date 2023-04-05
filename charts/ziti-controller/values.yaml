@@ -10,7 +10,7 @@ ctrlPlane:
   # inside the same cluster
   advertisedHost:
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: 6262
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: true
@@ -27,6 +27,8 @@ ctrlPlane:
     # kind:
     # -- metadata name of the alternative issuer
     # name:
+  # -- additional DNS SANs
+  dnsNames: []
 
 clientApi:
   # -- cluster service target port on the container
@@ -34,7 +36,7 @@ clientApi:
   # -- global DNS name by which routers can resolve a reachable IP for this service
   advertisedHost:
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: 1280
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: true
@@ -45,23 +47,34 @@ clientApi:
     enabled: false
     # -- ingress annotations, e.g., to configure ingress-nginx
     annotations:
+  # -- additional DNS SANs
+  dnsNames: []
 
 managementApi:
   # -- cluster service target port on the container
-  containerPort: &mgmtPort 1281
+  containerPort: 1281
+  # -- global DNS name by which routers can resolve a reachable IP for this service
+  advertisedHost:
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: *mgmtPort
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
+  ingress:
+    # -- create an ingress for the cluster service
+    enabled: false
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations:
+  # -- additional DNS SANs
+  dnsNames: []
 
 prometheus:
   # -- cluster service target port on the container
-  containerPort: &prometheusPort 9090
+  containerPort: 9090
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: *prometheusPort
+  advertisedPort: 443
   service:
     # -- create a cluster service for the deployment
     enabled: false
@@ -86,36 +99,58 @@ cert:
   # TODO lower this value!
   # duration: 2160h   # 90d
   # renewBefore: 360h # 15d
-  # -- Go time.Duration string format
+  # -- server certificate duration as Go time.Duration string format
   duration: 87840h    # 3660d / 10 y
-  # -- Go time.Duration string format
+  # -- rewnew server certificates before expiry as Go time.Duration string format
   renewBefore: 720h   # 30d
 
 # you can enable these if you want to use roots of trust that are separate from
 # the main identity used by the ctrl plane
 edgeSignerPki:
   # -- generate a separate PKI root of trust for the edge signer CA
-  enabled: false
+  enabled: true
+  admin_client_cert:
+    # -- admin client certificate duration as Go time.Duration
+    duration: 8760h
+    # -- renew admin client certificate before expiry as Go time.Duration
+    renewBefore: 720h
+
 webBindingPki:
   # -- generate a separate PKI root of trust for web bindings, i.e., client,
   # management, and prometheus APIs
-  enabled: false
+  enabled: true
 
 image:
+  # -- alternative homedir for ephemeral, writeable storage
+  homedir: /tmp
   # -- container image tag for app deployment
   repository: docker.io/openziti/ziti-controller
   # -- deployment image pull policy
   pullPolicy: Always
-  # -- container command
+  # -- container entrypoint command
   command: ["ziti", "controller", "run"]
-  # command: ["bash", "-c", "while true; do sleep 1; done"]
-  # -- container command options and args
-  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}", "--verbose"]
+  # -- args for the entrypoint command
+  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]
+  admin: 
+    # -- image for the admin container
+    repository: docker.io/openziti/ziti-cli
+    # -- entrypoint command for the admin container
+    command:
+      - bash
+      - -c
+      - |
+        while true; do 
+          sleep 10;
+        done
+    # -- args for the admin container entrypoint command
+    args: []
 
 # -- a directory included in the init and run containers' executable search path
 execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
 # -- exec by init container
 initScriptFile: ziti-controller-init.bash
+# -- admin profile script file
+zitiLoginScript: zitiLogin
 # -- read-only mountpoint where configFile and various read-only identity dirs are projected
 configMountDir: /etc/ziti
 # -- filename of the controller configuration file
@@ -218,20 +253,20 @@ persistence:
 # with Terraform or some other external configuration system.
 cert-manager:
   # -- install the cert-manager subchart to provide CRDs Certificate, Issuer
-  enabled: true
+  enabled: false
   # -- clean up secret when certificate is deleted
   enableCertificateOwnerRef: true
   # -- CRDs must be applied in advance of installing the parent chart
   installCRDs: false
 trust-manager:
   # -- install the trust-manager subchart to provide CRD Bundle
-  enabled: true
+  enabled: false
   app:
     trust:
       # -- trust-manager needs to be configured to trust the namespace in which
       # the controller is deployed so that it will create the Bundle resource
       # for the ctrl plane trust bundle
-      namespace: ziti-controller
+      namespace: ziti
   crds:
     # -- CRDs must be applied in advance of installing the parent chart
     enabled: false

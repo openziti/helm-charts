@@ -56,8 +56,11 @@ data:
       {{ include "ziti-router.fullname" . }}-identity &>/dev/null; then
       kubectl -n {{ .Release.Namespace }} delete secret \
         {{ include "ziti-router.fullname" . }}-identity
+      echo "INFO: Finished cleaning up router identity. Job will self-destruct in 20s."
+      sleep 10
     else
-      echo "INFO: no-op because identity secret does not exist"
+      echo "INFO: no-op because identity secret does not exist. Job will self-destruct in 20s."
+      sleep 10
       exit 0
     fi
 
@@ -110,7 +113,9 @@ data:
             lanIf: {{ .Values.tunnel.lanIf }}
           {{- else if eq .Values.tunnel.mode "proxy" }}
             services:
-            {{- include .Values.tunnel.services . | nindent 14 }}
+            {{- range .Values.tunnel.services }}
+              - {{ . | quote }}
+            {{- end }}
           {{- end }}
     {{- end }}
     {{- end }}

@@ -34,6 +34,23 @@ spec:
         - name: {{ .Chart.Name }}-init
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           command: ["{{ .Values.initScriptFile }}"]
+          env:
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-user
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-password
+            - name: ZITI_CTRL_PLANE_CA
+              value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
+            - name: PFXLOG_NO_JSON
+              value: "true"
+            - name: HOME
+              value: {{ .Values.image.homedir }}
           volumeMounts:
             - mountPath: {{ .Values.execMountDir }}/{{ .Values.initScriptFile }}
               name: ziti-controller-configmap
@@ -63,21 +80,6 @@ spec:
               name: cert-web-identity
               readOnly: true
             {{- end }}
-          env:
-            - name: ZITI_ADMIN_USER
-              valueFrom:
-                secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
-                  key: admin-user
-            - name: ZITI_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
-                  key: admin-password
-            - name: ZITI_CTRL_PLANE_CA
-              value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
-            - name: PFXLOG_NO_JSON
-              value: "true"
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -111,7 +113,7 @@ spec:
             - name: ZITI_CTRL_PLANE_CA
               value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
             - name: HOME
-              value: /tmp
+              value: {{ .Values.image.homedir }}
           volumeMounts:
             - mountPath: {{ .Values.dataMountDir }}
               name: data
@@ -138,6 +140,37 @@ spec:
               name: cert-web-identity
               readOnly: true
             {{- end }}
+        - name: {{ .Chart.Name }}-admin
+          image: {{ .Values.image.admin.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          command:
+          {{- range .Values.image.admin.command }}
+            - {{ . | quote }}
+          {{- end }}
+          env:
+            - name: ZITI_MGMT_API
+              {{- if .Values.managementApi.service.enabled }}
+              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.managementApi.advertisedPort }}
+              {{- else }}
+              value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.clientApi.advertisedPort }}
+              {{- end }}
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-user
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-password
+            - name: PFXLOG_NO_JSON
+              value: "true"
+            - name: HOME
+              value: {{ .Values.image.homedir }}
+          volumeMounts:
+            - mountPath: {{ .Values.execMountDir }}/{{ .Values.zitiLoginScript }}
+              name: ziti-controller-configmap
+              subPath: {{ .Values.zitiLoginScript }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -161,6 +194,9 @@ spec:
               - key: {{ .Values.configFile }}
                 path: {{ .Values.configFile }}
                 mode: 0444
+              - key: {{ .Values.zitiLoginScript }}
+                path: {{ .Values.zitiLoginScript }}
+                mode: 0555
         # ctrl-plane-cas is created by init script
         - name: ziti-controller-ctrl-plane-cas
           configMap:

@@ -1,9 +1,7 @@
 ingress:
   enabled: true
   ingressClassName: nginx
-  hosts:
-    # DNS name for ingress on 80/tcp
-    - host: # myziti-console.zitik8s
+  advertisedHost:  # myziti-console.zitik8s
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
   labels:

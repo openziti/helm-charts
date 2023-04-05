@@ -75,3 +75,42 @@ spec:
                 port:
                   number: {{ .Values.clientApi.advertisedPort }}
 {{- end }}
+
+{{- if .Values.managementApi.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-mgmt
+  labels:
+  {{- include "ziti-controller.labels" . | nindent 4 }}
+  {{- with .Values.managementApi.ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.managementApi.ingress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.managementApi.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.managementApi.ingress.ingressClassName }}
+  {{- end }}
+  {{- if .Values.managementApi.ingress.tls }}
+  tls:
+    {{- with .Values.managementApi.ingress.tls }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.managementApi.advertisedHost }}
+      http:
+        paths:
+          # This rule gives internal access to the pingaccess admin services.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-controller.fullname" . }}-mgmt
+                port:
+                  number: {{ .Values.managementApi.advertisedPort }}
+{{- end }}

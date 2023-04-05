@@ -14,6 +14,12 @@
 
 {{ template "chart.requirementsSection" . }}
 
+## Add the OpenZiti Charts Repo to Helm
+
+```bash
+helm repo add openziti https://docs.openziti.io/helm-charts/
+```
+
 ## Minimal Installation
 
 After adding the charts repo to Helm, then you may install the chart in the same cluster where the controller is running by using the cluster-internal service of the control plane endpoint. This default values used in this minimal approach is suitable for a Kubernetes distribution like K3S or Minikube that configures pass-through TLS for Service resources of type LoadBalancer. 

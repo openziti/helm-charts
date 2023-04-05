@@ -21,6 +21,11 @@ data:
         -p "${ZITI_ADMIN_PASSWORD}"
     fi
 
+  {{ .Values.zitiLoginScript }}: |-
+    ziti edge login "${ZITI_MGMT_API}" --yes \
+      --username "${ZITI_ADMIN_USER}" \
+      --password "${ZITI_ADMIN_PASSWORD}"
+
   {{ .Values.configFile }}: |-
     v: 3
 

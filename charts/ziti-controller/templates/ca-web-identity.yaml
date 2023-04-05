@@ -108,9 +108,14 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
-    {{- if .Values.clientApi.advertisedHost }}
+      {{- if .Values.clientApi.advertisedHost }}
     - {{ .Values.clientApi.advertisedHost }}
-    {{- end }}
+      {{- end }}
+      {{- if .Values.clientApi.dnsNames }}
+        {{- range .Values.clientApi.dnsNames }}
+    - {{ . | quote }}
+        {{- end }}
+      {{- end }}
     {{- end }}
     {{- if .Values.managementApi.service.enabled }}
     - {{ include "ziti-controller.fullname" . }}-mgmt
@@ -118,9 +123,14 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
-    {{- end }}
-    {{- if .Values.managementApi.advertisedHost }}
+      {{- if .Values.managementApi.advertisedHost }}
     - {{ .Values.managementApi.advertisedHost }}
+      {{- end }}
+      {{- if .Values.managementApi.dnsNames }}
+        {{- range .Values.managementApi.dnsNames }}
+    - {{ . | quote }}
+        {{- end }}
+      {{- end }}
     {{- end }}
   # uris:
   #   - spiffe://cluster.local/ns/sandbox/sa/example
