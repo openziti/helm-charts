@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.2.2](https://img.shields.io/badge/Version-0.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.5](https://img.shields.io/badge/AppVersion-0.27.5-informational?style=flat-square)
+![Version: 0.2.4](https://img.shields.io/badge/Version-0.2.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.8](https://img.shields.io/badge/AppVersion-0.27.8-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -211,6 +211,9 @@ edgeSignerPki:
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
 | execMountDir | string | `"/usr/local/bin"` | a directory included in the init and run containers' executable search path |
+| fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
+| fabric.events.fileName | string | `"fabric-events.log"` |  |
+| fabric.events.mountDir | string | `"/var/run/ziti"` |  |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
 | image.admin.args | list | `[]` | args for the admin container entrypoint command |

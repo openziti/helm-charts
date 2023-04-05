@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "zrok.fullname" . }}
+  labels:
+    {{- include "zrok.labelsController" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "zrok.selectorLabelsController" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "zrok.selectorLabelsController" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "zrok.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        {{- if .Values.controller.persistence.enabled }}
+        - name: {{ .Chart.Name }}-chown
+          image: busybox
+          command: ["/bin/chown","-R","65534:65534", "{{ .Values.controller.persistence.mount_dir }}"]
+        {{- end }}
+          volumeMounts:
+            {{- if .Values.controller.persistence.enabled }}
+            - name: database
+              mountPath: {{ .Values.controller.persistence.mount_dir }}
+            {{- end }}
+            # not yet used, but here for when it's possible to configure explicit trust of the Ziti Mgmt API's server cert
+            - name: ziti-ctrl-plane-cas
+              mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
+              subPath: {{ .Values.ziti.ca_cert_file }}
+              readOnly: true
+        - name: {{ .Chart.Name }}-bootstrap
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bootstrap-ziti.bash"]
+          # command: ["bash", "-c", "while true; do sleep 3600; done"]
+          env:
+            - name: PFXLOG_NO_JSON
+              value: "true"
+            - name: HOME
+              value: {{ .Values.controller.persistence.mount_dir }}
+          volumeMounts:
+            - name: zrok-config
+              mountPath: /etc/zrok
+              readOnly: true
+            - name: bootstrap-ziti
+              mountPath: /usr/local/bin/bootstrap-ziti.bash
+              subPath: bootstrap-ziti.bash
+              readOnly: true
+            - name: database
+              mountPath: {{ .Values.controller.persistence.mount_dir }}
+              readOnly: false
+            # not yet used, but here for when it's possible to configure explicit trust of the Ziti Mgmt API's server cert
+            - name: ziti-ctrl-plane-cas
+              mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
+              subPath: {{ .Values.ziti.ca_cert_file }}
+              readOnly: true
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["controller", "/etc/zrok/ctrl.yaml"]
+          env:
+            - name: ZROK_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zrok.fullname" . }}-admin-secret
+                  key: admin-token
+            - name: ZROK_API_ENDPOINT
+              value: http://127.0.0.1:{{ .Values.controller.service.containerPort }}
+            - name: PFXLOG_NO_JSON
+              value: "true"
+            - name: HOME
+              value: {{ .Values.controller.persistence.mount_dir }}
+          volumeMounts:
+            - name: zrok-config
+              mountPath: /etc/zrok
+              readOnly: true
+            - name: database
+              mountPath: /var/lib/zrok
+              readOnly: false
+          ports:
+            - name: http
+              containerPort: {{ .Values.controller.service.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}z
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: zrok-config
+          configMap:
+            name: {{ include "zrok.fullname" . }}-config
+            defaultMode: 0444
+            items:
+              - key: ctrl.yaml
+                path: ctrl.yaml
+        - name: bootstrap-ziti
+          configMap:
+            name: {{ include "zrok.fullname" . }}-config
+            defaultMode: 0555
+            items:
+              - key: bootstrap-ziti.bash 
+                path: bootstrap-ziti.bash
+        - name: ziti-ctrl-plane-cas
+          configMap:
+            name: {{ .Values.ziti.ca_cert_configmap }}
+            defaultMode: 0444
+            items:
+              - key: {{ .Values.ziti.ca_cert_file }}
+                path: {{ .Values.ziti.ca_cert_file }}}
+        {{- if .Values.controller.persistence.enabled }}
+        - name: database
+          persistentVolumeClaim:
+            claimName: {{ include "zrok.fullname" . }}-database
+        {{- end }}

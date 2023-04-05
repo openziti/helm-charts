@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: {{ include "zrok.fullname" . }}-frontend-config
+    labels:
+        {{- include "zrok.labelsFrontend" . | nindent 8 }}
+data:
+    # post-install hook runs until one completion after Helm install/create release
+    bootstrap-frontend.bash: |-
+        #!/usr/bin/env bash
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+        set -o xtrace  # FIXME remove this     
+
+        ziti edge login \
+            --username {{ .Values.ziti.username }} \
+            --password {{ .Values.ziti.password }} \
+            {{ .Values.ziti.advertisedHost }}:{{ .Values.ziti.advertisedPort }}
+        
+        # find Ziti ID of frontend
+        FRONTEND_ID=$(
+            ziti edge list identities 'name="frontend"' --csv \
+                | awk -F, '$2~/frontend/ {print $1;}'
+        )
+        until [[ -n "$FRONTEND_ID" ]]; do
+            echo "DEBUG: waiting for frontend identity to be created"
+            sleep 3
+            FRONTEND_ID=$(
+                ziti edge list identities 'name="frontend"' --csv \
+                    | awk -F, '$2~/frontend/ {print $1;}'
+            )
+        done
+        echo "DEBUG: FRONTEND_ID=$FRONTEND_ID"
+
+        until curl -sSf ${ZROK_API_ENDPOINT}/api/v1/version; do
+            echo "DEBUG: waiting for zrok to be ready"
+            sleep 3
+        done
+
+        # test if frontend already exists
+        if zrok admin list frontends|grep -q "${FRONTEND_ID}"; then
+            echo "DEBUG: frontend already exists"
+        else
+            echo "INFO: creating frontend"
+            zrok admin create frontend ${FRONTEND_ID} public "https://{token}.{{ .Values.dnsZone }}"
+        fi
+
+        # while true;do sleep 1;done
+
+    frontend.yaml: |-
+
+        #    _____ __ ___ | | __
+        #   |_  / '__/ _ \| |/ /
+        #    / /| | | (_) |   <
+        #   /___|_|  \___/|_|\_\
+        # frontend configuration
+
+        host_match: {{ .Values.dnsZone | quote }}
+        address: 0.0.0.0:{{ .Values.frontend.service.containerPort }}
+
+    {{ .Values.frontend.deleteIdentityScriptFile }}: |-
+        #!/usr/bin/env bash
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+        set -o xtrace
+
+        if kubectl -n {{ .Release.Namespace }} get secret \
+            {{ include "zrok.fullname" . }}-frontend-identity &>/dev/null
+        then
+            kubectl -n {{ .Release.Namespace }} delete secret \
+                {{ include "zrok.fullname" . }}-frontend-identity
+            echo "INFO: Finished cleaning up frontend identity. Job will self-destruct in 20s."
+            sleep 10
+        else
+            echo "INFO: doing nothing because identity secret does not exist. Job will self-destruct in 20s."
+            sleep 10
+            exit 0
+        fi

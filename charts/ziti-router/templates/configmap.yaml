@@ -65,6 +65,7 @@ data:
     fi
 
   {{ .Values.configFile }}: |-
+
     v: 3
 
     # this dir is a var because the value is a writeable tmp dir during
@@ -121,62 +122,62 @@ data:
     {{- end }}
 
     edge:
-        csr:
-          {{- if .Values.csr.country }}
-            country: {{ .Values.csr.country }}
-          {{- end }}
-          {{- if .Values.csr.province }}
-            province: {{ .Values.csr.province }}
-          {{- end }}
-          {{- if .Values.csr.locality }}
-            locality: {{ .Values.csr.locality }}
-          {{- end }}
-          {{- if .Values.csr.organization }}
-            organization: {{ .Values.csr.organization }}
-          {{- end }}
-          {{- if .Values.csr.organizationalUnit }}
-            organizationalUnit: {{ .Values.csr.organizationalUnit }}
-          {{- end }}
-            sans:
-                dns:
-                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
-                    - localhost
-                    {{- if .Values.advertisedHost }}
-                    - {{ .Values.advertisedHost }}
-                    {{- end }}
-                    {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
-                    - {{ .Values.edge.advertisedHost }}
-                    {{- end }}
-                    {{- if and .Values.linkListeners.transport.service.enabled .Values.linkListeners.transport.advertisedHost }}
-                    - {{ .Values.linkListeners.transport.advertisedHost }}
-                    {{- end }}
-                  {{- end }}
-                  {{- range .Values.csr.sans.dns }}
-                    - {{ . | quote }}
-                  {{- end }}
-                ip:
-                  {{- if eq (default false .Values.csr.sans.noDefaults) false }}
-                    - 127.0.0.1
-                  {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
-                      {{- with .Values.edge.service.loadBalancerIP }}
-                    - {{ . }}
-                      {{- end }}
-                      {{- with .Values.edge.service.externalIPs }}
-                        {{- toYaml . | nindent 4 }}
-                      {{- end }}
-                  {{- end }}
-                  {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
-                      {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
-                    - {{ . }}
-                      {{- end }}
-                      {{- with .Values.linkListeners.transport.service.externalIPs }}
-                        {{- toYaml . | nindent 4 }}
-                      {{- end }}
-                  {{- end }}
-                  {{- end }}
-                  {{- range .Values.csr.sans.ip }}
-                    - {{ . | quote }}
-                  {{- end }}
+      csr:
+        {{- if .Values.csr.country }}
+        country: {{ .Values.csr.country }}
+        {{- end }}
+        {{- if .Values.csr.province }}
+        province: {{ .Values.csr.province }}
+        {{- end }}
+        {{- if .Values.csr.locality }}
+        locality: {{ .Values.csr.locality }}
+        {{- end }}
+        {{- if .Values.csr.organization }}
+        organization: {{ .Values.csr.organization }}
+        {{- end }}
+        {{- if .Values.csr.organizationalUnit }}
+        organizationalUnit: {{ .Values.csr.organizationalUnit }}
+        {{- end }}
+        sans:
+          dns:
+            {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+            - localhost
+            {{- if .Values.advertisedHost }}
+            - {{ .Values.advertisedHost }}
+            {{- end }}
+            {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
+            - {{ .Values.edge.advertisedHost }}
+            {{- end }}
+            {{- if and .Values.linkListeners.transport.service.enabled .Values.linkListeners.transport.advertisedHost }}
+            - {{ .Values.linkListeners.transport.advertisedHost }}
+            {{- end }}
+            {{- end }}
+            {{- range .Values.csr.sans.dns }}
+            - {{ . | quote }}
+            {{- end }}
+          ip:
+            {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+            - 127.0.0.1
+            {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
+            {{- with .Values.edge.service.loadBalancerIP }}
+            - {{ . }}
+            {{- end }}
+            {{- with .Values.edge.service.externalIPs }}
+            {{- toYaml . | nindent 4 }}
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
+            {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
+            - {{ . }}
+            {{- end }}
+            {{- with .Values.linkListeners.transport.service.externalIPs }}
+            {{- toYaml . | nindent 4 }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- range .Values.csr.sans.ip }}
+            - {{ . | quote }}
+            {{- end }}
 
     #transport:
     #  ws:
@@ -198,3 +199,9 @@ data:
         xgressDialWorkerCount: 128
         linkDialQueueLength: 1000
         linkDialWorkerCount: 32
+
+    {{- if eq .Values.fabric.metrics.enabled true }}
+    metrics:
+      reportInterval: 5s
+      intervalAgeThreshold: 5s
+    {{- end }}

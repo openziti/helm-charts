@@ -27,6 +27,7 @@ data:
       --password "${ZITI_ADMIN_PASSWORD}"
 
   {{ .Values.configFile }}: |-
+
     v: 3
 
     #trace:
@@ -50,7 +51,23 @@ data:
     # Configure how the controller will establish and manage the overlay network, and routing operations on top of
     # the network.
     #
-    #network:
+    {{- if .Values.fabric.events.enabled }}
+    events:
+      jsonLogger:
+        subscriptions:
+          - type: fabric.usage
+            version: 3
+        handler:
+          type: file
+          format: json
+          path: {{ .Values.fabric.events.mountDir }}/{{ .Values.fabric.events.fileName }}
+    {{- end }}
+
+    network:
+    {{- if .Values.fabric.events.enabled }}
+      intervalAgeThreshold: 5s 
+      metricsReportInterval: 5s
+    {{- end }}
 
       # routeTimeoutSeconds controls the number of seconds the controller will wait for a route attempt to succeed.
       #routeTimeoutSeconds:  10
