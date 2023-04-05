@@ -80,6 +80,7 @@ spec:
               name: cert-web-identity
               readOnly: true
             {{- end }}
+      shareProcessNamespace: true  # this allows the admin container to observe the controller process namespace
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -140,6 +141,10 @@ spec:
               name: cert-web-identity
               readOnly: true
             {{- end }}
+            {{- if .Values.fabric.events.enabled }}
+            - mountPath: {{ .Values.fabric.events.mountDir }}
+              name: fabric-events
+            {{- end }}
         - name: {{ .Chart.Name }}-admin
           image: {{ .Values.image.admin.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           command:
@@ -197,7 +202,6 @@ spec:
               - key: {{ .Values.zitiLoginScript }}
                 path: {{ .Values.zitiLoginScript }}
                 mode: 0555
-        # ctrl-plane-cas is created by init script
         - name: ziti-controller-ctrl-plane-cas
           configMap:
             name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
@@ -224,5 +228,9 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.existingClaim | default (include "ziti-controller.fullname" .) }}
         {{- else }}
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.fabric.events.enabled }}
+        - name: fabric-events
           emptyDir: {}
         {{- end }}

@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pre-delete-job
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  completions: 1
+  template:
+    metadata:
+      name: {{ .Release.Name }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- include "zrok.labelsFrontend" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "zrok.serviceAccountName" . }}
+      containers:
+      - name: pre-install-job
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        volumeMounts:
+          - mountPath: /usr/local/bin/{{ .Values.frontend.deleteIdentityScriptFile }}
+            name: zrok-config
+            subPath: {{ .Values.frontend.deleteIdentityScriptFile }}
+        command: ["{{ .Values.frontend.deleteIdentityScriptFile }}"]
+        # command: ["sh", "-c", "while true; do sleep 86400; done"]
+      volumes:
+        - name: zrok-config
+          configMap:
+            name: {{ include "zrok.fullname" . }}-frontend-config
+            items:
+              - key: {{ .Values.frontend.deleteIdentityScriptFile }}
+                path: {{ .Values.frontend.deleteIdentityScriptFile }}
+                mode: 0555

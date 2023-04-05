@@ -82,10 +82,7 @@ prometheus:
     enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP
-    # -- labels for the service
-    labels:
-      prometheus.openziti.io/scrape: "true"
-    # -- annotations for the service
+    labels: {}
     annotations: {}
 
 ca:
@@ -253,6 +250,12 @@ persistence:
   # -- 2GiB is enough for tens of thousands of entities, but feel free to make it larger
   size: 2Gi
 
+fabric:
+  events:
+    # -- enable fabric event logger and file handler
+    enabled: false
+    mountDir: /var/run/ziti
+    fileName: fabric-events.json
 # A note about sub-charts: these values may serve as a partial reference for
 # configuring the charts on which this chart depends. However, I wasn't able to
 # get dependency solving working with Helm, which doesn't install depenencies
