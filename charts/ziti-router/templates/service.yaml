@@ -171,12 +171,12 @@ spec:
   ports:
   {{- range .Values.tunnel.proxyServices }}
     {{- if or (not .k8sservice) (ne .k8sservice "default") }}
-    - port: {{ .servicePort }}
-      targetPort: {{ .listenPort }}
+    - port: {{ .advertisedPort }}
+      targetPort: {{ .containerPort }}
       protocol: {{ .serviceProtocol | default "TCP" }}
       name: {{ regexReplaceAll "\\W+" .zitiService "-" }}
-      {{- if and (eq $type "NodePort") .serviceNodePort }}
-      nodePort: {{ .serviceNodePort }}
+      {{- if eq $type "NodePort" }}
+      nodePort: {{ .advertisedPort }}
       {{- end }}
     {{- end }}
   {{- end }}
@@ -238,12 +238,12 @@ spec:
   {{- $service_name := .name }}
   {{- range $root.Values.tunnel.proxyServices }}
     {{- if and .k8sservice (eq .k8sservice $service_name) }}
-    - port: {{ .servicePort }}
-      targetPort: {{ .listenPortPort }}
+    - port: {{ .advertisedrPort }}
+      targetPort: {{ .containerPortPort }}
       protocol: {{ .serviceProtocol | default "TCP" }}
       name: {{ regexReplaceAll "\\W+" .zitiService "-" }}
-      {{- if and (eq $type "NodePort") .serviceNodePort }}
-      nodePort: {{ .serviceNodePort }}
+      {{- if eq $type "NodePort" }}
+      nodePort: {{ .advertisedPort }}
       {{- end }}
     {{- end }}
   {{- end }}
