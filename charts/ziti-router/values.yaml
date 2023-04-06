@@ -95,9 +95,9 @@ tunnel:
     #  # -- name of the Openziti service to forward data to
     #- zitiService: my_service.svc
     #  # -- port the router opens to listen for data
-    #  listenPort: 8443
+    #  containerPort: 8443
     #  # -- port the kubernetes service uses as listen port
-    #  servicePort: 80
+    #  advertisedPort: 80
     #  # -- name suffix when not using the "default" proxy tunnel service, see above: "additionalK8sServices"
     #  k8sservice: myservice
 

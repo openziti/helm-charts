@@ -115,7 +115,7 @@ data:
           {{- else if eq .Values.tunnel.mode "proxy" }}
             services:
             {{- range .Values.tunnel.proxyServices }}
-              - "{{ .zitiService }}:{{ .listenPort }}"
+              - "{{ .zitiService }}:{{ .containerPort }}"
             {{- end }}
           {{- end }}
     {{- end }}
