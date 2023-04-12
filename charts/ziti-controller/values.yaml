@@ -75,11 +75,18 @@ prometheus:
   containerPort: 9090
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: 443
+  # -- DNS name to advertise in place of the default internal cluster name built from the Helm release name
+  advertisedHost: ""
   service:
     # -- create a cluster service for the deployment
     enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP
+    # -- labels for the service
+    labels:
+      prometheus.openziti.io/scrape: "true"
+    # -- annotations for the service
+    annotations: {}
 
 ca:
   # Note: The renewBefore and duration fields must be specified using a Go
