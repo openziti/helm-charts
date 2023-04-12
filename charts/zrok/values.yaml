@@ -161,6 +161,14 @@ controller:
     accessMode: ReadWriteOnce
     # -- PVC size of zrok controller database
     size: 2Gi
+  # -- send invitation acknowledgements and usage limit warnings from the specified email address
+  email: {}
+    # host:                           smtp.server.com
+    # port:                           587
+    # username:                       ""
+    # password:                       ""
+    # from:                           ziggy@zrok.io
+
 
 
 
