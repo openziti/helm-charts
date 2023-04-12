@@ -120,7 +120,7 @@ spec:
     app.kubernetes.io/component: "ziti-router"
 {{- end }}
 
-{{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) .Values.tunnel.service.enabled }}
+{{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) .Values.tunnel.proxyDefaultK8sService.enabled }}
 ---
 apiVersion: v1
 kind: Service
@@ -128,44 +128,44 @@ metadata:
   name: {{ include "ziti-router.fullname" . }}-proxy-default
   labels:
   {{- include "ziti-router.labels" . | nindent 4 }}
-  {{- with .Values.tunnel.service.labels }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.labels }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.tunnel.service.annotations }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.annotations }}
   annotations:
   {{ toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- $type := default "ClusterIP" .Values.tunnel.service.type }}
+  {{- $type := default "ClusterIP" .Values.tunnel.proxyDefaultK8sService.type }}
   type: {{ $type }}
   {{- if eq $type "ClusterIP" }}
-  {{- with .Values.tunnel.service.clusterIP }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.clusterIP }}
   clusterIP: {{ . }}
   {{- end }}
   {{- else if eq $type "LoadBalancer" }}
-  {{- with .Values.tunnel.service.loadBalancerIP }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.loadBalancerIP }}
   loadBalancerIP: {{ . }}
   {{- end }}
-  {{- with .Values.tunnel.service.externalTrafficPolicy }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.externalTrafficPolicy }}
   externalTrafficPolicy: {{ . }}
   {{- end }}
-  {{- with .Values.tunnel.service.loadBalancerSourceRanges }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- if .Values.tunnel.service.sessionAffinity }}
-  sessionAffinity: {{ .Values.tunnel.service.sessionAffinity }}
-  {{- with .Values.tunnel.service.sessionAffinityConfig }}
+  {{- if .Values.tunnel.proxyDefaultK8sService.sessionAffinity }}
+  sessionAffinity: {{ .Values.tunnel.proxyDefaultK8sService.sessionAffinity }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.sessionAffinityConfig }}
   sessionAffinityConfig:
   {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
-  {{- with .Values.tunnel.service.externalIPs }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.externalIPs }}
   externalIPs:
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.tunnel.service.publishNotReadyAddresses }}
+  {{- with .Values.tunnel.proxyDefaultK8sService.publishNotReadyAddresses }}
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
@@ -185,9 +185,9 @@ spec:
     app.kubernetes.io/component: "ziti-router"
 {{- end }}
 
-{{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) (gt (len .Values.tunnel.additionalK8sServices) 0) }}
+{{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) (gt (len .Values.tunnel.proxyAdditionalK8sServices) 0) }}
 {{- $root := . }}
-{{- range .Values.tunnel.additionalK8sServices }}
+{{- range .Values.tunnel.proxyAdditionalK8sServices }}
 apiVersion: v1
 kind: Service
 metadata:
