@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 0.1.15](https://img.shields.io/badge/Version-0.1.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.4.0](https://img.shields.io/badge/AppVersion-v0.4.0-informational?style=flat-square)
+![Version: 0.1.16](https://img.shields.io/badge/Version-0.1.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.4.0](https://img.shields.io/badge/AppVersion-v0.4.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -33,6 +33,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| controller.email | object | `{}` | send invitation acknowledgements and usage limit warnings from the specified email address |
 | controller.ingress.annotations | object | `{}` |  |
 | controller.ingress.className | string | `""` |  |
 | controller.ingress.enabled | bool | `false` | enable the ingress resource for  |
