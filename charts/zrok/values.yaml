@@ -35,6 +35,7 @@ securityContext: {}
   # runAsUser: 1000
 
 controller:
+  specVersion: 2
   service:
     # -- The service type to use for the zrok controller
     type: ClusterIP
@@ -45,6 +46,7 @@ controller:
   ingress:
     # -- enable the ingress resource for 
     enabled: false
+    scheme: https
     className: ""
     annotations: {}
       # kubernetes.io/ingress.class: nginx
@@ -183,6 +185,7 @@ frontend:
   ingress:
     # -- enable the frontend's ingress resource
     enabled: false
+    scheme: https
     className: ""
     annotations: {}
       # kubernetes.io/ingress.class: nginx

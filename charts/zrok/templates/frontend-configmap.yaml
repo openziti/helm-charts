@@ -44,7 +44,7 @@ data:
             echo "DEBUG: frontend already exists"
         else
             echo "INFO: creating frontend"
-            zrok admin create frontend ${FRONTEND_ID} public "https://{token}.{{ .Values.dnsZone }}"
+            zrok admin create frontend ${FRONTEND_ID} public "{{ .Values.frontend.ingress.scheme }}://{token}.{{ .Values.dnsZone }}"
         fi
 
         # while true;do sleep 1;done
