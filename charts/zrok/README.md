@@ -40,6 +40,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | controller.ingress.hosts[0].host | string | `"chart-example.local"` |  |
 | controller.ingress.hosts[0].paths[0].path | string | `"/"` |  |
 | controller.ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
+| controller.ingress.scheme | string | `"https"` |  |
 | controller.ingress.tls | list | `[]` |  |
 | controller.metrics.agent.source.type | string | `"websocketSource"` | initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics |
 | controller.metrics.enabled | bool | `true` | enable metrics collection and reporting for the zrok controller |
@@ -79,6 +80,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | controller.service.advertisedPort | int | `80` | The port to advertise for the zrok controller service |
 | controller.service.containerPort | int | `18080` | The port to expose on the zrok controller container |
 | controller.service.type | string | `"ClusterIP"` | The service type to use for the zrok controller |
+| controller.specVersion | int | `2` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
 | frontend.deleteIdentityScriptFile | string | `"delete-identity.sh"` |  |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
@@ -88,6 +90,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | frontend.ingress.hosts[0].host | string | `"chart-example.local"` |  |
 | frontend.ingress.hosts[0].paths[0].path | string | `"/"` |  |
 | frontend.ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
+| frontend.ingress.scheme | string | `"https"` |  |
 | frontend.ingress.tls | list | `[]` |  |
 | frontend.service.advertisedPort | int | `80` | The port to advertise for the zrok frontend service |
 | frontend.service.containerPort | int | `8080` | The port to expose on the zrok frontend container |
