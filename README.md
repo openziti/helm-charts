@@ -48,6 +48,25 @@ These charts help cluster workloads access or provide a Ziti service.
 * [`prometheus`](./charts/prometheus/README.md): Ziti fork of Prometheus
 * [`reflect`](./charts/reflect/README.md): A Ziti original. This app echoes the bytes it receives and is useful for testing Ziti.
 
+## Maintainers
+
+This repo uses GitHub Actions to automate the following tasks:
+
+1. Generate Helm docs for each chart in the repo.
+1. Package and index the charts and publish the new Helm repo index and READMEs to GitHub Pages.
+
+### Troubleshooting a Missing Chart
+
+In case a chart release is missing from the Helm index, you can run the following commands to resolve the issue locally.
+
+For this example, support the `httpbin` chart release version `0.1.2` exists in GitHub, but is missing from the Helm index. The solution is to run Chart Releaser locally to package and index the chart.
+
+```bash
+git checkout gh-pages
+cr package ./charts/httpbin
+cr index --owner openziti --git-repo helm-charts --index-path .
+```
+
 ## Contribute
 
 1. Clone this repo.

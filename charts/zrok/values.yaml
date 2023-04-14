@@ -1,0 +1,269 @@
+# Default values for zrok.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: openziti/zrok
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+controller:
+  specVersion: 2
+  service:
+    # -- The service type to use for the zrok controller
+    type: ClusterIP
+    # -- The port to advertise for the zrok controller service
+    advertisedPort: 80
+    # -- The port to expose on the zrok controller container
+    containerPort: 18080
+  ingress:
+    # -- enable the ingress resource for 
+    enabled: false
+    scheme: https
+    className: ""
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  metrics:
+    # -- enable metrics collection and reporting for the zrok controller
+    enabled: true
+    agent:
+      source:
+        # -- initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics
+        type: "websocketSource"
+    # ampqSource:
+    #   url: "amqp://localhost:5672"
+    #   queuename: "zrok"
+    # fileSource:
+    #   path: /var/lib/zrok/fabric-events.json
+    limits:
+      # -- the maximum number of environments
+      environments:     -1
+      # -- the maximum number of shares
+      shares:           -1
+      bandwidth:
+        per_account:
+          # -- per-account period for bandwidth usage
+          period:       5m
+          warning:
+            # -- per-account warning threshold for receive bandwidth usage
+            rx:         -1
+            # -- per-account warning threshold for transmit bandwidth usage
+            tx:         -1
+            # -- per-account warning threshold for total bandwidth usage
+            total:      7242880
+          limit:
+            # -- per-account limit threshold for receive bandwidth usage
+            rx:         -1
+            # -- per-account limit threshold for transmit bandwidth usage
+            tx:         -1
+            # -- per-account limit threshold for total bandwidth usage
+            total:      10485760
+        per_environment:
+          # -- per-environment period for bandwidth usage
+          period:       5m
+          warning:
+            # -- per-environment warning threshold for receive bandwidth usage
+            rx:         -1
+            # -- per-environment warning threshold for transmit bandwidth usage
+            tx:         -1
+            # -- per-environment warning threshold for total bandwidth usage
+            total:      -1
+          limit:
+            # -- per-environment limit threshold for receive bandwidth usage
+            rx:         -1
+            # -- per-environment limit threshold for transmit bandwidth usage
+            tx:         -1
+            # -- per-environment limit threshold for total bandwidth usage
+            total:      -1
+        per_share:
+          # -- per-share period for bandwidth usage
+          period:       5m
+          warning:
+            # -- per-share warning threshold for receive bandwidth usage
+            rx:         -1
+            # -- per-share warning threshold for transmit bandwidth usage
+            tx:         -1
+            # -- per-share warning threshold for total bandwidth usage
+            total:      -1
+          limit:
+            # -- per-share limit threshold for receive bandwidth usage
+            rx:         -1
+            # -- per-share limit threshold for transmit bandwidth usage
+            tx:         -1
+            # -- per-share limit threshold for total bandwidth usage
+            total:      -1
+      # -- toggle enforcement of usage limits
+      enforcing:        false
+      # -- the period for checking usage limits
+      cycle:            5m
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    # -- storage claim for the zrok controller database if using sqlite3
+    enabled: true
+    # -- annotations for the PVC
+    # -- The mount path for the zrok controller database
+    mount_dir: /var/lib/zrok
+    annotations: {}
+    # -- A manually managed Persistent Volume and Claim
+    # Requires persistence.enabled: true
+    # -- If defined, PVC must be created manually before volume will be bound
+    existingClaim: ""
+    ## minio data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # -- Storage class of PV to bind. By default it looks for the default storage class.
+    # If the PV uses a different storage class, specify that here.
+    storageClass: ""
+    # -- PVC volume name
+    VolumeName:
+    # -- PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed)
+    accessMode: ReadWriteOnce
+    # -- PVC size of zrok controller database
+    size: 2Gi
+  # -- send invitation acknowledgements and usage limit warnings from the specified email address
+  email: {}
+    # host:                           smtp.server.com
+    # port:                           587
+    # username:                       ""
+    # password:                       ""
+    # from:                           ziggy@zrok.io
+
+
+
+
+frontend:
+  service:
+    # -- The service type to use for the zrok frontend
+    type: ClusterIP
+    # -- The port to advertise for the zrok frontend service
+    advertisedPort: 80
+    # -- The port to expose on the zrok frontend container
+    containerPort: 8080
+  ingress:
+    # -- enable the frontend's ingress resource
+    enabled: false
+    scheme: https
+    className: ""
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  # -- a read-only mountpoint for the frontend's Ziti identity is "homeDir"
+  # because zrok always looks in $HOME/.zrok/identities
+  homeDir: /var/lib/zrok
+  deleteIdentityScriptFile: delete-identity.sh
+
+ziti:
+  # -- The Ziti Management API host to bootstrap with zrok and to collect fabric metrics from
+  advertisedHost: localhost
+  # -- The Ziti Management API port
+  advertisedPort: "443"
+  # -- Ziti admin login name
+  username: admin
+  # -- Ziti admin login password
+  password: admin
+  # -- name of the configmap containing the Ziti CA certificate trust bundle
+  # that trust-manager syncs to namespaces with the label
+  # "openziti.io/namespace: enabled"; has format {{controller's Helm release name}}-ctrl-plane-cas
+  ca_cert_configmap: ziti-controller-ctrl-plane-cas
+  # -- mountpoint of the Ziti CA certificate trust bundle
+  ca_cert_dir: /etc/ssl/certs
+  # -- key name of trust bundle in configmap and filename to project into mountpoint
+  ca_cert_file: ctrl-plane-cas.crt
+
+# -- The DNS zone with a wildcard * A record to use for the zrok public frontend
+dnsZone: "zrok.example.com"
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+influxdb2:
+  # -- enable the influxdb2 subchart
+  enabled: true
+  service:
+    # -- The service type to use for the InfluxDB service
+    type: ClusterIP
+    # -- The port to advertise for the InfluxDB service
+    port: 8086
+    # -- set URL of the InfluxDB service if subchart is disabled
+    url: ""  
+  adminUser:
+    # -- The admin username for the InfluxDB service
+    username: admin
+    # -- The admin password for the InfluxDB service
+    password: admin
+    # -- The name of an existing secret with admin-password and admin-token for the InfluxDB service
+    existingSecret: ""

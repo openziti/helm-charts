@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "zrok.fullname" . }}
+  labels:
+    {{- include "zrok.labelsController" . | nindent 4 }}
+spec:
+  type: {{ .Values.controller.service.type }}
+  ports:
+    - port: {{ .Values.controller.service.advertisedPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "zrok.selectorLabelsController" . | nindent 4 }}

@@ -44,4 +44,4 @@ spec:
       key: {{ .Values.ctrlPlaneCasFile }}
     namespaceSelector:
       matchLabels:
-        kubernetes.io/metadata.name: {{ .Release.Namespace }}
+        openziti.io/namespace: "enabled"
