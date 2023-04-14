@@ -55,8 +55,7 @@ data:
     events:
       jsonLogger:
         subscriptions:
-          - type: fabric.usage
-            version: 3
+          {{- .Values.fabric.events.subscriptions | toYaml | nindent 10 }}
         handler:
           type: file
           format: json

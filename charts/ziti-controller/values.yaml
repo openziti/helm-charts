@@ -256,6 +256,22 @@ fabric:
     enabled: false
     mountDir: /var/run/ziti
     fileName: fabric-events.json
+    subscriptions:
+      - type: fabric.circuits
+      - type: fabric.links
+      - type: fabric.routers
+      - type: fabric.terminators
+      - type: metrics
+        sourceFilter: .*
+        metricFilter: .*
+      - type: edge.sessions
+      - type: edge.apiSessions
+      - type: fabric.usage  # used by zrok for limits enforcement
+        version: 3
+      - type: services
+      - type: edge.entityCounts
+        interval: 5s
+
 # A note about sub-charts: these values may serve as a partial reference for
 # configuring the charts on which this chart depends. However, I wasn't able to
 # get dependency solving working with Helm, which doesn't install depenencies
