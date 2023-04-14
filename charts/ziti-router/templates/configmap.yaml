@@ -121,6 +121,12 @@ data:
     {{- end }}
     {{- end }}
 
+    {{- if eq .Values.fabric.metrics.enabled true }}
+    metrics:
+      reportInterval: 5s
+      intervalAgeThreshold: 5s
+    {{- end }}
+    
     edge:
       csr:
         {{- if .Values.csr.country }}
@@ -200,8 +206,3 @@ data:
         linkDialQueueLength: 1000
         linkDialWorkerCount: 32
 
-    {{- if eq .Values.fabric.metrics.enabled true }}
-    metrics:
-      reportInterval: 5s
-      intervalAgeThreshold: 5s
-    {{- end }}
