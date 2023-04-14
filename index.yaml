@@ -234,6 +234,29 @@ entries:
     version: 0.1.1
   ziti-controller:
   - apiVersion: v3
+    appVersion: 0.27.9
+    created: "2023-04-14T16:30:23.374094601Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.4.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: e06e34a7dc21ec7e3d8b0bdb902e0bcf0618bb3bb2b406464c115ba577a496a7
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-0.2.6/ziti-controller-0.2.6.tgz
+    version: 0.2.6
+  - apiVersion: v3
     appVersion: 0.27.5
     created: "2023-04-12T16:20:50.360742496Z"
     dependencies:
@@ -623,6 +646,16 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.5/ziti-host-0.3.5.tgz
     version: 0.3.5
   ziti-router:
+  - apiVersion: v3
+    appVersion: 0.27.9
+    created: "2023-04-14T16:30:23.521193105Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 6be889e66c4c1cd78d48ea0d00e112deae27e400c868c97af0f109855ae30cef
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.3.5/ziti-router-0.3.5.tgz
+    version: 0.3.5
   - apiVersion: v2
     appVersion: 0.27.5
     created: "2023-04-03T18:45:23.026883673Z"
@@ -733,4 +766,20 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.1.3/ziti-router-0.1.3.tgz
     version: 0.1.3
-generated: "2023-04-12T16:20:50.360954395Z"
+  zrok:
+  - apiVersion: v2
+    appVersion: v0.4.0
+    created: "2023-04-14T16:30:23.672417886Z"
+    dependencies:
+    - condition: influxdb2.enabled
+      name: influxdb2
+      repository: https://helm.influxdata.com/
+      version: 2.1.1
+    description: A Helm chart for Kubernetes
+    digest: a9db1d137474e70fd313feab4938c3fc0154825e5065a37247f78139dabb8194
+    name: zrok
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
+    version: 0.1.16
+generated: "2023-04-14T16:30:23.672602989Z"
