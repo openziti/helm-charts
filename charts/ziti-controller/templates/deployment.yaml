@@ -115,9 +115,30 @@ spec:
               value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
             - name: HOME
               value: {{ .Values.image.homedir }}
+            - name: ZITI_MGMT_API
+              {{- if .Values.managementApi.service.enabled }}
+              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.managementApi.advertisedPort }}
+              {{- else }}
+              value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.clientApi.advertisedPort }}
+              {{- end }}
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-user
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                  key: admin-password
           volumeMounts:
             - mountPath: {{ .Values.dataMountDir }}
               name: data
+            - mountPath: {{ .Values.image.homedir }}
+              name: ziggy-home
+            - mountPath: {{ .Values.execMountDir }}/{{ .Values.zitiLoginScript }}
+              name: ziti-controller-configmap
+              subPath: {{ .Values.zitiLoginScript }}
             - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
               name: ziti-controller-configmap
               subPath: {{ .Values.configFile }}
@@ -145,37 +166,6 @@ spec:
             - mountPath: {{ .Values.fabric.events.mountDir }}
               name: fabric-events
             {{- end }}
-        - name: {{ .Chart.Name }}-admin
-          image: {{ .Values.image.admin.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
-          command:
-          {{- range .Values.image.admin.command }}
-            - {{ . | quote }}
-          {{- end }}
-          env:
-            - name: ZITI_MGMT_API
-              {{- if .Values.managementApi.service.enabled }}
-              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.managementApi.advertisedPort }}
-              {{- else }}
-              value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.clientApi.advertisedPort }}
-              {{- end }}
-            - name: ZITI_ADMIN_USER
-              valueFrom:
-                secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
-                  key: admin-user
-            - name: ZITI_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
-                  key: admin-password
-            - name: PFXLOG_NO_JSON
-              value: "true"
-            - name: HOME
-              value: {{ .Values.image.homedir }}
-          volumeMounts:
-            - mountPath: {{ .Values.execMountDir }}/{{ .Values.zitiLoginScript }}
-              name: ziti-controller-configmap
-              subPath: {{ .Values.zitiLoginScript }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -234,3 +224,5 @@ spec:
         - name: fabric-events
           emptyDir: {}
         {{- end }}
+        - name: ziggy-home
+          emptyDir: {}
