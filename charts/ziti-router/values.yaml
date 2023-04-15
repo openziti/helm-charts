@@ -175,12 +175,10 @@ persistence:
   enabled: true
   # -- annotations for the PVC
   annotations: {}
-
   # -- A manually managed Persistent Volume and Claim
   # Requires persistence.enabled: true
   # If defined, PVC must be created manually before volume will be bound
   existingClaim: ""
-
   ## minio data Persistent Volume Storage Class
   ## If defined, storageClassName: <storageClass>
   ## If set to "-", storageClassName: "", which disables dynamic provisioning
@@ -197,3 +195,8 @@ persistence:
   accessMode: ReadWriteOnce
   # -- 50Mi is plenty for this state file 
   size: 50Mi
+
+fabric:
+  metrics:
+    # -- configure fabric metrics in the router config
+    enabled: false

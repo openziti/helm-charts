@@ -33,20 +33,33 @@ Create chart name and version as used by the chart label.
 {{/*
 Common labels
 */}}
-{{- define "zrok.labels" -}}
+{{- define "zrok.commonLabels" -}}
 helm.sh/chart: {{ include "zrok.chart" . }}
-{{ include "zrok.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "zrok.labelsController" -}}
+{{ include "zrok.commonLabels" . }}
+{{ include "zrok.selectorLabelsController" . }}
+{{- end }}
+
+{{- define "zrok.labelsFrontend" -}}
+{{ include "zrok.commonLabels" . }}
+{{ include "zrok.selectorLabelsFrontend" . }}
+{{- end }}
+
 {{/*
 Selector labels
 */}}
-{{- define "zrok.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "zrok.name" . }}
+{{- define "zrok.selectorLabelsController" -}}
+app.kubernetes.io/name: {{ include "zrok.name" . }}-controller
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+{{- define "zrok.selectorLabelsFrontend" -}}
+app.kubernetes.io/name: {{ include "zrok.name" . }}-frontend
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -54,9 +67,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "zrok.serviceAccountName" -}}
+{{/*
 {{- if .Values.serviceAccount.create }}
+*/}}
 {{- default (include "zrok.fullname" .) .Values.serviceAccount.name }}
+{{/*
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
+*/}}
 {{- end }}

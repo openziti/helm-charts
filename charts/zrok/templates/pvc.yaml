@@ -1,28 +1,28 @@
-{{- if .Values.persistence.enabled }}
+{{- if and .Values.controller.persistence.enabled (not .Values.controller.persistence.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "zrok.fullname" . }}
+  name: {{ include "zrok.fullname" . }}-database
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    {{- include "zrok.labels" . | nindent 4 }}
+    {{- include "zrok.labelsController" . | nindent 4 }}
     app.kubernetes.io/component: "zrok"
-{{- if .Values.persistence.annotations }}
+{{- if .Values.controller.persistence.annotations }}
   annotations:
-{{ toYaml .Values.persistence.annotations | trimSuffix "\n" | indent 4 }}
+{{ toYaml .Values.controller.persistence.annotations | trimSuffix "\n" | indent 4 }}
 {{- end }}
 spec:
   accessModes:
-    - {{ .Values.persistence.accessMode | quote }}
+    - {{ .Values.controller.persistence.accessMode | quote }}
   resources:
     requests:
-      storage: {{ .Values.persistence.size | quote }}
+      storage: {{ .Values.controller.persistence.size | quote }}
 
-{{- if .Values.persistence.storageClass }}
-  {{- if or (eq "-" .Values.persistence.storageClass) (eq "" .Values.persistence.storageClass) }}
+{{- if .Values.controller.persistence.storageClass }}
+  {{- if or (eq "-" .Values.controller.persistence.storageClass) (eq "" .Values.controller.persistence.storageClass) }}
   storageClassName: ""
     {{- else }}
-  storageClassName: "{{ .Values.persistence.storageClass }}"
+  storageClassName: "{{ .Values.controller.persistence.storageClass }}"
     {{- end }}
   {{- end }}
 {{- end }}

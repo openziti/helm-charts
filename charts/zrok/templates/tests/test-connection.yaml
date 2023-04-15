@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: "{{ include "zrok.fullname" . }}-test-connection"
   labels:
-    {{- include "zrok.labels" . | nindent 4 }}
+    {{- include "zrok.labelsController" . | nindent 4 }}
   annotations:
     "helm.sh/hook": test
 spec:
@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "zrok.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ include "zrok.fullname" . }}:{{ .Values.controller.service.advertisedPort }}']
   restartPolicy: Never
