@@ -16,4 +16,4 @@ dependencies:
 description: Host an OpenZiti controller in Kubernetes
 name: ziti-controller
 type: application
-version: 0.2.6
+version: 0.3.1
