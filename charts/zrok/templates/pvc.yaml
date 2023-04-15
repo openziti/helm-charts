@@ -1,0 +1,28 @@
+{{- if and .Values.controller.persistence.enabled (not .Values.controller.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "zrok.fullname" . }}-database
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "zrok.labelsController" . | nindent 4 }}
+    app.kubernetes.io/component: "zrok"
+{{- if .Values.controller.persistence.annotations }}
+  annotations:
+{{ toYaml .Values.controller.persistence.annotations | trimSuffix "\n" | indent 4 }}
+{{- end }}
+spec:
+  accessModes:
+    - {{ .Values.controller.persistence.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.controller.persistence.size | quote }}
+
+{{- if .Values.controller.persistence.storageClass }}
+  {{- if or (eq "-" .Values.controller.persistence.storageClass) (eq "" .Values.controller.persistence.storageClass) }}
+  storageClassName: ""
+    {{- else }}
+  storageClassName: "{{ .Values.controller.persistence.storageClass }}"
+    {{- end }}
+  {{- end }}
+{{- end }}

@@ -179,6 +179,7 @@ tunnel:
 | enrollJwtFile | string | `"enrollment.jwt"` | projected subpath where the enrollment token will be mounted |
 | enrollmentJwt | string | `nil` | enrollment one time token from the controller's management API |
 | execMountDir | string | `"/usr/local/bin"` | read-only mountpoint for executables (must be in image's executable search PATH) |
+| fabric.metrics.enabled | bool | `false` | configure fabric metrics in the router config |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
 | image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
 | image.command | list | `["ziti","router","run"]` | deployment container command |
