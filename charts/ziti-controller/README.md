@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.2.6](https://img.shields.io/badge/Version-0.2.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.9](https://img.shields.io/badge/AppVersion-0.27.9-informational?style=flat-square)
+![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.9](https://img.shields.io/badge/AppVersion-0.27.9-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -230,14 +230,12 @@ edgeSignerPki:
 | fabric.events.subscriptions[9].type | string | `"edge.entityCounts"` |  |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
-| image.admin.args | list | `[]` | args for the admin container entrypoint command |
-| image.admin.command | list | `["bash","-c","while true; do \n  sleep 10;\ndone\n"]` | entrypoint command for the admin container |
-| image.admin.repository | string | `"docker.io/openziti/ziti-cli"` | image for the admin container |
 | image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
-| image.homedir | string | `"/tmp"` | alternative homedir for ephemeral, writeable storage |
-| image.pullPolicy | string | `"Always"` | deployment image pull policy |
-| image.repository | string | `"docker.io/openziti/ziti-controller"` | container image tag for app deployment |
+| image.homedir | string | `"/home/ziggy"` | alternative homedir for ephemeral, writeable storage |
+| image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
+| image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
+| image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | recommended: install the ingress-nginx subchart (may be necessary for managed k8s) |
 | initScriptFile | string | `"ziti-controller-init.bash"` | exec by init container |
