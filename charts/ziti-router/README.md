@@ -204,8 +204,8 @@ tunnel:
 | persistence.size | string | `"50Mi"` | 50Mi is plenty for this state file  |
 | persistence.storageClass | string | `""` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
-| podSecurityContext | object | `{"fsGroup":65534}` | deployment template spec security context |
-| podSecurityContext.fsGroup | int | `65534` | this is the GID of "nobody" in the RedHat UBI minimal container image. This was added when troubleshooting a persistent volume permission error, and I don't know if it's necessary. |
+| podSecurityContext | object | `{"fsGroup":1001}` | deployment template spec security context |
+| podSecurityContext.fsGroup | int | `1001` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the endpoints state file |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
