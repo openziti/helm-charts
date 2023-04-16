@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.3.3](https://img.shields.io/badge/Version-0.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.9](https://img.shields.io/badge/AppVersion-0.27.9-informational?style=flat-square)
+![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.28.0](https://img.shields.io/badge/AppVersion-0.28.0-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -192,7 +192,6 @@ edgeSignerPki:
 | clientApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| configFile | string | `"ziti-controller.yaml"` | filename of the controller configuration file |
 | configMountDir | string | `"/etc/ziti"` | read-only mountpoint where configFile and various read-only identity dirs are projected |
 | ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
@@ -231,15 +230,14 @@ edgeSignerPki:
 | fabric.events.subscriptions[9].type | string | `"edge.entityCounts"` |  |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
-| image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | args for the entrypoint command |
+| image.args | list | `["{{ .Values.configMountDir }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
-| image.homedir | string | `"/home/ziggy"` | alternative homedir for ephemeral, writeable storage |
+| image.homeDir | string | `"/home/ziggy"` | alternative homeDir for ephemeral, writeable storage |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | recommended: install the ingress-nginx subchart (may be necessary for managed k8s) |
-| initScriptFile | string | `"ziti-controller-init.bash"` | exec by init container |
 | managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
@@ -257,8 +255,8 @@ edgeSignerPki:
 | persistence.size | string | `"2Gi"` | 2GiB is enough for tens of thousands of entities, but feel free to make it larger |
 | persistence.storageClass | string | `nil` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
-| podSecurityContext | object | `{"fsGroup":65534}` | deployment template spec security context |
-| podSecurityContext.fsGroup | int | `65534` | this is the GID of "nobody" in the RedHat UBI minimal container image. This was added when troubleshooting a persistent volume permission error, and I don't know if it's necessary. |
+| podSecurityContext | object | `{"fsGroup":1001}` | deployment template spec security context |
+| podSecurityContext.fsGroup | int | `1001` | the GID of the group that should own any files created by the container, especially the BoltDB file |
 | prometheus.advertisedHost | string | `""` | DNS name to advertise in place of the default internal cluster name built from the Helm release name |
 | prometheus.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
@@ -275,9 +273,6 @@ edgeSignerPki:
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
-| zitiLoginScript | string | `"zitiLogin"` | admin profile script file |
-| zitiShellProfileDir | string | `"/etc/profile.d"` | ziti shell rc mountpoint where zitirc.bash is projected |
-| zitiShellProfileSript | string | `"ziti-profile.bash"` | ziti shell rc filename |
 
 ## TODO's
 
