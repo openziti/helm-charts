@@ -276,6 +276,8 @@ edgeSignerPki:
 | trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 | zitiLoginScript | string | `"zitiLogin"` | admin profile script file |
+| zitiShellProfileDir | string | `"/etc/profile.d"` | ziti shell rc mountpoint where zitirc.bash is projected |
+| zitiShellProfileSript | string | `"ziti-profile.bash"` | ziti shell rc filename |
 
 ## TODO's
 
