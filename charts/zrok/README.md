@@ -34,14 +34,12 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | controller.email | object | `{}` | send invitation acknowledgements and usage limit warnings from the specified email address |
-| controller.ingress.annotations | object | `{}` |  |
-| controller.ingress.className | string | `""` |  |
+| controller.ingress.annotations | object | `{}` | The annotations to use for the zrok controller ingress resource |
+| controller.ingress.className | string | `""` | The ingress class to use for the zrok controller |
 | controller.ingress.enabled | bool | `false` | enable the ingress resource for  |
-| controller.ingress.hosts[0].host | string | `"chart-example.local"` |  |
-| controller.ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| controller.ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
-| controller.ingress.scheme | string | `"https"` |  |
-| controller.ingress.tls | list | `[]` |  |
+| controller.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The hosts to use for the zrok controller ingress resource |
+| controller.ingress.scheme | string | `"https"` | URI scheme to advertise for the controller's ingress resource |
+| controller.ingress.tls | list | `[]` | The TLS configuration for the zrok controller ingress resource |
 | controller.metrics.agent.source.type | string | `"websocketSource"` | initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics |
 | controller.metrics.enabled | bool | `true` | enable metrics collection and reporting for the zrok controller |
 | controller.metrics.limits.bandwidth.per_account.limit.rx | int | `-1` | per-account limit threshold for receive bandwidth usage |
@@ -84,14 +82,12 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
 | frontend.deleteIdentityScriptFile | string | `"delete-identity.sh"` |  |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
-| frontend.ingress.annotations | object | `{}` |  |
-| frontend.ingress.className | string | `""` |  |
+| frontend.ingress.annotations | object | `{}` | The annotations to use for the frontend's ingress resource |
+| frontend.ingress.className | string | `""` | The annotations to use for the frontend's ingress resource |
 | frontend.ingress.enabled | bool | `false` | enable the frontend's ingress resource |
-| frontend.ingress.hosts[0].host | string | `"chart-example.local"` |  |
-| frontend.ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| frontend.ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
-| frontend.ingress.scheme | string | `"https"` |  |
-| frontend.ingress.tls | list | `[]` |  |
+| frontend.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The hostnames to use for the frontend's ingress resource |
+| frontend.ingress.scheme | string | `"https"` | URI scheme to advertise for the frontend's ingress resource |
+| frontend.ingress.tls | list | `[]` | The TLS configuration for the frontend's ingress resource |
 | frontend.service.advertisedPort | int | `80` | The port to advertise for the zrok frontend service |
 | frontend.service.containerPort | int | `8080` | The port to expose on the zrok frontend container |
 | frontend.service.type | string | `"ClusterIP"` | The service type to use for the zrok frontend |

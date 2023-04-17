@@ -46,16 +46,21 @@ controller:
   ingress:
     # -- enable the ingress resource for 
     enabled: false
+    # -- URI scheme to advertise for the controller's ingress resource
     scheme: https
+    # -- The ingress class to use for the zrok controller
     className: ""
+    # -- The annotations to use for the zrok controller ingress resource
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
+    # -- The hosts to use for the zrok controller ingress resource
     hosts:
       - host: chart-example.local
         paths:
           - path: /
             pathType: ImplementationSpecific
+    # -- The TLS configuration for the zrok controller ingress resource
     tls: []
     #  - secretName: chart-example-tls
     #    hosts:
@@ -185,16 +190,21 @@ frontend:
   ingress:
     # -- enable the frontend's ingress resource
     enabled: false
+    # -- URI scheme to advertise for the frontend's ingress resource
     scheme: https
+    # -- The annotations to use for the frontend's ingress resource
     className: ""
+    # -- The annotations to use for the frontend's ingress resource
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
+    # -- The hostnames to use for the frontend's ingress resource
     hosts:
       - host: chart-example.local
         paths:
           - path: /
             pathType: ImplementationSpecific
+    # -- The TLS configuration for the frontend's ingress resource
     tls: []
     #  - secretName: chart-example-tls
     #    hosts:
