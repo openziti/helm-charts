@@ -768,6 +768,21 @@ entries:
     version: 0.1.3
   zrok:
   - apiVersion: v2
+    appVersion: v0.3.6
+    created: "2023-04-19T14:41:07.936866956Z"
+    dependencies:
+    - condition: influxdb2.enabled
+      name: influxdb2
+      repository: https://helm.influxdata.com/
+      version: 2.1.1
+    description: A Helm chart for Kubernetes
+    digest: d1c782c6df5f1d520d0201ae895009ac0f83a3452abd97cabcb6a24d1fa83b4f
+    name: zrok
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.17/zrok-0.1.17.tgz
+    version: 0.1.17
+  - apiVersion: v2
     appVersion: v0.4.0
     created: "2023-04-14T16:30:23.672417886Z"
     dependencies:
@@ -782,4 +797,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2023-04-14T16:30:23.672602989Z"
+generated: "2023-04-19T14:41:07.937044963Z"
