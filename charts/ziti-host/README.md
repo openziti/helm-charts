@@ -7,7 +7,7 @@ Host OpenZiti services with a tunneler pod
 
 ## Requirements
 
-Kubernetes: `>= 1.20.0`
+Kubernetes: `>= 1.20.0-0`
 
 ## Overview
 
