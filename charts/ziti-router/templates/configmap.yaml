@@ -114,8 +114,8 @@ data:
             lanIf: {{ .Values.tunnel.lanIf }}
           {{- else if eq .Values.tunnel.mode "proxy" }}
             services:
-            {{- range .Values.tunnel.services }}
-              - {{ . | quote }}
+            {{- range .Values.tunnel.proxyServices }}
+              - "{{ .zitiService }}:{{ .containerPort }}"
             {{- end }}
           {{- end }}
     {{- end }}
@@ -205,4 +205,3 @@ data:
         xgressDialWorkerCount: 128
         linkDialQueueLength: 1000
         linkDialWorkerCount: 32
-

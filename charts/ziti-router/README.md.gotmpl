@@ -134,6 +134,34 @@ helm upgrade \
     --values /tmp/router-values.yml
 ```
 
+## Proxy tunnel mode
+
+The Openziti router supports the [Proxy Tunnel mode](https://docs.openziti.io/docs/reference/configuration/router#tunnel-listeners). If you need to deploy Kubernetes services together with your Ziti Router in order to make these ports available as ClusterIP, NodePort or LoadBalancer services within your cluster, you can let this helm chart deploy those services for you. In some specific cases, it is not enough to have just one Kubernetes service making accessible all ports assigned to specific Openziti services, but to have some of these proxy ports on one, and others on another Kubernetes service (for example, if you want to expose one of the proxy services as a ClusterIP service, but another as a LoadBalancer service).
+
+Here's an example router valuess snippet to merge with your other values:
+
+```yaml
+tunnel:
+  mode: proxy
+  proxyServices:
+    # this will be bound on the "default" proxy Kubernetes service, see below
+    - zitiService: my-ziti-service.svc
+      containerPort: 10443
+      advertisedPort: 10443
+    # this will be bound on an additionally configured proxy Kubernetes service, see below
+    - zitiService: my-other-service.svc
+      containerPort: 10022
+      advertisedPort: 10022
+  proxyDefaultK8sService:
+    enabled: true
+    type: ClusterIP
+  proxyAdditionalK8sServices:
+    - name: myservice
+      type: LoadBalancer
+      annotations:
+        metallb.universe.tf/loadBalancerIPs: 192.168.1.100
+```
+
 ## Values Reference
 
 {{ template "chart.valuesTable" . }}

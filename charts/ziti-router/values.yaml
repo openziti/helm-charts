@@ -82,8 +82,24 @@ tunnel:
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
   # lanIf: eth0   # interface device name for tproxy?
-  # -- list of service-name:tcp-port pairs if mode "proxy"
-  services: []
+  # -- list of definitions to configure proxy services and according kubernetes services for these if mode "proxy"
+  proxyServices: []
+    #  # -- name of the Openziti service to forward data to
+    #- zitiService: my_service.svc
+    #  # -- port the router opens to listen for data
+    #  containerPort: 8443
+    #  # -- port the kubernetes service uses as listen port
+    #  advertisedPort: 80
+    #  # -- name suffix when not using the "default" proxy tunnel service, see above: "additionalK8sServices"
+    #  k8sservice: myservice
+  # -- default Kubernetes service object listening to proxy ports defined in "proxyServices", only if tunnel mode is "proxy"
+  proxyDefaultK8sService:
+    enabled: true
+    type: ClusterIP
+  # -- additional Kubernetes services created additionally to the "default" proxy listener service, only if mode is "proxy"
+  proxyAdditionalK8sServices: []
+    #- name: myservice
+    #  type: ClusterIP
 
 # -- read-only mountpoint for executables (must be in image's executable search PATH)
 execMountDir:     /usr/local/bin
@@ -195,7 +211,6 @@ persistence:
   accessMode: ReadWriteOnce
   # -- 50Mi is plenty for this state file 
   size: 50Mi
-
 fabric:
   metrics:
     # -- configure fabric metrics in the router config
