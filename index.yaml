@@ -173,6 +173,16 @@ entries:
     version: 0.3.3
   ziti-console:
   - apiVersion: v2
+    appVersion: 2.6.9
+    created: "2023-04-24T22:32:25.710382114Z"
+    description: Deploy OpenZiti console as kubernetes service
+    digest: fc46e241c936bb22af95d2c04671f3821879d9668a8bb96e91bc44fa589d702d
+    name: ziti-console
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.3.0/ziti-console-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
     appVersion: latest
     created: "2023-02-28T15:01:13.248180019Z"
     description: Deploy OpenZiti console as kubernetes service
@@ -648,6 +658,16 @@ entries:
   ziti-router:
   - apiVersion: v3
     appVersion: 0.27.9
+    created: "2023-04-24T22:32:25.841557253Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: a02b79854d9971de20f9e1cb01eb9bdfa1d644d5dacac7cf3b83d96249544dbb
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.4.1/ziti-router-0.4.1.tgz
+    version: 0.4.1
+  - apiVersion: v3
+    appVersion: 0.27.9
     created: "2023-04-24T15:22:48.803822871Z"
     description: Host an OpenZiti router in Kubernetes
     digest: bcd0f9671b6de46fb48543508ba0d7ec462c7b49281d67fa30b7e2c70abc4044
@@ -807,4 +827,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2023-04-24T15:22:48.804144699Z"
+generated: "2023-04-24T22:32:25.841752798Z"
