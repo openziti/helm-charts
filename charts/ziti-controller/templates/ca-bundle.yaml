@@ -42,6 +42,7 @@ spec:
   target:
     configMap:
       key: {{ .Values.ctrlPlaneCasFile }}
+    {{- with .Values.ctrlPlaneCasBundle.namespaceSelector }}
     namespaceSelector:
-      matchLabels:
-        openziti.io/namespace: "enabled"
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
