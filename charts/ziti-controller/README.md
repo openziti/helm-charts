@@ -204,6 +204,7 @@ edgeSignerPki:
 | ctrlPlane.service.enabled | bool | `true` | create a cluster service for the deployment |
 | ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | ctrlPlaneCaDir | string | `"ctrl-plane-cas"` | read-only mountpoint for run container to read the ctrl plane trust bundle created during init |
+| ctrlPlaneCasBundle.namespaceSelector | object | `{}` | namespaces where trust-manager will create the Bundle resource containing Ziti's trusted CA certs (default: empty means all namespaces) |
 | ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` | filename of the ctrl plane trust bundle |
 | dataMountDir | string | `"/persistent"` | writeable mountpoint where the controller will create dbFile during init |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
