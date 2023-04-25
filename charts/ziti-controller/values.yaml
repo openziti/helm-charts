@@ -157,6 +157,16 @@ ctrlPlaneCaDir: ctrl-plane-cas
 # -- filename of the ctrl plane trust bundle
 ctrlPlaneCasFile: ctrl-plane-cas.crt
 
+ctrlPlaneCasBundle:
+  # -- namespaces where trust-manager will create the Bundle resource containing
+  # Ziti's trusted CA certs (default: empty means all namespaces)
+  namespaceSelector: {}
+    # matchLabels:
+    #   openziti.io/namespace: "enabled"
+    # matchLabels:
+    #   kubernetes.io/metadata.name: ziti
+
+
 # nameOverride: ""
 # fullnameOverride: ""
 
