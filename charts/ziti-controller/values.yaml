@@ -124,6 +124,12 @@ webBindingPki:
   # management, and prometheus APIs
   enabled: true
 
+spireAgent:
+  # -- if you are running a container with the spire-agent binary installed
+  # then this will allow you to add the hostpath necessary for connecting to
+  # the spire socket
+  enabled: false
+
 image:
   # -- alternative homedir for ephemeral, writeable storage
   homedir: /home/ziggy
@@ -156,6 +162,8 @@ dbFile:         ctrl.db
 ctrlPlaneCaDir: ctrl-plane-cas
 # -- filename of the ctrl plane trust bundle
 ctrlPlaneCasFile: ctrl-plane-cas.crt
+# -- file path of the spire socket mount
+spireSocketMnt: /run/spire/sockets
 
 # nameOverride: ""
 # fullnameOverride: ""
