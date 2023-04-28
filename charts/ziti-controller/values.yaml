@@ -165,6 +165,16 @@ ctrlPlaneCasFile: ctrl-plane-cas.crt
 # -- file path of the spire socket mount
 spireSocketMnt: /run/spire/sockets
 
+ctrlPlaneCasBundle:
+  # -- namespaces where trust-manager will create the Bundle resource containing
+  # Ziti's trusted CA certs (default: empty means all namespaces)
+  namespaceSelector: {}
+    # matchLabels:
+    #   openziti.io/namespace: "enabled"
+    # matchLabels:
+    #   kubernetes.io/metadata.name: ziti
+
+
 # nameOverride: ""
 # fullnameOverride: ""
 

@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.9](https://img.shields.io/badge/AppVersion-0.27.9-informational?style=flat-square)
+![Version: 0.3.2](https://img.shields.io/badge/Version-0.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.9](https://img.shields.io/badge/AppVersion-0.27.9-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -204,6 +204,7 @@ edgeSignerPki:
 | ctrlPlane.service.enabled | bool | `true` | create a cluster service for the deployment |
 | ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | ctrlPlaneCaDir | string | `"ctrl-plane-cas"` | read-only mountpoint for run container to read the ctrl plane trust bundle created during init |
+| ctrlPlaneCasBundle.namespaceSelector | object | `{}` | namespaces where trust-manager will create the Bundle resource containing Ziti's trusted CA certs (default: empty means all namespaces) |
 | ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` | filename of the ctrl plane trust bundle |
 | dataMountDir | string | `"/persistent"` | writeable mountpoint where the controller will create dbFile during init |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
