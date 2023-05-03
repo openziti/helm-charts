@@ -165,7 +165,6 @@ ctrlPlaneCaDir: ctrl-plane-cas
 # -- filename of the ctrl plane trust bundle
 ctrlPlaneCasFile: ctrl-plane-cas.crt
 # -- file path of the spire socket mount
-spireSocketMnt: /run/spire/sockets
 
 ctrlPlaneCasBundle:
   # -- namespaces where trust-manager will create the Bundle resource containing
