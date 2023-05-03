@@ -234,6 +234,6 @@ spec:
         {{- if .Values.spireAgent.enabled }}
         - name: spire-agent-socket
           hostPath:
-            path: {{ .Values.spireSocketMnt }}
+            path: {{ .Values.spireAgent.spireSocketMnt }}
             type: Directory
         {{- end }}
