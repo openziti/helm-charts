@@ -166,6 +166,11 @@ spec:
             - mountPath: {{ .Values.fabric.events.mountDir }}
               name: fabric-events
             {{- end }}
+            {{- if .Values.spireAgent.enabled }}
+            - mountPath: {{ .Values.spireAgent.spireSocketMnt }}
+              name: spire-agent-socket
+              readOnly: true
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -226,3 +231,9 @@ spec:
         {{- end }}
         - name: ziggy-home
           emptyDir: {}
+        {{- if .Values.spireAgent.enabled }}
+        - name: spire-agent-socket
+          hostPath:
+            path: {{ .Values.spireAgent.spireSocketMnt }}
+            type: Directory
+        {{- end }}
