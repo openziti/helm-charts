@@ -129,6 +129,8 @@ spireAgent:
   # then this will allow you to add the hostpath necessary for connecting to
   # the spire socket
   enabled: false
+  # -- file path of the spire socket mount
+  spireSocketMnt: /run/spire/sockets
 
 image:
   # -- alternative homedir for ephemeral, writeable storage
