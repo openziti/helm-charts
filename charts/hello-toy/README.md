@@ -1,6 +1,6 @@
 # hello-toy
 
-![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 2.1.0](https://img.shields.io/badge/Version-2.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: unprivileged](https://img.shields.io/badge/AppVersion-unprivileged-informational?style=flat-square)
 
 Run the lightweight toy web server, optionally with a custom service domain name in cluster DNS e.g.
   helm install my-toy-release openziti/hello-toy --set serviceDomainName=my-toy-service-dns
@@ -21,7 +21,7 @@ Run the lightweight toy web server, optionally with a custom service domain name
 | persistence.enabled | bool | `false` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
-| ports[0].containerPort | int | `80` |  |
+| ports[0].containerPort | int | `8080` |  |
 | ports[0].name | string | `"http"` |  |
 | ports[0].protocol | string | `"TCP"` |  |
 | replicas | int | `1` |  |
