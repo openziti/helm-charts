@@ -142,9 +142,6 @@ spec:
             - mountPath: {{ .Values.configMountDir }}/ziti-controller.yaml
               name: ziti-controller-configmap
               subPath: ziti-controller.yaml
-            - mountPath: {{ .Values.image.homeDir }}/.bashrc
-              name: ziti-controller-configmap
-              subPath: .bashrc
             - mountPath: {{ .Values.image.homeDir }}/.bash_profile
               name: ziti-controller-configmap
               subPath: .bash_profile
@@ -199,9 +196,6 @@ spec:
                 mode: 0555
               - key: ziti-controller.yaml
                 path: ziti-controller.yaml
-                mode: 0444
-              - key: .bashrc
-                path: .bashrc
                 mode: 0444
               - key: .bash_profile
                 path: .bash_profile
