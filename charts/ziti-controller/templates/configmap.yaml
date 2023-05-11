@@ -7,7 +7,6 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 data:
   ziti-controller-init.bash: |-
-
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -23,7 +22,6 @@ data:
     fi
 
   zitiLogin: |-
-
     #!/usr/bin/env bash
     ziti edge login "${ZITI_MGMT_API}" --yes \
       --username "${ZITI_ADMIN_USER}" \

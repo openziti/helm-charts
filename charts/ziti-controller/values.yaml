@@ -176,7 +176,9 @@ ctrlPlaneCasBundle:
 podAnnotations: {}
 
 # -- deployment template spec security context
-podSecurityContext: {}
+podSecurityContext:
+  # -- the GID of the group that should own any files created by the container, especially the BoltDB file
+  fsGroup: 1001
 
 # -- deployment container security context
 securityContext: {}
