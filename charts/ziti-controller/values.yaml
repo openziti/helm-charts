@@ -176,8 +176,7 @@ ctrlPlaneCasBundle:
 podAnnotations: {}
 
 # -- deployment template spec security context
-podSecurityContext:
-  fsGroup: 1000
+podSecurityContext: {}
 
 # -- deployment container security context
 securityContext: {}
