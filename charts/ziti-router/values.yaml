@@ -146,10 +146,10 @@ podAnnotations: {}
 
 # -- deployment template spec security context
 podSecurityContext:
-  # -- this is the GID of "nobody" in the RedHat UBI minimal container image.
-  # This was added when troubleshooting a persistent volume permission error,
-  # and I don't know if it's necessary.
-  fsGroup: 65534
+  # -- this is the GID of "ziggy" run-as user in the container that has access
+  # to any files created by the router process in the emptyDir volume used to
+  # persist the endpoints state file
+  fsGroup: 1001
 
 # -- deployment container security context
 securityContext:
