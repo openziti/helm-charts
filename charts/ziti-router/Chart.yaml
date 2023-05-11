@@ -3,4 +3,4 @@ appVersion: 0.28.0
 description: Host an OpenZiti router in Kubernetes
 name: ziti-router
 type: application
-version: 0.4.1
+version: 0.5.0
