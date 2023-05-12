@@ -149,7 +149,7 @@ podSecurityContext:
   # -- this is the GID of "ziggy" run-as user in the container that has access
   # to any files created by the router process in the emptyDir volume used to
   # persist the endpoints state file
-  fsGroup: 1001
+  fsGroup: 2171
 
 # -- deployment container security context
 securityContext:

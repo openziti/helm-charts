@@ -178,7 +178,7 @@ podAnnotations: {}
 # -- deployment template spec security context
 podSecurityContext:
   # -- the GID of the group that should own any files created by the container, especially the BoltDB file
-  fsGroup: 1001
+  fsGroup: 2171
 
 # -- deployment container security context
 securityContext: {}
