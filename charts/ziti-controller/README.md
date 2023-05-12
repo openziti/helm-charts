@@ -255,8 +255,8 @@ edgeSignerPki:
 | persistence.size | string | `"2Gi"` | 2GiB is enough for tens of thousands of entities, but feel free to make it larger |
 | persistence.storageClass | string | `nil` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
-| podSecurityContext | object | `{"fsGroup":1001}` | deployment template spec security context |
-| podSecurityContext.fsGroup | int | `1001` | the GID of the group that should own any files created by the container, especially the BoltDB file |
+| podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
+| podSecurityContext.fsGroup | int | `2171` | the GID of the group that should own any files created by the container, especially the BoltDB file |
 | prometheus.advertisedHost | string | `""` | DNS name to advertise in place of the default internal cluster name built from the Helm release name |
 | prometheus.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
