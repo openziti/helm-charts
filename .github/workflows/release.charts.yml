@@ -31,6 +31,7 @@ jobs:
           charts_dir: charts
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_SKIP_EXISTING: "true"
 
       - name: Push READMEs to gh-pages
         uses: netfoundry/git-push-action@main
