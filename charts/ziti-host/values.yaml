@@ -75,3 +75,11 @@ tolerations: []
 affinity: {}
 
 replicas: 1
+
+spireAgent:
+  # -- if you are running a container with the spire-agent binary installed
+  # then this will allow you to add the hostpath necessary for connecting to
+  # the spire socket
+  enabled: false
+  # -- file path of the spire socket mount
+  spireSocketMnt: /run/spire/sockets
