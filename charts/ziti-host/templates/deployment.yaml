@@ -48,6 +48,11 @@ spec:
             - mountPath: /ziti-edge-tunnel
               name: persisted-identity
               readOnly: true
+            {{- if .Values.spireAgent.enabled }}
+            - mountPath: {{ .Values.spireAgent.spireSocketMnt }}
+              name: spire-agent-socket
+              readOnly: true
+            {{- end }}
       hostNetwork: {{ .Values.hostNetwork }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -77,5 +82,10 @@ spec:
             - key: persisted-identity
               path: {{ include "ziti-host.fullname" . }}-identity.json
           {{- end }}
-
+        {{- if .Values.spireAgent.enabled }}
+        - name: spire-agent-socket
+          hostPath:
+            path: {{ .Values.spireAgent.spireSocketMnt }}
+            type: Directory
+        {{- end }}
 
