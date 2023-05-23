@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.3.2](https://img.shields.io/badge/Version-0.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.9](https://img.shields.io/badge/AppVersion-0.27.9-informational?style=flat-square)
+![Version: 0.3.3](https://img.shields.io/badge/Version-0.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.27.9](https://img.shields.io/badge/AppVersion-0.27.9-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -269,6 +269,8 @@ edgeSignerPki:
 | prometheus.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
+| spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
+| spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
 | tolerations | list | `[]` | deployment template spec tolerations |
 | trust-manager.app.trust.namespace | string | `"ziti"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
