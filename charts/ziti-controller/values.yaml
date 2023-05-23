@@ -178,6 +178,20 @@ ctrlPlaneCasBundle:
 # nameOverride: ""
 # fullnameOverride: ""
 
+# -- additional volumes to mount to ziti-controller container
+additionalVolumes: []
+#  - name: additional-volume-1
+#    volumeType: emptyDir
+#    mountPath: /path/to/mount/1
+#    secretName: name-of-secret
+#  - name: additional-volume-2
+#    volumeType: configMap
+#    mountPath: /path/to/configmap/mount
+#    configMapName: your-configmap-name
+#  - name: additional-volume-2
+#    volumeType: emptyDir
+#    mountPath: /path/to/mount/2
+
 # -- annotations to apply to all pods deployed by this chart
 podAnnotations: {}
 

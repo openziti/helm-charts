@@ -176,6 +176,7 @@ edgeSignerPki:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| additionalVolumes | list | `[]` | additional volumes, see values.yaml for example |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |

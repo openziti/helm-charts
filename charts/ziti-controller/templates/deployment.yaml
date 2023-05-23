@@ -171,6 +171,10 @@ spec:
               name: spire-agent-socket
               readOnly: true
             {{- end }}
+            {{- range .Values.additionalVolumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -236,4 +240,16 @@ spec:
           hostPath:
             path: {{ .Values.spireAgent.spireSocketMnt }}
             type: Directory
+        {{- end }}
+        {{- range .Values.additionalVolumes }}
+        - name: {{ .name }}
+          {{- if eq .volumeType "secret" }}
+          secret:
+            secretName: {{ .secretName }}
+          {{- else if eq .volumeType "configMap" }}
+          configMap:
+            name: {{ .configMapName }}
+          {{- else if eq .volumeType "emptyDir" }}
+          emptyDir: {}
+          {{- end }}
         {{- end }}
