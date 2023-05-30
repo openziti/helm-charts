@@ -76,6 +76,8 @@ When you don't want to use the default key name `persisted-identity` you can def
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
+| spireAgent.enabled | bool | `false` |  |
+| spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` |  |
 | tolerations | list | `[]` |  |
 
 ```bash
