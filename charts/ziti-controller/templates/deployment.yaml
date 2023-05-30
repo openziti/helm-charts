@@ -33,7 +33,7 @@ spec:
       initContainers:
         - name: {{ .Chart.Name }}-init
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
-          command: ["{{ .Values.initScriptFile }}"]
+          command: ["ziti-controller-init.bash"]
           env:
             - name: ZITI_ADMIN_USER
               valueFrom:
@@ -50,16 +50,16 @@ spec:
             - name: PFXLOG_NO_JSON
               value: "true"
             - name: HOME
-              value: {{ .Values.image.homedir }}
+              value: {{ .Values.image.homeDir }}
           volumeMounts:
-            - mountPath: {{ .Values.execMountDir }}/{{ .Values.initScriptFile }}
+            - mountPath: {{ .Values.execMountDir }}/ziti-controller-init.bash
               name: ziti-controller-configmap
-              subPath: {{ .Values.initScriptFile }}
+              subPath: ziti-controller-init.bash
             - mountPath: {{ .Values.dataMountDir }}
               name: data
-            - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
+            - mountPath: {{ .Values.configMountDir }}/ziti-controller.yaml
               name: ziti-controller-configmap
-              subPath: {{ .Values.configFile }}
+              subPath: ziti-controller.yaml
             - mountPath: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
               name: ziti-controller-ctrl-plane-cas
               readOnly: true
@@ -114,7 +114,7 @@ spec:
             - name: ZITI_CTRL_PLANE_CA
               value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
             - name: HOME
-              value: {{ .Values.image.homedir }}
+              value: {{ .Values.image.homeDir }}
             - name: ZITI_MGMT_API
               {{- if .Values.managementApi.service.enabled }}
               value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.managementApi.advertisedPort }}
@@ -134,14 +134,17 @@ spec:
           volumeMounts:
             - mountPath: {{ .Values.dataMountDir }}
               name: data
-            - mountPath: {{ .Values.image.homedir }}
+            - mountPath: {{ .Values.image.homeDir }}
               name: ziggy-home
-            - mountPath: {{ .Values.execMountDir }}/{{ .Values.zitiLoginScript }}
+            - mountPath: {{ .Values.execMountDir }}/zitiLogin
               name: ziti-controller-configmap
-              subPath: {{ .Values.zitiLoginScript }}
-            - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
+              subPath: zitiLogin
+            - mountPath: {{ .Values.configMountDir }}/ziti-controller.yaml
               name: ziti-controller-configmap
-              subPath: {{ .Values.configFile }}
+              subPath: ziti-controller.yaml
+            - mountPath: {{ .Values.image.homeDir }}/.bash_profile
+              name: ziti-controller-configmap
+              subPath: .bash_profile
             - mountPath: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
               name: ziti-controller-ctrl-plane-cas
               readOnly: true
@@ -188,14 +191,17 @@ spec:
           configMap:
             name: {{ include "ziti-controller.fullname" . }}-config
             items:
-              - key: {{ .Values.initScriptFile }}
-                path: {{ .Values.initScriptFile }}
+              - key: ziti-controller-init.bash
+                path: ziti-controller-init.bash
                 mode: 0555
-              - key: {{ .Values.configFile }}
-                path: {{ .Values.configFile }}
+              - key: ziti-controller.yaml
+                path: ziti-controller.yaml
                 mode: 0444
-              - key: {{ .Values.zitiLoginScript }}
-                path: {{ .Values.zitiLoginScript }}
+              - key: .bash_profile
+                path: .bash_profile
+                mode: 0444
+              - key: zitiLogin
+                path: zitiLogin
                 mode: 0555
         - name: ziti-controller-ctrl-plane-cas
           configMap:

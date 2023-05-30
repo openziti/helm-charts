@@ -133,8 +133,8 @@ spireAgent:
   spireSocketMnt: /run/spire/sockets
 
 image:
-  # -- alternative homedir for ephemeral, writeable storage
-  homedir: /home/ziggy
+  # -- alternative homeDir for ephemeral, writeable storage
+  homeDir: /home/ziggy
   # -- container image repository for app deployment
   repository: docker.io/openziti/ziti-controller
   # -- override the container image tag specified in the chart
@@ -144,18 +144,12 @@ image:
   # -- container entrypoint command
   command: ["ziti", "controller", "run"]
   # -- args for the entrypoint command
-  args: ["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]
+  args: ["{{ .Values.configMountDir }}/ziti-controller.yaml"]
 
 # -- a directory included in the init and run containers' executable search path
 execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
-# -- exec by init container
-initScriptFile: ziti-controller-init.bash
-# -- admin profile script file
-zitiLoginScript: zitiLogin
 # -- read-only mountpoint where configFile and various read-only identity dirs are projected
 configMountDir: /etc/ziti
-# -- filename of the controller configuration file
-configFile:     ziti-controller.yaml
 # -- writeable mountpoint where the controller will create dbFile during init
 dataMountDir:   /persistent
 # -- name of the BoltDB file
@@ -183,10 +177,8 @@ podAnnotations: {}
 
 # -- deployment template spec security context
 podSecurityContext:
-  # -- this is the GID of "nobody" in the RedHat UBI minimal container image.
-  # This was added when troubleshooting a persistent volume permission error,
-  # and I don't know if it's necessary.
-  fsGroup: 65534
+  # -- the GID of the group that should own any files created by the container, especially the BoltDB file
+  fsGroup: 2171
 
 # -- deployment container security context
 securityContext: {}

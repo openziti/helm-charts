@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 data:
-  {{ .Values.initScriptFile }}: |-
+  ziti-controller-init.bash: |-
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -16,18 +16,24 @@ data:
     else
       echo "INFO: initializing Ziti Controller"
       ziti controller edge init \
-        "{{ .Values.configMountDir }}/{{ .Values.configFile }}" \
+        "{{ .Values.configMountDir }}/ziti-controller.yaml" \
         -u "${ZITI_ADMIN_USER}" \
         -p "${ZITI_ADMIN_PASSWORD}"
     fi
 
-  {{ .Values.zitiLoginScript }}: |-
+  zitiLogin: |-
+    #!/usr/bin/env bash
     ziti edge login "${ZITI_MGMT_API}" --yes \
       --username "${ZITI_ADMIN_USER}" \
       --password "${ZITI_ADMIN_PASSWORD}" \
-      --cert "${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}"
+      --ca "${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}"
+  
+  .bash_profile: |-
 
-  {{ .Values.configFile }}: |-
+    # customize ziggy's profile for login shells here
+    zitiLogin
+
+  ziti-controller.yaml: |-
 
     v: 3
 
