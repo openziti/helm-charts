@@ -278,6 +278,9 @@ edgeSignerPki:
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
+| zitiRouter.enabled | bool | `false` | optionally use the Ziti mgmt API to create a Ziti router and store the enrollment token in a secret |
+| zitiRouter.name | string | `"router0"` | the name of the Ziti router to create |
+| zitiRouter.roleAttributes | list | `["public-routers"]` | the Ziti role attributes to assign to the router |
 
 ## TODO's
 
