@@ -134,8 +134,6 @@ spec:
           volumeMounts:
             - mountPath: {{ .Values.dataMountDir }}
               name: data
-            - mountPath: {{ .Values.image.homeDir }}
-              name: ziggy-home
             - mountPath: {{ .Values.execMountDir }}/zitiLogin
               name: ziti-controller-configmap
               subPath: zitiLogin
@@ -239,8 +237,6 @@ spec:
         - name: fabric-events
           emptyDir: {}
         {{- end }}
-        - name: ziggy-home
-          emptyDir: {}
         {{- if .Values.spireAgent.enabled }}
         - name: spire-agent-socket
           hostPath:
