@@ -21,6 +21,37 @@ data:
         -p "${ZITI_ADMIN_PASSWORD}"
     fi
 
+  ziti-router-create.bash: |-
+    #!/usr/bin/env bash
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+    set -o xtrace
+
+    if kubectl -n {{ .Release.Namespace }} get secret \
+      {{ include "ziti-controller.fullname" . }}-router-token &>/dev/null; then
+      if [[ ${HELM_UPGRADE:-} == true ]]; then
+        echo 'INFO: no-op because secret exists and is Helm upgrade'
+        # exit without error so Helm will delete the post-upgrade hook Job
+        exit 0
+      else
+        echo 'ERROR: secret exists: "{{ include "ziti-controller.fullname" . }}-router-token"' >&2
+        # this should never happen because Helm deletes the secret with pre-uninstall hook
+        exit 1
+      fi
+    else
+      echo "INFO: identity secret does not exist, attempting to create router"
+    fi
+
+    ziti edge create edge-router {{ .Values.zitiRouter.name }} \
+      --role-attributes {{ join "," .Values.zitiRouter.roleAttributes }} \
+      --tunneler-enabled \
+      --jwt-output-file /tmp/router.jwt
+
+    kubectl -n {{ .Release.Namespace }} create secret generic \
+      {{ include "ziti-controller.fullname" . }}-router-token \
+      --from-file=router.jwt=/tmp/router.jwt
+
   zitiLogin: |-
     #!/usr/bin/env bash
     ziti edge login "${ZITI_MGMT_API}" --yes \

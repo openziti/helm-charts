@@ -287,6 +287,15 @@ fabric:
       - type: edge.entityCounts
         interval: 5s
 
+zitiRouter:
+  # -- optionally use the Ziti mgmt API to create a Ziti router and store the enrollment token in a secret
+  enabled: false
+  # -- the name of the Ziti router to create
+  name: router0
+  # -- the Ziti role attributes to assign to the router
+  roleAttributes:
+    - public-routers
+
 # A note about sub-charts: these values may serve as a partial reference for
 # configuring the charts on which this chart depends. However, I wasn't able to
 # get dependency solving working with Helm, which doesn't install dependencies
