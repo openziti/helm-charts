@@ -21,7 +21,7 @@ data:
         -p "${ZITI_ADMIN_PASSWORD}"
     fi
 
-  ziti-router-create.bash: |-
+  create-default-router.bash: |-
     #!/usr/bin/env bash
     set -o errexit
     set -o nounset
