@@ -233,7 +233,7 @@ edgeSignerPki:
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
 | image.args | list | `["{{ .Values.configMountDir }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
-| image.homeDir | string | `"/home/ziggy"` | alternative homeDir for ephemeral, writeable storage |
+| image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
