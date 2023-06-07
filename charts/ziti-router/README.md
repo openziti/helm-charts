@@ -40,6 +40,19 @@ You must supply some values when you install the chart:
 |advertisedHost|string|nil|the DNS name that edge clients will resolve to reach this router's edge listener|
 |ctrl.endpoint|string|nil|the DNS name:port of the router control plane endpoint provided by the Ziti controller|
 
+Alternatively, when you deploy the chart refer to an existing secret with the enrollment token:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+|tokenSecret.existingSecretName|string|nil|the name of an existing secret with the router enrollment token stored as data key "enrollment.jwt"|
+
+```bash
+helm install router0 openziti/ziti-router \
+  --set tokenSecret.existingSecretName=router0-token \
+  --set advertisedHost=ziti-router.example.com \
+  --set ctrl.endpoint=ziti-controller-ctrl.ziti-controller.svc:6262
+```
+
 ## Managed Kubernetes Installation
 
 Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because edge clients authenticate to the router with client certificates. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
@@ -180,6 +193,8 @@ tunnel:
 | enrollmentJwt | string | `nil` | enrollment one time token from the controller's management API |
 | execMountDir | string | `"/usr/local/bin"` | read-only mountpoint for executables (must be in image's executable search PATH) |
 | fabric.metrics.enabled | bool | `false` | configure fabric metrics in the router config |
+| fabric.tokenSecret.existingSecretName | string | `""` | optionally enroll with a token from an existing secret |
+| fabric.tokenSecret.keyName | string | `"enrollment.jwt"` | data key name in the secret where the token is stored, must match controller chart value enrollJwtFile if you are enrolling the controller's optional default router |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
 | image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
 | image.command | list | `["ziti","router","run"]` | deployment container command |
