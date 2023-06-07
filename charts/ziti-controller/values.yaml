@@ -133,7 +133,7 @@ spireAgent:
   spireSocketMnt: /run/spire/sockets
 
 image:
-  # -- alternative homeDir for ephemeral, writeable storage
+  # -- homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work
   homeDir: /home/ziggy
   # -- container image repository for app deployment
   repository: docker.io/openziti/ziti-controller
