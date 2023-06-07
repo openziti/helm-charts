@@ -3,13 +3,13 @@ kind: Service
 metadata:
   name: {{ include "zrok.fullname" . }}
   labels:
-    {{- include "zrok.labels" . | nindent 4 }}
+    {{- include "zrok.labelsController" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.controller.service.type }}
   ports:
-    - port: {{ .Values.service.advertisedPort }}
+    - port: {{ .Values.controller.service.advertisedPort }}
       targetPort: http
       protocol: TCP
       name: http
   selector:
-    {{- include "zrok.selectorLabels" . | nindent 4 }}
+    {{- include "zrok.selectorLabelsController" . | nindent 4 }}
