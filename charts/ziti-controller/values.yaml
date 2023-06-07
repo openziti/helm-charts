@@ -287,11 +287,11 @@ fabric:
       - type: edge.entityCounts
         interval: 5s
 
-zitiRouter:
+defaultRouter:
   # -- optionally use the Ziti mgmt API to create a Ziti router and store the enrollment token in a secret
   enabled: false
   # -- the name of the Ziti router to create
-  name: router0
+  name: default-router
   # -- the Ziti role attributes to assign to the router
   roleAttributes:
     - public-routers

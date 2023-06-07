@@ -43,14 +43,15 @@ data:
       echo "INFO: identity secret does not exist, attempting to create router"
     fi
 
-    ziti edge create edge-router {{ .Values.zitiRouter.name }} \
-      --role-attributes {{ join "," .Values.zitiRouter.roleAttributes }} \
+    ziti edge create edge-router {{ .Values.defaultRouter.name }} \
+      --role-attributes {{ join "," .Values.defaultRouter.roleAttributes }} \
       --tunneler-enabled \
-      --jwt-output-file /tmp/router.jwt
+      --jwt-output-file /tmp/enrollment.jwt
 
+    # secret data key must be "enrollment.jwt" or match the controller chart value of enrollJwtFile 
     kubectl -n {{ .Release.Namespace }} create secret generic \
       {{ include "ziti-controller.fullname" . }}-router-token \
-      --from-file=router.jwt=/tmp/router.jwt
+      --from-file=enrollment.jwt=/tmp/enrollment.jwt
 
   zitiLogin: |-
     #!/usr/bin/env bash

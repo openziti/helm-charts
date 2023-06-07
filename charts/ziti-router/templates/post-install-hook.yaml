@@ -69,11 +69,19 @@ spec:
                 mode: 0444
         - name: ziti-router-jwt
           secret:
+            {{- if .Values.tokenSecret.existingSecretName }}
+            secretName: {{ .Values.tokenSecret.existingSecretName }}
+            defaultMode: 0444
+            items:
+            - key: {{ .Values.tokenSsecret.keyName }}
+              path: {{ .Values.tokenSsecret.keyName }}
+            {{- else }}
             secretName: {{ include "ziti-router.fullname" . }}-jwt
             defaultMode: 0444
             items:
-            - key: enrollmentJwt
+            - key: {{ .Values.enrollJwtFile }}
               path: {{ .Values.enrollJwtFile }}
+            {{- end }}
         - name: config-data
         {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:

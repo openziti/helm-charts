@@ -215,3 +215,11 @@ fabric:
   metrics:
     # -- configure fabric metrics in the router config
     enabled: false
+  
+  tokenSecret:
+    # -- optionally enroll with a token from an existing secret
+    existingSecretName: ""
+    # -- data key name in the secret where the token is stored, must match
+    # controller chart value enrollJwtFile if you are enrolling the controller's
+    # optional default router
+    keyName: enrollment.jwt
