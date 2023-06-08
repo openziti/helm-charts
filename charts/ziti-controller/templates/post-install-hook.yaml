@@ -37,6 +37,14 @@ spec:
         image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
+          - name: HOME
+            value: {{ .Values.image.homeDir }}
+          - name: ZITI_MGMT_API
+            {{- if .Values.managementApi.service.enabled }}
+            value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.managementApi.advertisedPort }}
+            {{- else }}
+            value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.clientApi.advertisedPort }}
+            {{- end }}
           - name: ZITI_ADMIN_USER
             valueFrom:
               secretKeyRef:
@@ -51,19 +59,25 @@ spec:
             value: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
         volumeMounts:
           - mountPath: {{ .Values.execMountDir }}/create-default-router.bash
-            name: ziti-controller-config
+            name: ziti-controller-configmap
             subPath: create-default-router.bash
           - mountPath: {{ .Values.configMountDir }}/{{ .Values.ctrlPlaneCaDir }}
             name: ziti-controller-ctrl-plane-cas
             readOnly: true
+          - mountPath: {{ .Values.execMountDir }}/zitiLogin
+            name: ziti-controller-configmap
+            subPath: zitiLogin
         command: ["create-default-router.bash"]
       volumes:
-        - name: ziti-controller-config
+        - name: ziti-controller-configmap
           configMap:
-            name: {{ include "ziti-controller.fullname" . }}-config
+            name: {{ include "ziti-controller.fullname" . }}-configmap
             items:
               - key: create-default-router.bash
                 path: create-default-router.bash
+                mode: 0555
+              - key: zitiLogin
+                path: zitiLogin
                 mode: 0555
         - name: ziti-controller-ctrl-plane-cas
           configMap:

@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-config
+  name: {{ include "ziti-controller.fullname" . }}-configmap
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 data:
@@ -40,8 +40,10 @@ data:
         exit 1
       fi
     else
-      echo "INFO: identity secret does not exist, attempting to create router"
+      echo "INFO: enrollment secret does not exist, attempting to create router"
     fi
+
+    zitiLogin
 
     ziti edge create edge-router {{ .Values.defaultRouter.name }} \
       --role-attributes {{ join "," .Values.defaultRouter.roleAttributes }} \

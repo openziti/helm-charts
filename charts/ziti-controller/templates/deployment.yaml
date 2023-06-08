@@ -191,7 +191,7 @@ spec:
       volumes:
         - name: ziti-controller-configmap
           configMap:
-            name: {{ include "ziti-controller.fullname" . }}-config
+            name: {{ include "ziti-controller.fullname" . }}-configmap
             items:
               - key: ziti-controller-init.bash
                 path: ziti-controller-init.bash
