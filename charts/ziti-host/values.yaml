@@ -83,3 +83,17 @@ spireAgent:
   enabled: false
   # -- file path of the spire socket mount
   spireSocketMnt: /run/spire/sockets
+
+# -- additional volumes to mount to ziti-host container
+additionalVolumes: []
+#  - name: additional-volume-1
+#    volumeType: secret
+#    mountPath: /path/to/mount/1
+#    secretName: name-of-secret
+#  - name: additional-volume-2
+#    volumeType: configMap
+#    mountPath: /path/to/configmap/mount
+#    configMapName: your-configmap-name
+#  - name: additional-volume-2
+#    volumeType: emptyDir
+#    mountPath: /path/to/mount/2
