@@ -1,7 +1,7 @@
 apiVersion: v2
-appVersion: 0.20.21
+appVersion: 0.21.5
 description: Host OpenZiti services with a tunneler pod
 kubeVersion: '>= 1.20.0-0'
 name: ziti-host
 type: application
-version: 0.4.4
+version: 0.4.5
