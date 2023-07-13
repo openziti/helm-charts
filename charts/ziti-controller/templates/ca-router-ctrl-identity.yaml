@@ -14,7 +14,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-ctrl-plane-root
+  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -49,7 +49,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-ctrl-plane-intermediate
+  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -90,7 +90,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-ctrl-plane-identity
+  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
