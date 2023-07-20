@@ -52,7 +52,7 @@ When you don't want to use the default key name `persisted-identity` you can def
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| additionalVolumes | list | `[]` | additional volumes, see values.yaml for example |
+| additionalVolumes | list | `[]` | additional volumes to mount to ziti-host container |
 | affinity | object | `{}` |  |
 | dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
 | fullnameOverride | string | `""` |  |
