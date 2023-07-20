@@ -11,7 +11,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-web-root
+  commonName: {{ include "ziti-controller.fullname" . }}-web-root
   secretName: {{ include "ziti-controller.fullname" . }}-web-root-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -46,7 +46,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-web-intermediate
+  commonName: {{ include "ziti-controller.fullname" . }}-web-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
   isCA: true
   duration: {{ .Values.ca.duration }}
@@ -81,7 +81,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: ziti-controller-web-identity
+  commonName: {{ include "ziti-controller.fullname" . }}-web-identity
   secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
