@@ -24,7 +24,7 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ .Values.ctrlPlane.advertisedHost | default (printf "%s-ctrl.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}
+    - host: {{ .Values.ctrlPlane.advertisedHost | default (printf "%s-ctrl.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}
       http:
         paths:
           # This rule gives internal access to the pingaccess admin services.
