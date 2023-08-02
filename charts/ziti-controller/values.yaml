@@ -95,6 +95,8 @@ ca:
   duration: 87840h # 3660d / 10 y
   # -- Go time.Duration string format
   renewBefore: 720h # 30d
+  # Set a custom cluster domain if other than cluster.local
+  clusterDomain: "cluster.local"
 
 cert:
   # Note: The renewBefore and duration fields must be specified using a Go
