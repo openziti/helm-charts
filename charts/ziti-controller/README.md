@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.4.2](https://img.shields.io/badge/Version-0.4.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.28.4](https://img.shields.io/badge/AppVersion-0.28.4-informational?style=flat-square)
+![Version: 0.4.3](https://img.shields.io/badge/Version-0.4.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.28.4](https://img.shields.io/badge/AppVersion-0.28.4-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -178,6 +178,7 @@ edgeSignerPki:
 |-----|------|---------|-------------|
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
+| ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
