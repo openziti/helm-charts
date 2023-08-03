@@ -178,6 +178,7 @@ edgeSignerPki:
 |-----|------|---------|-------------|
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
+| ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
