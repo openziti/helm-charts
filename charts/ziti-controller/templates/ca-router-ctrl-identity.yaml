@@ -114,9 +114,8 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-ctrl
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc
-    - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster
-    - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.cluster.local
-    - {{ .Values.ctrlPlane.advertisedHost | default (printf "%s-ctrl.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}
+    - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
+    - {{ .Values.ctrlPlane.advertisedHost | default  (printf "%s-ctrl.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain)}}
     {{- if .Values.ctrlPlane.dnsNames }}
       {{- range .Values.ctrlPlane.dnsNames }}
     - {{ . | quote }}
@@ -126,8 +125,7 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-client
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
-    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster
-    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local
+    - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
     - {{ .Values.clientApi.advertisedHost }}
       {{- if .Values.clientApi.dnsNames }}
         {{- range .Values.clientApi.dnsNames }}
@@ -139,8 +137,7 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-mgmt
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
-    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster
-    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local
+    - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
       {{- if .Values.managementApi.advertisedHost }}
     - {{ .Values.managementApi.advertisedHost }}
       {{- end }}
@@ -151,7 +148,7 @@ spec:
       {{- end }}
     {{- end }}
   # uris:
-  #   - spiffe://cluster.local/ns/sandbox/sa/example
+  #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
   ipAddresses:
     - 127.0.0.1
   issuerRef:

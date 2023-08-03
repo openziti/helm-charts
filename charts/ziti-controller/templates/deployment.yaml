@@ -117,9 +117,9 @@ spec:
               value: {{ .Values.image.homeDir }}
             - name: ZITI_MGMT_API
               {{- if .Values.managementApi.service.enabled }}
-              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.managementApi.advertisedPort }}
+              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.managementApi.advertisedPort }}
               {{- else }}
-              value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.clientApi.advertisedPort }}
+              value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.clientApi.advertisedPort }}
               {{- end }}
             - name: ZITI_ADMIN_USER
               valueFrom:
