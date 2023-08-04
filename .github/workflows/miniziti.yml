@@ -26,9 +26,9 @@ jobs:
         uses: supplypike/setup-bin@v3
         with:
           uri: https://raw.githubusercontent.com/openziti/ziti-doc/miniziti-no-hosts/docusaurus/docs/learn/quickstarts/network/miniziti.bash
-          name: ziti
+          name: miniziti
           version: "miniziti-no-hosts"
 
       - name: Run miniziti script with local charts
         run: |
-          miniziti.bash --charts ./charts --verbose --no-hosts
+          miniziti --charts ./charts --verbose --no-hosts
