@@ -31,4 +31,4 @@ jobs:
 
       - name: Run miniziti script with local charts
         run: |
-          bash -x $(which miniziti.bash) -- --charts ./charts --verbose --no-hosts
+          miniziti.bash --charts ./charts --verbose --no-hosts
