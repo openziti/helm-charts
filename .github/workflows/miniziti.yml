@@ -22,6 +22,13 @@ jobs:
           name: ziti
           version: "0.29.0"
 
+      - name: install miniziti script
+        uses: supplypike/setup-bin@v3
+        with:
+          uri: https://raw.githubusercontent.com/openziti/ziti-doc/miniziti-no-hosts/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          name: ziti
+          version: "miniziti-no-hosts"
+
       - name: Run miniziti script with local charts
         run: |
-          bash -x ./miniziti.bash --charts ./charts --verbose --no-hosts
+          bash -x $(which miniziti.bash) --charts ./charts --verbose --no-hosts
