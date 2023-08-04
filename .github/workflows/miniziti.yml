@@ -7,13 +7,21 @@ jobs:
     runs-on: ubuntu-latest
     name: deploy to minikube
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout workspace
+        uses: actions/checkout@v3
 
       - name: Start minikube
         uses: medyagh/setup-minikube@v0.0.14
         with:
           start-args: --profile miniziti
 
-      - name: run miniziti script with local charts
+      - name: install ziti cli
+        uses: supplypike/setup-bin@v3
+        with:
+          uri: https://github.com/openziti/ziti/releases/download/v0.29.0/ziti-linux-amd64-0.29.0.tar.gz
+          name: ziti
+          version: "0.29.0"
+
+      - name: Run miniziti script with local charts
         run: |
-          ./miniziti.bash --charts ./charts --verbose
+          bash -x ./miniziti.bash --charts ./charts --verbose
