@@ -1,5 +1,5 @@
 # Chart dependencies
-/charts/*/charts
+/charts/**/charts
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -27,4 +27,3 @@ __snapshot__
 __snapshot__
 .cr-release-packages/
 .cr-index/
-Chart.lock
