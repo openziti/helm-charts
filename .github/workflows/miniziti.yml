@@ -29,6 +29,6 @@ jobs:
           name: miniziti
           version: 0fbea31
 
-      - name: Run miniziti script with local charts
+      - name: Run miniziti with charts from this branch
         run: |
           miniziti --charts ./charts --verbose --no-hosts
