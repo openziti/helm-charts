@@ -1,0 +1,19 @@
+name: Test charts in minikube
+on:
+  - pull_request
+  - workflow_dispatch
+jobs:
+  miniziti:
+    runs-on: ubuntu-latest
+    name: deploy to minikube
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Start minikube
+        uses: medyagh/setup-minikube@v0.0.14
+        with:
+          start-args: --profile miniziti
+
+      - name: run miniziti script with local charts
+        run: |
+          ./miniziti.bash --charts ./charts --verbose
