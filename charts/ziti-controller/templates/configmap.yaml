@@ -273,7 +273,7 @@ data:
             # address - required
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
-            address: {{ .Values.managementApi.advertisedHost | default printf "%s-mgmt.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}:{{ .Values.managementApi.advertisedPort }}
+            address: {{ .Values.managementApi.advertisedHost | default printf "%s-mgmt.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain }}:{{ .Values.managementApi.advertisedPort }}
             # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
         {{- if .Values.webBindingPki.enabled }}
         identity:
@@ -336,7 +336,7 @@ data:
             # address - required
             # The public address that external incoming requests will be able to resolve. Used in request processing and
             # response content that requires full host:port/path addresses.
-            address: {{ .Values.prometheus.advertisedHost | default printf "%s-prometheus.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}:{{ .Values.prometheus.advertisedPort }}
+            address: {{ .Values.prometheus.advertisedHost | default printf "%s-prometheus.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain }}:{{ .Values.prometheus.advertisedPort }}
         {{- if .Values.webBindingPki.enabled }}
         identity:
           #ClientCertKeyReuseIssue
