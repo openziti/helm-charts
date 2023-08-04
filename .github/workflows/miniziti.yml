@@ -25,7 +25,7 @@ jobs:
       - name: install miniziti
         uses: supplypike/setup-bin@v3
         with:
-          uri: https://github.com/openziti/ziti-doc/blob/0fbea31c3decbaa434aaf46d2bf6afadf9fce60c/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti-doc/0fbea31c3decbaa434aaf46d2bf6afadf9fce60c/docusaurus/docs/learn/quickstarts/network/miniziti.bash
           name: miniziti
           version: 0fbea31
 
