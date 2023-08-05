@@ -56,9 +56,9 @@ jobs:
         uses: iFaxity/wait-on-action@v1
         with:
           resource: http://127.0.0.1:4321/get
-          delay: 5000
-          interval: 5000
-          timeout: 21000
+          delay: 1000
+          interval: 1000
+          timeout: 10000
 
       - name: Send a POST request to the httpbin service and verify the response data
         run: |
