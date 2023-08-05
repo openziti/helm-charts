@@ -1,7 +1,13 @@
 name: Test charts in minikube
 on:
-  - pull_request
-  - workflow_dispatch
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/miniziti.yml'
+      - 'charts/ziti-controller/**'
+      - 'charts/ziti-router/**'
+      - 'charts/ziti-console/**'
+      - 'charts/httpbin/**'
 jobs:
   miniziti:
     runs-on: ubuntu-latest
@@ -54,7 +60,7 @@ jobs:
           set -euo pipefail
           curl -s -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
           AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response.json)
-          if [[ "$AWESOME" == "awesome" ]; then
+          if [[ "$AWESOME" == "awesome" ]]; then
             echo "Ziti is awesome!"
           else
             echo "Got '$AWESOME' instead of 'awesome'" >&2
