@@ -30,5 +30,25 @@ jobs:
           version: 0fbea31
 
       - name: Run miniziti with charts from this branch
+        run: miniziti --charts ./charts --verbose --no-hosts 
+
+      - name: Enroll client identity
+        run: ziti edge enroll --jwt /tmp/miniziti-client.jwt --out /tmp/miniziti-client.json 
+
+      - name: Run client proxy
         run: |
-          miniziti --charts ./charts --verbose --no-hosts
+          nohup ziti tunnel proxy "httpbin-service:4321" \
+            --identity /tmp/miniziti-client.json \
+            --verbose > /tmp/miniziti-client.log &
+
+      - name: Wait for proxy to serve the httpbin service
+        uses: iFaxity/wait-on-action@v1
+        with:
+          resource: http://127.0.0.1:4321/get
+          delay: 5000
+          interval: 5000
+          timeout: 21000
+
+      - name: Print the proxy log
+        if: always()
+        run: cat /tmp/miniziti-client.log
