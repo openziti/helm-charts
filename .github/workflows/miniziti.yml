@@ -49,6 +49,18 @@ jobs:
           interval: 5000
           timeout: 21000
 
+      - name: Send a POST request to the httpbin service and verify the response data
+        run: |
+          set -euo pipefail
+          curl -s -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
+          AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response.json)
+          if [[ "$AWESOME" == "awesome" ]; then
+            echo "Ziti is awesome!"
+          else
+            echo "Got '$AWESOME' instead of 'awesome'" >&2
+            exit 1
+          fi
+
       - name: Print the proxy log
         if: always()
         run: cat /tmp/miniziti-client.log
