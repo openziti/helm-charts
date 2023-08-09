@@ -35,10 +35,10 @@ jobs:
         with:
           # TODO: use main branch after --no-hosts feature merges, or relocate
           # the script to this repo so it is versioned with the charts
-          uri: https://raw.githubusercontent.com/openziti/ziti-doc/44d192bf2f45db9121842ddea68f2061e34f725c/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti-doc/e3051a8ce4479c843e13e7b401b47f5fa866183e/docusaurus/docs/learn/quickstarts/network/miniziti.bash
           # uri: https://raw.githubusercontent.com/openziti/ziti-doc/main/docusaurus/docs/learn/quickstarts/network/miniziti.bash
           name: miniziti
-          version: 44d192bf2f45db9121842ddea68f2061e34f725c
+          version: e3051a8ce4479c843e13e7b401b47f5fa866183e
 
       - name: Run miniziti with charts from this branch
         run: miniziti --charts ./charts --no-hosts # --verbose
