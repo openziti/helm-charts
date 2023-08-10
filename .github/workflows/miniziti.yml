@@ -1,0 +1,77 @@
+name: Test charts in minikube
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/miniziti.yml'
+      - 'charts/ziti-controller/**'
+      - 'charts/ziti-router/**'
+      - 'charts/ziti-console/**'
+      - 'charts/httpbin/**'
+jobs:
+  miniziti:
+    runs-on: ubuntu-latest
+    name: deploy to minikube
+    steps:
+      - name: Checkout workspace
+        uses: actions/checkout@v3
+
+      - name: Start minikube
+        uses: medyagh/setup-minikube@v0.0.14
+        with:
+          start-args: --profile miniziti
+
+      - name: install ziti cli
+        uses: supplypike/setup-bin@v3
+        with:
+          uri: https://github.com/openziti/ziti/releases/download/v0.29.0/ziti-linux-amd64-0.29.0.tar.gz
+          name: ziti
+          version: "0.29.0"
+
+      # this is the kubernetes quickstart script from
+      # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
+      - name: install miniziti
+        uses: supplypike/setup-bin@v3
+        with:
+          # TODO: use main branch after --no-hosts feature merges, or relocate
+          # the script to this repo so it is versioned with the charts
+          uri: https://raw.githubusercontent.com/openziti/ziti-doc/e3051a8ce4479c843e13e7b401b47f5fa866183e/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          # uri: https://raw.githubusercontent.com/openziti/ziti-doc/main/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          name: miniziti
+          version: e3051a8ce4479c843e13e7b401b47f5fa866183e
+
+      - name: Run miniziti with charts from this branch
+        run: miniziti --charts ./charts --no-hosts # --verbose
+
+      - name: Enroll client identity
+        run: ziti edge enroll --jwt /tmp/miniziti-client.jwt --out /tmp/miniziti-client.json 
+
+      - name: Run client proxy
+        run: |
+          nohup ziti tunnel proxy "httpbin-service:4321" \
+            --identity /tmp/miniziti-client.json \
+            --verbose </dev/null &>/tmp/miniziti-client.log &
+
+      - name: Wait for proxy to serve the httpbin service
+        uses: iFaxity/wait-on-action@v1
+        with:
+          resource: http://127.0.0.1:4321/get
+          delay: 1000
+          interval: 1000
+          timeout: 10000
+
+      - name: Send a POST request to the httpbin service and verify the response data
+        run: |
+          set -euo pipefail
+          curl -s -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
+          AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response.json)
+          if [[ "$AWESOME" == "awesome" ]]; then
+            echo "Ziti is awesome!"
+          else
+            echo "Got '$AWESOME' instead of 'awesome'" >&2
+            exit 1
+          fi
+
+      - name: Print the proxy log
+        if: always()
+        run: cat /tmp/miniziti-client.log
