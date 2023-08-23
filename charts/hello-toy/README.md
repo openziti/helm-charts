@@ -14,14 +14,14 @@ Run the lightweight toy web server, optionally with a custom service domain name
 | hostNetwork | bool | `false` |  |
 | image.args | list | `[]` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"netfoundry/hello-world-webpage"` |  |
+| image.repository | string | `"openziti/hello-world"` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
 | nodeSelector | object | `{}` |  |
 | persistence.enabled | bool | `false` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
-| ports[0].containerPort | int | `8080` |  |
+| ports[0].containerPort | int | `8000` |  |
 | ports[0].name | string | `"http"` |  |
 | ports[0].protocol | string | `"TCP"` |  |
 | replicas | int | `1` |  |
