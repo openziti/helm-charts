@@ -33,12 +33,9 @@ jobs:
       - name: install miniziti
         uses: supplypike/setup-bin@v3
         with:
-          # TODO: use main branch after --no-hosts feature merges, or relocate
-          # the script to this repo so it is versioned with the charts
-          uri: https://raw.githubusercontent.com/openziti/ziti-doc/e3051a8ce4479c843e13e7b401b47f5fa866183e/docusaurus/docs/learn/quickstarts/network/miniziti.bash
-          # uri: https://raw.githubusercontent.com/openziti/ziti-doc/main/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti-doc/main/docusaurus/docs/learn/quickstarts/network/miniziti.bash
           name: miniziti
-          version: e3051a8ce4479c843e13e7b401b47f5fa866183e
+          version: 34c72720
 
       - name: Run miniziti with charts from this branch
         run: miniziti --charts ./charts --no-hosts # --verbose
