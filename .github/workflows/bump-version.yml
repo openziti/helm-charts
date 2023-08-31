@@ -16,6 +16,7 @@ jobs:
           - ziti-controller
           - ziti-host
           - ziti-router
+          - ziti-tunnel
     runs-on: ubuntu-latest
     steps:
       - name: Bump Chart Versions if Changed
