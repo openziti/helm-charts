@@ -1,0 +1,92 @@
+# Default values for ziti-tunnel.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 100Mi
+
+image:
+  registry: docker.io
+  repository: openziti/ziti-edge-tunnel
+  pullPolicy: Always    # Never IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  args: []  # the ziti-edge-tunnel image execs "ziti-edge-tunnel run" to intercept/proxy, and DNS
+
+dnsPolicy: ClusterFirstWithHostNet
+
+secret: {}
+  # Use an existing secret name
+  # existingSecretName: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+hostNetwork: True
+securityContext:
+  privileged: true
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+ports: []
+
+nodeSelector:
+  node-role.kubernetes.io/node: worker
+
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+affinity: {}
+
+systemDBus:
+  # -- enable D-Bus socket connection
+  enabled: true
+  # -- file path of the System D-Bus socket mount
+  systemDBusSocketMnt: /var/run/dbus/system_bus_socket
+
+spireAgent:
+  # -- if you are running a container with the spire-agent binary installed
+  # then this will allow you to add the hostpath necessary for connecting to
+  # the spire socket
+  enabled: false
+  # -- file path of the spire socket mount
+  spireSocketMnt: /run/spire/sockets
+
+# -- additional volumes to mount to ziti-host container
+additionalVolumes: []
+#  - name: additional-volume-1
+#    volumeType: secret
+#    mountPath: /path/to/mount/1
+#    secretName: name-of-secret

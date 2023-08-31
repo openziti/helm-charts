@@ -1,0 +1,14 @@
+apiVersion: v2
+appVersion: 0.22.7
+description: Host OpenZiti services with a tunneler pod
+kubeVersion: '>= 1.20.0-0'
+name: ziti-tunnel
+type: application
+version: 0.0.2
+icon: https://openziti.io/img/ziti-logo-dark.svg
+home: https://github.com/openziti/ziti
+sources:
+  - https://github.com/openziti/ziti
+keywords:
+  - openziti
+  - coredns
