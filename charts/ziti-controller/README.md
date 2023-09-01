@@ -49,14 +49,14 @@ You must supply one value when you install the chart.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 |clientApi.advertisedHost|string|nil|the DNS name that edge clients and routers will resolve to reach this controller's edge client API|
-|client.ApiadvertisedPort|string|nil|the TCP port associated with the advertisedHost to advertise to edge clients and routers|
+|clientApi.advertisedPort|string|nil|the TCP port associated with the advertisedHost to advertise to edge clients and routers|
 
 ```bash
 helm install \
     --namespace ziti-controller ziti-controller-minimal1 \
     openziti/ziti-controller \
         --set clientApi.advertisedHost="ziti-controller-minimal.example.com" \
-        --set client.ApiadvertisedPort="443"
+        --set clientApi.advertisedPort="443"
 ```
 
 A default admin user and password will be generated and saved to a secret during installation. The credentials can be retrieved using this command:
