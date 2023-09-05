@@ -8,6 +8,12 @@ on:
       - 'charts/ziti-router/**'
       - 'charts/ziti-console/**'
       - 'charts/httpbin/**'
+
+# cancel older, redundant runs of same workflow on same branch
+concurrency:
+  group: ${{ github.workflow }}-${{github.event_name}}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   miniziti:
     runs-on: ubuntu-latest
