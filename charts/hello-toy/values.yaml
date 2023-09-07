@@ -13,7 +13,7 @@ ingress:
   enabled: false
 
 image:
-  repository: netfoundry/hello-world-webpage
+  repository: openziti/hello-world
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
 #  tag: 
@@ -48,7 +48,7 @@ resources: {}
 
 ports:
   - name: http
-    containerPort: 8080
+    containerPort: 8000
     protocol: TCP
 
 nodeSelector: {}
