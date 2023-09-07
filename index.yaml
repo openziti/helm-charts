@@ -2,6 +2,18 @@ apiVersion: v1
 entries:
   hello-toy:
   - apiVersion: v2
+    appVersion: v1
+    created: "2023-09-07T12:24:47.290883395Z"
+    description: 'Run the lightweight toy web server, optionally with a custom service
+      domain name in cluster DNS e.g.   helm install my-toy-release openziti/hello-toy
+      --set serviceDomainName=my-toy-service-dns '
+    digest: 2fdfa734b41a822933eed30acd23d11310641cc65662a18d6fc23af0b0293a63
+    name: hello-toy
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/hello-toy-3.0.0/hello-toy-3.0.0.tgz
+    version: 3.0.0
+  - apiVersion: v2
     appVersion: unprivileged
     created: "2023-05-04T15:18:13.314715406Z"
     description: 'Run the lightweight toy web server, optionally with a custom service
@@ -1086,4 +1098,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2023-09-01T12:32:04.735373193Z"
+generated: "2023-09-07T12:24:47.488171984Z"
