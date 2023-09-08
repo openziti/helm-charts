@@ -30,30 +30,33 @@ jobs:
       - name: install ziti cli
         uses: supplypike/setup-bin@v3
         with:
-          uri: https://github.com/openziti/ziti/releases/download/v0.29.0/ziti-linux-amd64-0.29.0.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/v0.30.3/ziti-linux-amd64-0.30.3.tar.gz
           name: ziti
-          version: "0.29.0"
+          version: "0.30.3"
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
       - name: install miniziti
         uses: supplypike/setup-bin@v3
         with:
-          uri: https://raw.githubusercontent.com/openziti/ziti-doc/6cf93a06/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti-doc/e1a3b173f12fa091aae7424565011be90ca9b014/docusaurus/docs/learn/quickstarts/network/miniziti.bash
           name: miniziti
-          version: 6cf93a06
+          version: e1a3b173
 
       - name: Run miniziti with charts from this branch
         run: miniziti --charts ./charts --no-hosts # --verbose
 
       - name: Enroll client identity
-        run: ziti edge enroll --jwt /tmp/miniziti-client.jwt --out /tmp/miniziti-client.json 
+        run: >
+          ziti edge enroll
+          --jwt ~/.local/state/miniziti/profiles/miniziti/identities/miniziti-client.jwt
+          --out ~/.local/state/miniziti/profiles/miniziti/identities/miniziti-client.json
 
       - name: Run client proxy
-        run: |
-          nohup ziti tunnel proxy "httpbin-service:4321" \
-            --identity /tmp/miniziti-client.json \
-            --verbose </dev/null &>/tmp/miniziti-client.log &
+        run: >
+          nohup ziti tunnel proxy "httpbin-service:4321"
+          --identity ~/.local/state/miniziti/profiles/miniziti/identities/miniziti-client.json
+          --verbose </dev/null &>/tmp/miniziti-client.log &
 
       - name: Wait for proxy to serve the httpbin service
         uses: iFaxity/wait-on-action@v1
@@ -66,7 +69,7 @@ jobs:
       - name: Send a POST request to the httpbin service and verify the response data
         run: |
           set -euo pipefail
-          curl -s -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
+          curl -sSf -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
           AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response.json)
           if [[ "$AWESOME" == "awesome" ]]; then
             echo "Ziti is awesome!"
