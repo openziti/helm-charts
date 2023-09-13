@@ -58,7 +58,7 @@ spec:
               name: ziti-router-identity
               readOnly: true
             - mountPath: {{ .Values.configMountDir }}
-              name: endpoints-data
+              name: data
               readOnly: false
             - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
               name: ziti-router-config
@@ -84,7 +84,7 @@ spec:
           configMap:
             name: {{ include "ziti-router.fullname" . }}-config
             defaultMode: 0444
-        - name: endpoints-data
+        - name: data
         {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
