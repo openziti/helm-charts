@@ -44,7 +44,7 @@ jobs:
           version: bc1c8b0e484544e6ef59007c0c28731a288272af
 
       - name: Run miniziti with charts from this branch
-        run: miniziti --charts ./charts --no-hosts # --verbose
+        run: miniziti --charts ./charts --no-hosts start  # --verbose
 
       - name: Enroll client identity
         run: >
