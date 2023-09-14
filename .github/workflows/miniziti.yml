@@ -39,9 +39,9 @@ jobs:
       - name: install miniziti
         uses: supplypike/setup-bin@v3
         with:
-          uri: https://raw.githubusercontent.com/openziti/ziti-doc/bc1c8b0e484544e6ef59007c0c28731a288272af/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti-doc/5c4471ee90ccb185befd65998de128653e0f6d90/docusaurus/docs/learn/quickstarts/network/miniziti.bash
           name: miniziti
-          version: bc1c8b0e484544e6ef59007c0c28731a288272af
+          version: 5c4471ee90ccb185befd65998de128653e0f6d90
 
       - name: Run miniziti with charts from this branch
         run: miniziti --charts ./charts --no-hosts start  # --verbose
