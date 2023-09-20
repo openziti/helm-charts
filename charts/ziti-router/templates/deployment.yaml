@@ -50,15 +50,16 @@ spec:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
           env:
             - name: ZITI_ROUTER_IDENTITY_DIR
-              value: {{ .Values.identityMountDir }}
+              value: {{ .Values.configMountDir }}
             - name: PFXLOG_NO_JSON
               value: "true"
           volumeMounts:
-            - mountPath: {{ .Values.identityMountDir }}
+            - mountPath: {{ .Values.configMountDir }}/tls.key
               name: ziti-router-identity
+              subPath: tls.key
               readOnly: true
             - mountPath: {{ .Values.configMountDir }}
-              name: data
+              name: config-data
               readOnly: false
             - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
               name: ziti-router-config
@@ -80,11 +81,15 @@ spec:
           secret:
             secretName: {{ include "ziti-router.fullname" . }}-identity
             defaultMode: 0444
+            items:
+              - key: tls.key
+                path: tls.key
+                mode: 0555
         - name: ziti-router-config
           configMap:
             name: {{ include "ziti-router.fullname" . }}-config
             defaultMode: 0444
-        - name: data
+        - name: config-data
         {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
