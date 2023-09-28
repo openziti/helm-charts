@@ -37,7 +37,7 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
           - name: ZITI_ROUTER_IDENTITY_DIR
-            value: /tmp/ziti-router-identity
+            value: {{ .Values.configMountDir }}
           - name: PFXLOG_NO_JSON
             value: "true"
           # used by init script to branch on the condition where the identity
@@ -55,6 +55,9 @@ spec:
             name: ziti-router-jwt
             subPath: {{ .Values.enrollJwtFile }}
             readOnly: true
+          - mountPath: {{ .Values.configMountDir }}
+            name: config-data
+            readOnly: false
         command: ["{{ .Values.initScriptFile }}"]
         # command: ["sh", "-c", "while true; do sleep 86400; done"]
       volumes:
@@ -75,3 +78,10 @@ spec:
             items:
             - key: enrollmentJwt
               path: {{ .Values.enrollJwtFile }}
+        - name: config-data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}

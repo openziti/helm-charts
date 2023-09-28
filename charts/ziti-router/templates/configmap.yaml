@@ -31,8 +31,6 @@ data:
       echo "INFO: identity secret does not exist, attempting router enrollment"
     fi
 
-    mkdir -v ${ZITI_ROUTER_IDENTITY_DIR}
-
     ziti router enroll \
       {{ .Values.configMountDir }}/{{ .Values.configFile }} \
       --jwt {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }} \
@@ -40,10 +38,11 @@ data:
 
     kubectl -n {{ .Release.Namespace }} create secret generic \
       {{ include "ziti-router.fullname" . }}-identity \
-      --from-file=client.crt="${ZITI_ROUTER_IDENTITY_DIR}/client.crt" \
-      --from-file=tls.key="${ZITI_ROUTER_IDENTITY_DIR}/tls.key" \
-      --from-file=tls.crt="${ZITI_ROUTER_IDENTITY_DIR}/tls.crt" \
-      --from-file=ca.crt="${ZITI_ROUTER_IDENTITY_DIR}/ca.crt"
+      --from-file=tls.key="${ZITI_ROUTER_IDENTITY_DIR}/tls.key"
+
+    # purge generated private from persistent volume
+    rm "${ZITI_ROUTER_IDENTITY_DIR}/tls.key"
+
 
   {{ .Values.deleteIdentityScriptFile }}: |-
     #!/usr/bin/env bash
