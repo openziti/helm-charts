@@ -30,21 +30,25 @@ jobs:
       - name: install ziti cli
         uses: supplypike/setup-bin@v3
         with:
-          uri: https://github.com/openziti/ziti/releases/download/v0.30.3/ziti-linux-amd64-0.30.3.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/v0.30.4/ziti-linux-amd64-0.30.4.tar.gz
           name: ziti
-          version: "0.30.3"
+          version: "0.30.4"
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
       - name: install miniziti
         uses: supplypike/setup-bin@v3
         with:
-          uri: https://raw.githubusercontent.com/openziti/ziti-doc/5c4471ee90ccb185befd65998de128653e0f6d90/docusaurus/docs/learn/quickstarts/network/miniziti.bash
+          # uri: https://raw.githubusercontent.com/qrkourier/ziti/d8a2d6e6da0c5edbf67357969a672daffc468bf3/quickstart/kubernetes/miniziti.bash
+          uri: https://get.openziti.io/miniziti.bash
           name: miniziti
-          version: 5c4471ee90ccb185befd65998de128653e0f6d90
+          version: quickstartrelease
 
-      - name: Run miniziti with charts from this branch
-        run: miniziti --charts ./charts --no-hosts start  # --verbose
+      - name: Run miniziti with latest release charts
+        run: miniziti start --no-hosts --verbose
+
+      - name: Upgrade miniziti with charts from this branch
+        run: miniziti start --no-hosts --verbose --charts ./charts
 
       - name: Enroll client identity
         run: >
