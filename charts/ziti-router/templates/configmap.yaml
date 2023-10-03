@@ -17,11 +17,53 @@ data:
     set -o xtrace
 
     if kubectl -n {{ .Release.Namespace }} get secret \
-      {{ include "ziti-router.fullname" . }}-identity &>/dev/null; then
-      if [[ ${HELM_UPGRADE:-} == true ]]; then
-        echo 'INFO: no-op because secret exists and is Helm upgrade'
-        # exit without error so Helm will delete the post-upgrade hook Job
-        exit 0
+      {{ include "ziti-router.fullname" . }}-identity &>/dev/null
+    then
+      if [[ ${HELM_UPGRADE:-} == true ]]
+      then
+        # prior versions of the chart stored certs in a Secret resource, so this copies those certs to the persistent
+        # volume unless a file already exists in the persistent volume
+        echo 'INFO: checking for old shape of existing identity secret'
+        typeset -a KEYS=(
+          $(
+            kubectl -n {{ .Release.Namespace }} get secret \
+              {{ include "ziti-router.fullname" . }}-identity \
+                --output go-template='{{"{{"}}range $k,$v := .data{{"}}"}}{{"{{"}}if $v{{"}}"}}{{"{{"}}printf "%s " $k{{"}}"}}{{"{{"}}end{{"}}"}}{{"{{"}}end{{"}}"}}'
+          )
+        )
+        echo "DEBUG: found dictionary keys: ${KEYS[*]}"
+        MIGRATE_SECRET=0
+        for KEY in ${KEYS[@]}; do
+          if [[ ${KEY} =~ ^(tls|client|ca)\.crt$ ]]
+          then
+            MIGRATE_SECRET=1
+            if [[ -s "${ZITI_ROUTER_IDENTITY_DIR}/${KEY}" ]]
+            then
+              echo "INFO: ${KEY} already exists in persistent volume, skipping"
+            else
+              echo "INFO: copying ${KEY} to persistent volume"
+              kubectl -n {{ .Release.Namespace }} get secret \
+                {{ include "ziti-router.fullname" . }}-identity \
+                  --output go-template='{{"{{"}}index .data "'${KEY}'" | base64decode {{"}}"}}' \
+                    > "${ZITI_ROUTER_IDENTITY_DIR}/${KEY}"
+            fi
+          fi
+        done
+        if (( MIGRATE_SECRET ))
+        then
+          TMPFILE="$(mktemp)"
+          kubectl -n {{ .Release.Namespace }} get secret \
+            {{ include "ziti-router.fullname" . }}-identity \
+              --output go-template='{{"{{"}}index .data "tls.key" | base64decode {{"}}"}}' \
+                > "${TMPFILE}"
+          kubectl -n {{ .Release.Namespace }} delete secret \
+            {{ include "ziti-router.fullname" . }}-identity
+          kubectl -n {{ .Release.Namespace }} create secret generic \
+            {{ include "ziti-router.fullname" . }}-identity \
+            --from-file=tls.key="${TMPFILE}"
+          rm "${TMPFILE}"
+        fi
+        exit
       else
         echo 'ERROR: secret exists: "{{ include "ziti-router.fullname" . }}-identity"' >&2
         # this should never happen because Helm deletes the secret with pre-uninstall hook
@@ -52,7 +94,8 @@ data:
     set -o xtrace
 
     if kubectl -n {{ .Release.Namespace }} get secret \
-      {{ include "ziti-router.fullname" . }}-identity &>/dev/null; then
+      {{ include "ziti-router.fullname" . }}-identity &>/dev/null
+    then
       kubectl -n {{ .Release.Namespace }} delete secret \
         {{ include "ziti-router.fullname" . }}-identity
       echo "INFO: Finished cleaning up router identity. Job will self-destruct in 20s."
