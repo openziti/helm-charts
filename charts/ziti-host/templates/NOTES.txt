@@ -1,3 +1,18 @@
+{{ if .Release.IsUpgrade }}
+Your release {{ .Release.Name }} was upgraded.
+{{ else if .Release.IsInstall }}
+This is the first install of release {{ .Release.Name }}.
+{{ else }}
+{{ .Chart.Name }} was neither installed nor upgraded.
+{{ end }}
+
+You have chart version {{ .Chart.Version }} and app version {{ .Chart.AppVersion }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
 This deployment provides an OpenZiti tunneler pod to which you may bind OpenZiti Services to provide cluster ingress to those cluster services.
 
 To bind a service to this tunneler you must create a Bind Service Policy matching the role of a service to the role of the identity you used to install this chart.
