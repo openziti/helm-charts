@@ -1,1 +1,16 @@
+{{ if .Release.IsUpgrade }}
+Your release {{ .Release.Name }} was upgraded.
+{{ else if .Release.IsInstall }}
+This is the first install of release {{ .Release.Name }}.
+{{ else }}
+{{ .Chart.Name }} was neither installed nor upgraded.
+{{ end }}
+
+You have chart version {{ .Chart.Version }} and app version {{ .Chart.AppVersion }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
 This deployment provides an OpenZiti web console.
