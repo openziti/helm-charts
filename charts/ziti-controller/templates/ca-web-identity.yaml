@@ -139,7 +139,7 @@ spec:
     name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
 
 # #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
-# via the same private key - I currenlty have no Idea how to solve this with CertManager
+# via the same private key - I currently have no Idea how to solve this with CertManager
 # ---
 # # the controller's client certificate
 # apiVersion: cert-manager.io/v1

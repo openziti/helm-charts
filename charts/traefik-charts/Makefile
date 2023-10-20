@@ -6,7 +6,7 @@ HELM_REPO ?= $(CURDIR)/repo
 LINT_USE_DOCKER ?= true
 LINT_CMD ?= ct lint --config=lint/ct.yaml
 PROJECT ?= github.com/traefik/traefik-helm-chart
-################################## Functionnal targets
+################################## Functional targets
 
 # Default Target: run all
 all: clean test build deploy
