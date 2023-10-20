@@ -289,7 +289,7 @@ fabric:
 
 # A note about sub-charts: these values may serve as a partial reference for
 # configuring the charts on which this chart depends. However, I wasn't able to
-# get dependency solving working with Helm, which doesn't install depenencies
+# get dependency solving working with Helm, which doesn't install dependencies
 # first the way I expected. For now, it's necessary to express the dependency
 # with Terraform or some other external configuration system.
 cert-manager:

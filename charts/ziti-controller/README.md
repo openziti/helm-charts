@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.7.0](https://img.shields.io/badge/Version-0.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.30.4](https://img.shields.io/badge/AppVersion-0.30.4-informational?style=flat-square)
+![Version: 0.7.1](https://img.shields.io/badge/Version-0.7.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.30.4](https://img.shields.io/badge/AppVersion-0.30.4-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -279,7 +279,7 @@ edgeSignerPki:
 ## TODO's
 
 * replicas - Each controller replica needs to be it's own HA member. We have to wait until HA https://github.com/openziti/ziti/blob/release-next/doc/ha/overview.md is officially released.
-* lower CA / Cert livetime; how to refresh stuff when Certs are updated?
+* lower CA / Cert lifetime; how to refresh stuff when Certs are updated?
 * Deploy Prometheus scraper configuration when `prometheus.enabled = true`
 * cert-manager allows issuing only one cert per key, i.e., ClientCertKeyReuseIssue prevents us from issuing a user cert and server cert backed by same private key, hence the controller config.yaml re-uses server certs in place of user certs to allow startup and testing to continue
 

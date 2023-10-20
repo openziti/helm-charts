@@ -26,6 +26,7 @@ Deploying additional targets on install:
 ----------------------------------------
 create a YAML file that will contain your additional scrape targets. the YAML file will look something like:
 
+```yaml
 - job_name: 'job1'
   scrape_interval: 15s
   honor_labels: true
@@ -52,10 +53,13 @@ create a YAML file that will contain your additional scrape targets. the YAML fi
   static_configs:
     - targets:
         - '{serviceName}-{targetIdentityName}'
+```
 
-With the YAML file containing your additional targets, add the following arugment to your install command:
+With the YAML file containing your additional targets, add the following argument to your install command:
 
+```console
 --set-file extraScrapeConfigs=myScrapeConfigs.yaml
+```
 
 where myScrapeConfigs.yaml is the path to the yaml containing the extra scrape configs
 
@@ -65,21 +69,28 @@ This method can also be used when updating scrape targets by running a helm upda
 -----------------------------
 Configuring the identity file
 -----------------------------
-The ziti identity json file must be provided during an install/updgrade in order to scrape ziti targets. This can be done by the use of the following arugment
 
+The ziti identity json file must be provided during an install/upgrade in order to scrape ziti targets.
+This can be done by the use of the following argument,
+
+```console
 --set-file prometheusIdentity=prometheus.json
+```
 
 where prometheus.json is the path to the identity file on the local machine.
 
 By default, this helm chart will mount this file to /etc/prometheus/prometheus.json on the kubernetes cluster. Please take care to include the full path when providing your scrape targets
 
-
 ---------------------------------------
 Changing the mounted identity file name
 ---------------------------------------
-It is possible to change the name of the identity file that gets mounted on the kubernetes cluster if the prometheus.json identity name isn't desired. This can be done with the following argument:
 
+It is possible to change the name of the identity file that gets mounted on the kubernetes cluster if the prometheus.json identity name isn't desired.
+This can be done with the following argument,
+
+```console
 --set identityFileName=myIdentity
+```
 
 where myIdentity is the name of the identity. This will cause the identity file to be mounted at /etc/prometheus/myIdentity.json instead of /etc/prometheus/prometheus.json
 
@@ -90,8 +101,7 @@ Example Installation Command
 
 Assume that we have an identity file zitiPrometheus.json and we have a yaml file called zitiTargets.yaml which contains the following:
 
-
-
+```yaml
 - job_name: 'redis'
   scrape_interval: 15s
   honor_labels: true
@@ -118,9 +128,7 @@ Assume that we have an identity file zitiPrometheus.json and we have a yaml file
   static_configs:
     - targets:
         - 'traefikPrometheus-prometheus'
-
-
-
+```
 
 The following command will allow us to install zitified prometheus:
 // TODO update once remote
@@ -144,7 +152,9 @@ in our zitiTargets.yaml file
 
 the helm command would then look like:
 
+```console
 helm install prometheus . --set-file prometheusIdentity=zitiPrometheus.json --set-file extraScrapeConfigs=zitiTargets.yaml --set identityFileName=zitiPrometheus
+```
 
 --------------------
 Upgrading the Chart
@@ -164,4 +174,3 @@ kubectl scale deployment prometheus-server --replicas=0
 kubectl scale deployment prometheus-server --replicas=1
 
 by scaling the deployment down and then up this will force a restart so that the new scrapes get picked up
-
