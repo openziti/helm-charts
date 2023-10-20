@@ -161,6 +161,33 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/httpbin-0.1.1/httpbin-0.1.1.tgz
     version: 0.1.1
+  prometheus:
+  - apiVersion: v2
+    appVersion: 0.0.13
+    created: "2023-10-20T14:38:23.353204613Z"
+    dependencies:
+    - condition: kubeStateMetrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.0.*
+    description: Prometheus is a monitoring system and time series database.
+    digest: adad8b355a6203fe0ad18331187eefbd2ee76436bc5ee5d35457a08762d73440
+    home: https://prometheus.io/
+    icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+    maintainers:
+    - email: help.openziti.org
+      name: OpenZiti
+    name: prometheus
+    sources:
+    - https://github.com/prometheus/alertmanager
+    - https://github.com/prometheus/prometheus
+    - https://github.com/prometheus/pushgateway
+    - https://github.com/prometheus/node_exporter
+    - https://github.com/kubernetes/kube-state-metrics
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/prometheus-0.0.11/prometheus-0.0.11.tgz
+    version: 0.0.11
   reflect:
   - apiVersion: v2
     appVersion: 0.0.4
@@ -330,6 +357,29 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.1.1/ziti-console-0.1.1.tgz
     version: 0.1.1
   ziti-controller:
+  - apiVersion: v3
+    appVersion: 0.30.4
+    created: "2023-10-20T14:38:23.520564054Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.4.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: 95119093e3ec348ef85baf29c131105bb9f23773bd7994c7549678ea13853956
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-0.7.1/ziti-controller-0.7.1.tgz
+    version: 0.7.1
   - apiVersion: v3
     appVersion: 0.30.4
     created: "2023-10-03T20:19:59.067262421Z"
@@ -1042,6 +1092,16 @@ entries:
   ziti-router:
   - apiVersion: v3
     appVersion: 0.30.4
+    created: "2023-10-20T14:38:23.701283893Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 716ec4eac2e5cd33442882b25f7b357989e6f0c19603ffdd191f78521815a584
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.8.3/ziti-router-0.8.3.tgz
+    version: 0.8.3
+  - apiVersion: v3
+    appVersion: 0.30.4
     created: "2023-10-03T20:36:54.270542847Z"
     description: Host an OpenZiti router in Kubernetes
     digest: e1377432ad0abf0d0bd4eb5c776e77e300f47a61614a609233a3e1cd95a52d04
@@ -1291,4 +1351,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2023-10-03T20:53:50.555997274Z"
+generated: "2023-10-20T14:38:23.701743603Z"
