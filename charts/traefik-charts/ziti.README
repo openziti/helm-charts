@@ -13,7 +13,7 @@ By default, the service name and identity file name are set to 'traefikPrometheu
 In order to change the service name, the following argument can be added to the install
 --set ports.prometheuz.serviceName=newServiceName
 
-In order to change the identity name, the following arugment can be added to the install
+In order to change the identity name, the following argument can be added to the install
 
 --set ports.prometheuz.identityName=newIdentityName
 
