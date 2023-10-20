@@ -17,10 +17,9 @@
 ## Overview
 
 You may use this chart to reach services node-wide via your Ziti network via DNS. For example, if you create a repository or container registry Ziti service, and your cluster has no internet access, you can reach those repositories or container registries via Ziti services.
-**NOTE: This approach has an unsolved problem.** CoreDNS answers Ziti DNS by forwarding the query to the tunneler pod on it's own node. The response is the Ziti intercept IP address on the controller node where CoreDNS is running, not necessarily the node where the pod is running that sent the original DNS query.
-All nodes have the same Ziti Identity and so they obtain the same list of services from the Ziti controller and in most cases the mapping of Ziti addresses is identical, but there is no guarantee this is the case because Ziti intercept IP addresses are always picked on the node, not globally unique for the Ziti network.
-This means the daemonset works when there's only one K8s node or only one Ziti service, and the risk of an incorrect IP intercept increases from there. This is a DNS related problem, so it does not affect Ziti services that don't employ DNS.
-If it's possible, one solution would be to configure K8s so that every node runs CoreDNS and all pods only query DNS on their own node.
+**NOTE:**
+For one node kubernetes approaches like k3s, this works out-of-the-box and you can extend your coredns configuration to forward to the Ziti DNS IP, as you can see [here](https://openziti.io/docs/guides/kubernetes/workload-tunneling/kubernetes-daemonset/).
+For multinode kubernetes installations, where your cluster DNS could run on a different node, you need to install the [node-local-dns](https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/) feature, which secures that the Ziti DNS name will be resolved locally, on the very same tunneler, as Ziti Intercept IPs can change from node to node. See [this](https://github.com/lablabs/k8s-nodelocaldns-helm) helm chart for a possible implementation.
 
 ## How this Chart Works
 
@@ -83,7 +82,6 @@ Reload CoreDNS config,
 ```console
 kubectl rollout restart -n kube-system deployment/coredns
 ```
-
 
 ## Values Reference
 
