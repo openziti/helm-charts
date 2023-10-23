@@ -1,0 +1,117 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "ziti-edge-tunnel.fullname" . }}
+  labels:
+    {{- include "ziti-edge-tunnel.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "ziti-edge-tunnel.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ziti-edge-tunnel.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ziti-edge-tunnel.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{- toYaml .Values.ports | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{ if .Values.image.command }}
+          command: {{ .Values.image.command }}
+          {{ end }}
+          args:
+            {{- toYaml .Values.image.args | nindent 12 }}
+          env:
+            - name: ZITI_IDENTITY_BASENAME
+              value: {{ include "ziti-edge-tunnel.fullname" . }}-identity
+          volumeMounts:
+            - mountPath: /ziti-edge-tunnel
+              name: persisted-identity
+              readOnly: true
+            {{- if .Values.systemDBus.enabled }}
+            - mountPath: {{ .Values.systemDBus.systemDBusSocketMnt }}
+              name: system-bus-socket
+            {{- end }}
+            {{- if .Values.spireAgent.enabled }}
+            - mountPath: {{ .Values.spireAgent.spireSocketMnt }}
+              name: spire-agent-socket
+              readOnly: true
+            {{- end }}
+            {{- range .Values.additionalVolumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+      hostNetwork: {{ .Values.hostNetwork }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: persisted-identity
+          secret:
+          {{- if .Values.secret.existingSecretName }}
+            secretName: {{ .Values.secret.existingSecretName }}
+            defaultMode: 0444
+            items:
+            - key: {{ .Values.secret.keyName | default "persisted-identity" | quote }}
+              path: {{ include "ziti-edge-tunnel.fullname" . }}-identity.json
+          {{- else }}
+            secretName: {{ include "ziti-edge-tunnel.fullname" . }}-identity
+            defaultMode: 0444
+            items:
+            - key: persisted-identity
+              path: {{ include "ziti-edge-tunnel.fullname" . }}-identity.json
+          {{- end }}
+        {{- if .Values.systemDBus.enabled }}
+        - name: system-bus-socket
+          hostPath:
+            path: {{ .Values.systemDBus.systemDBusSocketMnt }}
+            type: Socket
+        {{- end }}
+        {{- if .Values.spireAgent.enabled }}
+        - name: spire-agent-socket
+          hostPath:
+            path: {{ .Values.spireAgent.spireSocketMnt }}
+            type: Directory
+        {{- end }}
+        {{- range .Values.additionalVolumes }}
+        - name: {{ .name }}
+          {{- if eq .volumeType "secret" }}
+          secret:
+            secretName: {{ .secretName }}
+          {{- else if eq .volumeType "configMap" }}
+          configMap:
+            name: {{ .configMapName }}
+          {{- else if eq .volumeType "emptyDir" }}
+          emptyDir: {}
+          {{- end }}
+        {{- end }}
+

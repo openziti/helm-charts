@@ -14,6 +14,7 @@ jobs:
           - reflect
           - ziti-console
           - ziti-controller
+          - ziti-edge-tunnel
           - ziti-host
           - ziti-router
     runs-on: ubuntu-latest
