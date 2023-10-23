@@ -14,9 +14,9 @@ jobs:
           - reflect
           - ziti-console
           - ziti-controller
+          - ziti-edge-tunnel
           - ziti-host
           - ziti-router
-          - ziti-tunnel
     runs-on: ubuntu-latest
     steps:
       - name: Bump Chart Versions if Changed

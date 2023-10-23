@@ -2,13 +2,13 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "ziti-tunnel.fullname" . }}
+  name: {{ include "ziti-edge-tunnel.fullname" . }}
   labels:
-    {{- include "ziti-tunnel.labels" . | nindent 4 }}
+    {{- include "ziti-edge-tunnel.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "ziti-tunnel.selectorLabels" . | nindent 6 }}
+      {{- include "ziti-edge-tunnel.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,13 +16,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "ziti-tunnel.selectorLabels" . | nindent 8 }}
+        {{- include "ziti-edge-tunnel.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "ziti-tunnel.serviceAccountName" . }}
+      serviceAccountName: {{ include "ziti-edge-tunnel.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       dnsPolicy: {{ .Values.dnsPolicy }}
@@ -43,7 +43,7 @@ spec:
             {{- toYaml .Values.image.args | nindent 12 }}
           env:
             - name: ZITI_IDENTITY_BASENAME
-              value: {{ include "ziti-tunnel.fullname" . }}-identity
+              value: {{ include "ziti-edge-tunnel.fullname" . }}-identity
           volumeMounts:
             - mountPath: /ziti-edge-tunnel
               name: persisted-identity
@@ -82,13 +82,13 @@ spec:
             defaultMode: 0444
             items:
             - key: {{ .Values.secret.keyName | default "persisted-identity" | quote }}
-              path: {{ include "ziti-tunnel.fullname" . }}-identity.json
+              path: {{ include "ziti-edge-tunnel.fullname" . }}-identity.json
           {{- else }}
-            secretName: {{ include "ziti-tunnel.fullname" . }}-identity
+            secretName: {{ include "ziti-edge-tunnel.fullname" . }}-identity
             defaultMode: 0444
             items:
             - key: persisted-identity
-              path: {{ include "ziti-tunnel.fullname" . }}-identity.json
+              path: {{ include "ziti-edge-tunnel.fullname" . }}-identity.json
           {{- end }}
         {{- if .Values.systemDBus.enabled }}
         - name: system-bus-socket
