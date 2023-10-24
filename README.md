@@ -8,23 +8,26 @@ These files are published from [a GitHub repo](https://github.com/openziti/helm-
 
 ### Subscribe
 
-```bash
+```console
 $ helm repo add openziti https://docs.openziti.io/helm-charts/
-"openziti" has been added to your repositories                         
+"openziti" has been added to your repositories
 ```
 
 ### Search for available charts in this repo
 
-```bash
+```console
 $ helm search repo openziti
-NAME                            CHART VERSION   APP VERSION     DESCRIPTION                                       
-openziti/ziti-controller        0.1.2           0.27.5          Host an OpenZiti controller in Kubernetes         
-openziti/ziti-router            0.1.3           0.27.5          Host an OpenZiti router in Kubernetes             
-openziti/ziti-console           0.1.1           latest          Deploy OpenZiti console as kubernetes service     
-openziti/ziti-host              0.3.5           0.20.20         Host OpenZiti services with a tunneler pod        
-openziti/hello-toy              1.3.1           latest          Run the lightweight toy web server, optionally ...
-openziti/httpbin                0.1.2           latest          Run the Ziti fork of go-httpbin                   
-openziti/reflect                0.3.3           0.0.4           Deploy a pod running the Ziti-embeded version o...
+NAME                                    CHART VERSION   APP VERSION     DESCRIPTION
+openziti/hello-toy                      3.0.1           v1              Run the lightweight toy web server, optionally with a custom service domain name in cluster DNS.
+openziti/httpbin                        0.1.11          latest          Run the Ziti fork of go-httpbin
+openziti/prometheus                     0.0.11          0.0.13          Prometheus is a monitoring system and time series database.
+openziti/reflect                        0.3.8           0.0.4           Deploy a pod running the Ziti-embeded version of go-httpbin, a REST API server.
+openziti/ziti-console                   0.4.2           2.9.0           Deploy OpenZiti console as kubernetes service
+openziti/ziti-controller                0.7.1           0.30.4          Host an OpenZiti controller in Kubernetes
+openziti/ziti-edge-tunnel               0.0.2           0.22.12         Host OpenZiti services with a tunneler pod
+openziti/ziti-host                      0.4.6           0.21.5          Host OpenZiti services with a tunneler pod
+openziti/ziti-router                    0.8.3           0.30.4          Host an OpenZiti router in Kubernetes
+openziti/zrok                           0.1.17          v0.3.6          A Helm chart for Kubernetes
 ```
 
 ## Chart Highlights
@@ -34,7 +37,7 @@ openziti/reflect                0.3.3           0.0.4           Deploy a pod run
 These charts help cluster workloads access or provide a Ziti service.
 
 * [`ziti-host`](./charts/ziti-host/README.md): Ziti tunnel pod for hosting services (ingress only)
-* (*planned*) [`ziti-node`](./charts/ziti-node/README.md): Ziti tunnel daemonset for accessing services (intercept node egress)
+* [`ziti-edge-tunnel`](./charts/ziti-edge-tunnel/README.md): Ziti tunnel daemonset for accessing services (intercept node egress)
 
 ### Charts for Self-Hosting Ziti
 
@@ -61,7 +64,7 @@ In case a chart release is missing from the Helm index, you can run the followin
 
 For this example, support the `httpbin` chart release version `0.1.2` exists in GitHub, but is missing from the Helm index. The solution is to run Chart Releaser locally to package and index the chart.
 
-```bash
+```console
 git checkout gh-pages
 cr package ./charts/httpbin
 cr index --owner openziti --git-repo helm-charts --index-path .
@@ -76,4 +79,4 @@ cr index --owner openziti --git-repo helm-charts --index-path .
 1. Wait for GitHub bot to bump chart versions if necessary, i.e., if anything in the chart dir changed since latest tag and the chart version is already released.
 1. Merging to main runs GitHub Actions to package and index the charts and publish the new Helm repo index and READMEs to GitHub Pages.
 
-You may verify changes are present in the Helm index: https://docs.openziti.io/helm-charts/index.yaml.
+You may verify changes are present in the Helm index: <https://docs.openziti.io/helm-charts/index.yaml>.
