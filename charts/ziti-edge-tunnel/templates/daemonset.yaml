@@ -44,6 +44,12 @@ spec:
           env:
             - name: ZITI_IDENTITY_BASENAME
               value: {{ include "ziti-edge-tunnel.fullname" . }}-identity
+            - name: ZITI_LOG
+              value: {{ .Values.log.zitiLevel | default 3 | quote }}
+            - name: TLSUV_DEBUG
+              value: {{ .Values.log.tlsUVLevel | default 3 | quote }}
+            - name: ZITI_TIME_FORMAT
+              value: {{ .Values.log.timeFormat | default ms | quote }}
           volumeMounts:
             - mountPath: /ziti-edge-tunnel
               name: persisted-identity

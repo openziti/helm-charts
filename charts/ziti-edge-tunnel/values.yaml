@@ -37,6 +37,15 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+log:
+  # Ziti log level, from 0 to 6 (see README.md Reference)
+  zitiLevel: 3
+  # TLSUV log level, from 0 to 6 (see README.md Reference)
+  tlsUVLevel: 3
+  # Set log time format, if set to "utc", then in UTC format,
+  # otherwise in milliseconds since the program has started.
+  timeFormat: utc
+
 podAnnotations: {}
 
 podSecurityContext: {}
@@ -84,7 +93,7 @@ spireAgent:
   # -- file path of the spire socket mount
   spireSocketMnt: /run/spire/sockets
 
-# -- additional volumes to mount to ziti-host container
+# -- additional volumes to mount to ziti-edge-tunnel container
 additionalVolumes: []
 #  - name: additional-volume-1
 #    volumeType: secret
