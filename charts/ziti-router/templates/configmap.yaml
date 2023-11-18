@@ -16,6 +16,9 @@ data:
     set -o pipefail
     set -o xtrace
 
+    # delayed exit to allow for debugging life-cycle hook Job
+    trap 'echo "ERROR: ${BASH_SOURCE[0]}:${LINENO} exited with code $?" >&2; sleep 600' ERR
+
     if kubectl -n {{ .Release.Namespace }} get secret \
       {{ include "ziti-router.fullname" . }}-identity &>/dev/null
     then
