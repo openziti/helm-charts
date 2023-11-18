@@ -1111,6 +1111,16 @@ entries:
     version: 0.3.5
   ziti-router:
   - apiVersion: v3
+    appVersion: 0.31.0
+    created: "2023-11-18T22:18:12.716294288Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 7e54657c174a1a08ddb29f177a6ad42974a7f86820e2eaebaf481fc2a39d237a
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.9.0/ziti-router-0.9.0.tgz
+    version: 0.9.0
+  - apiVersion: v3
     appVersion: 0.30.4
     created: "2023-10-20T14:38:23.701283893Z"
     description: Host an OpenZiti router in Kubernetes
@@ -1371,4 +1381,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2023-10-23T15:23:00.158657591Z"
+generated: "2023-11-18T22:18:12.716524757Z"
