@@ -359,6 +359,29 @@ entries:
   ziti-controller:
   - apiVersion: v3
     appVersion: 0.30.4
+    created: "2023-11-22T17:32:37.206160835Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.4.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: d6b6c80405b7a2b56cb86fcaffee14e954a8c0f3e6757d4e7908cfe325a1bb58
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-0.7.2/ziti-controller-0.7.2.tgz
+    version: 0.7.2
+  - apiVersion: v3
+    appVersion: 0.30.4
     created: "2023-10-20T14:38:23.520564054Z"
     dependencies:
     - condition: cert-manager.enabled
@@ -981,6 +1004,25 @@ entries:
   ziti-edge-tunnel:
   - apiVersion: v2
     appVersion: 0.22.12
+    created: "2023-11-22T17:32:37.422475843Z"
+    description: Host OpenZiti services with a tunneler pod
+    digest: f5b0b2cbd505208e253a1f47b9f2792d28da3d1da45f0cd7156d58673c485711
+    home: https://github.com/openziti/ziti
+    icon: https://openziti.io/img/ziti-logo-dark.svg
+    keywords:
+    - openziti
+    - coredns
+    - node-local-dns
+    kubeVersion: '>= 1.20.0-0'
+    name: ziti-edge-tunnel
+    sources:
+    - https://github.com/openziti/ziti
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-edge-tunnel-0.0.4/ziti-edge-tunnel-0.0.4.tgz
+    version: 0.0.4
+  - apiVersion: v2
+    appVersion: 0.22.12
     created: "2023-11-20T15:11:25.663520807Z"
     description: Host OpenZiti services with a tunneler pod
     digest: 085ff4bbd7fddad26ef7a4bf63a818b5014dade253bd3b5d0f2d2b80a5f1e5e8
@@ -1129,6 +1171,16 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.5/ziti-host-0.3.5.tgz
     version: 0.3.5
   ziti-router:
+  - apiVersion: v3
+    appVersion: 0.31.0
+    created: "2023-11-22T17:32:37.674190218Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 9d1e88d1ab6bc1523f50ea665401c70ebfb1bd10391896212b68ab5ed9b6b9f2
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.9.1/ziti-router-0.9.1.tgz
+    version: 0.9.1
   - apiVersion: v3
     appVersion: 0.31.0
     created: "2023-11-18T22:18:12.716294288Z"
@@ -1400,4 +1452,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2023-11-20T15:11:25.663731049Z"
+generated: "2023-11-22T17:32:37.674637591Z"
