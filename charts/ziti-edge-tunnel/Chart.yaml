@@ -4,12 +4,12 @@ description: Host OpenZiti services with a tunneler pod
 kubeVersion: '>= 1.20.0-0'
 name: ziti-edge-tunnel
 type: application
-version: 0.0.3
+version: 0.0.4
 icon: https://openziti.io/img/ziti-logo-dark.svg
 home: https://github.com/openziti/ziti
 sources:
-  - https://github.com/openziti/ziti
+- https://github.com/openziti/ziti
 keywords:
-  - openziti
-  - coredns
-  - node-local-dns
+- openziti
+- coredns
+- node-local-dns
