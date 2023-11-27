@@ -49,7 +49,7 @@ spec:
             - name: TLSUV_DEBUG
               value: {{ .Values.log.tlsUVLevel | default 3 | quote }}
             - name: ZITI_TIME_FORMAT
-              value: {{ .Values.log.timeFormat | default ms | quote }}
+              value: {{ .Values.log.timeFormat | default "ms" | quote }}
           volumeMounts:
             - mountPath: /ziti-edge-tunnel
               name: persisted-identity
