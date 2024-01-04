@@ -24,7 +24,7 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ (coalesce .Values.edge.advertisedHost .Values.advertisedHost) }}
+    - host: {{ .Values.edge.advertisedHost }}
       http:
         paths:
           # This rule gives internal access to the pingaccess admin services.
@@ -63,7 +63,7 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ (coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost) }}
+    - host: {{ .Values.linkListeners.transport.advertisedHost }}
       http:
         paths:
           # This rule gives internal access to the pingaccess admin services.
