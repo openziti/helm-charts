@@ -41,7 +41,7 @@ data:
       listeners:
         - binding:          transport
           bind:             tls:0.0.0.0:{{ .Values.linkListeners.transport.containerPort }}
-          advertise:        tls:{{ coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost (printf "%s-transport.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ .Values.linkListeners.transport.advertisedPort }}
+          advertise:        tls:{{ coalesce .Values.linkListeners.transport.advertisedHost (printf "%s-transport.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ .Values.linkListeners.transport.advertisedPort }}
           options:
             outQueueSize:   4
       {{- end }}
@@ -50,11 +50,22 @@ data:
     # bindings of edge and tunnel requires an "edge" section below
     {{- if (eq .Values.edge.enabled true) }}
       - binding: edge
-        address: tls:0.0.0.0:{{ .Values.edge.containerPort }}
+        address: {{ .Values.edge.protocol }}:0.0.0.0:{{ .Values.edge.containerPort }}
         options:
-            advertise: {{ required "You must set either .Values.advertisedHost or .Values.edge.advertisedHost to the <host/ip> to advertise for this router. Try adding --set edge.advertisedHost=router.zitinetwork.example.org to your Helm command" (coalesce .Values.edge.advertisedHost .Values.advertisedHost) }}:{{ .Values.edge.advertisedPort }}
-            connectTimeoutMs: 1000
-            getSessionTimeout: 60
+          advertise: {{ required "You must set .Values.edge.advertisedHost to the domain name to advertise for this router's edge listener. Try adding --set edge.advertisedHost=router11.ziti.example.org to your Helm command" .Values.edge.advertisedHost }}:{{ .Values.edge.advertisedPort }}
+          {{- if .Values.edge.options }}
+            {{- toYaml .Values.edge.options | nindent 10 }}
+          {{- end }
+    {{- end }}
+    {{- if .Values.edge.additionalListeners }}
+      {{- range .Values.edge.additionalListeners }}
+      - binding: edge
+        address: {{ $element.protocol }}:0.0.0.0:{{ $element.containerPort }}
+        options:
+          advertise: {{ required (printf "You must set .Values.edge.additionalListeners[%d].advertisedHost to the domain name to advertise for this router's additional edge listener. Try adding --set edge.additionalListeners[%d].advertisedHost=router11-wss.ziti.example.org to your Helm command" $index $index) $element.advertisedHost }}:{{ $element.advertisedPort }}
+          {{- if $element.options }}
+            {{- toYaml $element.options | nindent 10 }}
+          {{- end }}
     {{- end }}
     {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "none" ) }}
       - binding: tunnel

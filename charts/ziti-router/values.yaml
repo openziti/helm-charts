@@ -1,7 +1,7 @@
 
 ctrl:
   # -- required control plane endpoint
-  endpoint: # ctrl.example.com:6262
+  endpoint: # ctrl.ziti.example.com:443
 
 # -- Explicit proxy setting in the router configuration. Router can be deployed in a site 
 # where all egress traffic is forwarded through an explicit proxy.
@@ -11,9 +11,8 @@ proxy: {}
 #  address: 192.168.0.142
 #  port: 3128
 
-# -- common advertise-host for transport and edge listeners can also be
-# specified separately via `edge.advertisedHost` and
-# `linkListeners.transport.advertisedHost`
+# -- decommissioned value must be specified separately as edge.advertisedHost,
+# edge.additionalListeners[].advertisedHost, and linkListeners.transport.advertisedHost
 advertisedHost:
 
 # -- Certificate signing request distinguished name and subject alternative names
@@ -74,12 +73,16 @@ linkListeners:
 edge:
   # -- enable the edge listener in the router config
   enabled: true
+  # -- edge listener protocol: tls, wss
+  protocol: tls
   # -- cluster service target port on the container
   containerPort: 3022
-  # -- DNS name that edge clients will use to reach this router's edge listener
+  # -- Domain name that edge clients will use to reach this router's edge listener
   advertisedHost: #router11-edge.ziti.example.com
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: 443
+  # -- additional common xgress options
+  options:
   service:
     # -- create a cluster service for the edge listener
     enabled: true
@@ -94,6 +97,25 @@ edge:
     enabled: false
     # -- ingress annotations, e.g., to configure ingress-nginx
     annotations:
+  # -- additional edge listeners have the same shape as the default edge listener, except there is no "enabled" (they're
+  # enabled if defined), and you must specify a unique name for each additional edge listener. The name distinguishes
+  # their respective cluster services.
+  additionalListeners:
+    #- name: router11-edge-wss
+    #  protocol: wss
+    #  containerPort: 3023
+    #  advertisedHost: # router11-edge-wss.ziti.example.com
+    #  advertisedPort: 443
+    #  # -- additional edge listeners can have their own cluster services
+    #  service:
+    #    enabled: true
+    #    type: ClusterIP
+    #    labels:
+    #    annotations:
+    #  # -- additional edge listeners can have their own ingresses
+    #  ingress:
+    #    enabled: false
+    #    annotations:
 
 tunnel:
   # -- run mode for the router's built-in tunnel component: host, tproxy, proxy, or none
@@ -205,7 +227,7 @@ podAnnotations: {}
 podSecurityContext:
   # -- this is the GID of "ziggy" run-as user in the container that has access
   # to any files created by the router process in the emptyDir volume used to
-  # persist the endpoints state file
+  # persist the list of ctrl endpoints
   fsGroup: 2171
 
 # -- Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace.
