@@ -16,22 +16,29 @@ proxy: {}
 # `linkListeners.transport.advertisedHost`
 advertisedHost:
 
-# Certificate signing request basic data
+# -- Certificate signing request distinguished name and subject alternative names
 csr:
-  # country: US
-  # province: NC
-  # locality: Charlotte
-  # organization: NetFoundry
-  # organizationalUnit: Ziti
+  # -- country
+  country:
+  # -- state
+  province:
+  # -- city
+  locality:
+  # -- organization
+  organization:
+  # -- organizational unit
+  organizationalUnit:
   sans:
-  # # you could specify additional SANS here - configurations from advertise hosts and
-  # # service's will be collected automatically
-  # -- additional DNS SANs
+    # -- disable computing the SANs from the advertisedHost, etc.
+    noDefaults: false
+    # -- additional DNS SANs
     dns: []
-  #     - my.additional.host
-  # -- additional IP SANs
+    # -- additional IP SANs
     ip: []
-  #     - "192.168.10.0"
+    # -- additional email SANs
+    email: []
+    # -- additional URI SANs
+    uri: []
 
 
 # -- set name to value in containers' environment
