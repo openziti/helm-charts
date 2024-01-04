@@ -168,21 +168,33 @@ tunnel:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-router container |
-| advertisedHost | string | `nil` | common advertise-host for transport and edge listeners can also be specified separately via `edge.advertisedHost` and `linkListeners.transport.advertisedHost` |
+| advertisedHost | string | `nil` | decommissioned value must be specified separately as edge.advertisedHost, edge.additionalListeners[].advertisedHost, and linkListeners.transport.advertisedHost |
 | affinity | object | `{}` | deployment template spec affinity |
 | configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
 | configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints statefile in same dir |
+| csr | object | `{"country":null,"locality":null,"organization":null,"organizationalUnit":null,"province":null,"sans":{"dns":[],"email":[],"ip":[],"noDefaults":false,"uri":[]}}` | Certificate signing request distinguished name and subject alternative names |
+| csr.country | string | `nil` | country |
+| csr.locality | string | `nil` | city |
+| csr.organization | string | `nil` | organization |
+| csr.organizationalUnit | string | `nil` | organizational unit |
+| csr.province | string | `nil` | state |
 | csr.sans.dns | list | `[]` | additional DNS SANs |
+| csr.sans.email | list | `[]` | additional email SANs |
 | csr.sans.ip | list | `[]` | additional IP SANs |
+| csr.sans.noDefaults | bool | `false` | disable computing the SANs from the advertisedHost, etc. |
+| csr.sans.uri | list | `[]` | additional URI SANs |
 | ctrl.endpoint | string | `nil` | required control plane endpoint |
 | dnsConfig | object | `{}` | it allows to override dns options when dnsPolicy is set to None. |
 | dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
-| edge.advertisedHost | string | `nil` | DNS name that edge clients will use to reach this router's edge listener |
+| edge.additionalListeners | string | `nil` | additional edge listeners have the same shape as the default edge listener, except there is no "enabled" (they're enabled if defined), and you must specify a unique name for each additional edge listener. The name distinguishes their respective cluster services. |
+| edge.advertisedHost | string | `nil` | Domain name that edge clients will use to reach this router's edge listener |
 | edge.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | edge.containerPort | int | `3022` | cluster service target port on the container |
 | edge.enabled | bool | `true` | enable the edge listener in the router config |
 | edge.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
 | edge.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| edge.options | string | `nil` | additional common xgress options |
+| edge.protocol | string | `"tls"` | edge listener protocol: tls, wss |
 | edge.service.annotations | string | `nil` | service annotations |
 | edge.service.enabled | bool | `true` | create a cluster service for the edge listener |
 | edge.service.labels | string | `nil` | service labels |
@@ -226,7 +238,7 @@ tunnel:
 | persistence.volumeName | string | `nil` | PVC volume name |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
-| podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the endpoints state file |
+| podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the list of ctrl endpoints |
 | proxy | object | `{}` | Explicit proxy setting in the router configuration. Router can be deployed in a site  where all egress traffic is forwarded through an explicit proxy. The enrollment will also be forwarded through the proxy. |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
