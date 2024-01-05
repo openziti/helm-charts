@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Bump Chart Versions if Changed
         id: bumper
-        uses: netfoundry/chart-version-bumper-action@filter-tags
+        uses: netfoundry/chart-version-bumper-action@main
         with:
           chart_dir: ./charts/${{ matrix.charts }}
 
