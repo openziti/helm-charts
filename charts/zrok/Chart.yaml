@@ -21,10 +21,10 @@ version: 0.2.0
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "0.4.0"
+appVersion: "0.4.20"
 
 dependencies:
   - name: influxdb2  # v2 provides an API token
-    version: 2.1.1
+    version: 2.1.2
     repository: https://helm.influxdata.com/
     condition: influxdb2.enabled
