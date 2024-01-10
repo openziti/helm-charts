@@ -40,8 +40,10 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | controller.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The hosts to use for the zrok controller ingress resource |
 | controller.ingress.scheme | string | `"https"` | URI scheme to advertise for the controller's ingress resource |
 | controller.ingress.tls | list | `[]` | The TLS configuration for the zrok controller ingress resource |
+| controller.invites.open | bool | `true` | enable the zrok controller to onboard new users when they run "zrok invite" |
+| controller.invites.token_required | bool | `false` | require new users to submit an invitation token when they run "zrok invite", tokens are generated with "zrok admin generate" |
 | controller.metrics.agent.source.type | string | `"websocketSource"` | initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics |
-| controller.metrics.enabled | bool | `true` | enable metrics collection and reporting for the zrok controller |
+| controller.metrics.enabled | bool | `false` | enable metrics collection and reporting for the zrok controller |
 | controller.metrics.limits.bandwidth.per_account.limit.rx | int | `-1` | per-account limit threshold for receive bandwidth usage |
 | controller.metrics.limits.bandwidth.per_account.limit.total | int | `10485760` | per-account limit threshold for total bandwidth usage |
 | controller.metrics.limits.bandwidth.per_account.limit.tx | int | `-1` | per-account limit threshold for transmit bandwidth usage |
@@ -78,7 +80,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | controller.service.advertisedPort | int | `80` | The port to advertise for the zrok controller service |
 | controller.service.containerPort | int | `18080` | The port to expose on the zrok controller container |
 | controller.service.type | string | `"ClusterIP"` | The service type to use for the zrok controller |
-| controller.specVersion | int | `2` |  |
+| controller.specVersion | int | `3` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
 | frontend.deleteIdentityScriptFile | string | `"delete-identity.sh"` |  |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
@@ -91,6 +93,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | frontend.service.advertisedPort | int | `80` | The port to advertise for the zrok frontend service |
 | frontend.service.containerPort | int | `8080` | The port to expose on the zrok frontend container |
 | frontend.service.type | string | `"ClusterIP"` | The service type to use for the zrok frontend |
+| frontend.specVersion | int | `3` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"openziti/zrok"` |  |
@@ -99,7 +102,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | influxdb2.adminUser.existingSecret | string | `""` | The name of an existing secret with admin-password and admin-token for the InfluxDB service |
 | influxdb2.adminUser.password | string | `"admin"` | The admin password for the InfluxDB service |
 | influxdb2.adminUser.username | string | `"admin"` | The admin username for the InfluxDB service |
-| influxdb2.enabled | bool | `true` | enable the influxdb2 subchart |
+| influxdb2.enabled | bool | `false` | enable the influxdb2 subchart |
 | influxdb2.service.port | int | `8086` | The port to advertise for the InfluxDB service |
 | influxdb2.service.type | string | `"ClusterIP"` | The service type to use for the InfluxDB service |
 | influxdb2.service.url | string | `""` | set URL of the InfluxDB service if subchart is disabled |
