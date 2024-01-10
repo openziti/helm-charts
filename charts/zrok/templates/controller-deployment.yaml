@@ -35,7 +35,7 @@ spec:
         {{- end }}
           volumeMounts:
             {{- if .Values.controller.persistence.enabled }}
-            - name: database
+            - name: persistence
               mountPath: {{ .Values.controller.persistence.mount_dir }}
             {{- end }}
             # not yet used, but here for when it's possible to configure explicit trust of the Ziti Mgmt API's server cert
@@ -63,7 +63,7 @@ spec:
               mountPath: /usr/local/bin/bootstrap-ziti.bash
               subPath: bootstrap-ziti.bash
               readOnly: true
-            - name: database
+            - name: persistence
               mountPath: {{ .Values.controller.persistence.mount_dir }}
               readOnly: false
             # not yet used, but here for when it's possible to configure explicit trust of the Ziti Mgmt API's server cert
@@ -94,8 +94,8 @@ spec:
             - name: zrok-config
               mountPath: /etc/zrok
               readOnly: true
-            - name: database
-              mountPath: /var/lib/zrok
+            - name: persistence
+              mountPath: {{ .Values.controller.persistence.mount_dir }}
               readOnly: false
           ports:
             - name: http
@@ -146,7 +146,7 @@ spec:
               - key: {{ .Values.ziti.ca_cert_file }}
                 path: {{ .Values.ziti.ca_cert_file }}}
         {{- if .Values.controller.persistence.enabled }}
-        - name: database
+        - name: persistence
           persistentVolumeClaim:
-            claimName: {{ include "zrok.fullname" . }}-database
+            claimName: {{ include "zrok.fullname" . }}-persistence
         {{- end }}

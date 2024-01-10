@@ -35,7 +35,7 @@ securityContext: {}
   # runAsUser: 1000
 
 controller:
-  specVersion: 2
+  specVersion: 3
   service:
     # -- The service type to use for the zrok controller
     type: ClusterIP
@@ -43,6 +43,12 @@ controller:
     advertisedPort: 80
     # -- The port to expose on the zrok controller container
     containerPort: 18080
+  invites:
+    # -- enable the zrok controller to onboard new users when they run "zrok invite"
+    open: true
+    # -- require new users to submit an invitation token when they run "zrok invite", tokens are generated with "zrok
+    # admin generate"
+    token_required: false
   ingress:
     # -- enable the ingress resource for 
     enabled: false
@@ -67,7 +73,7 @@ controller:
     #      - chart-example.local
   metrics:
     # -- enable metrics collection and reporting for the zrok controller
-    enabled: true
+    enabled: false
     agent:
       source:
         # -- initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics
@@ -176,10 +182,8 @@ controller:
     # password:                       ""
     # from:                           ziggy@zrok.io
 
-
-
-
 frontend:
+  specVersion: 3
   service:
     # -- The service type to use for the zrok frontend
     type: ClusterIP
@@ -262,7 +266,7 @@ affinity: {}
 
 influxdb2:
   # -- enable the influxdb2 subchart
-  enabled: true
+  enabled: false
   service:
     # -- The service type to use for the InfluxDB service
     type: ClusterIP

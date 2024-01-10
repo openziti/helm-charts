@@ -99,6 +99,9 @@ spec:
             - name: frontend-identity
               mountPath: {{ .Values.frontend.homeDir }}/.zrok/identities
               readOnly: true
+            - name: persistence
+              mountPath: /var/lib/zrok
+              readOnly: false
           ports:
             - name: http
               containerPort: {{ .Values.frontend.service.containerPort }}
@@ -152,6 +155,11 @@ spec:
             secretName: {{ include "zrok.fullname" . }}-frontend-identity
             defaultMode: 0444
             items:
-              - key: frontend.json
-                path: frontend.json
+              - key: public.json
+                path: public.json
+        {{- if .Values.controller.persistence.enabled }}
+        - name: persistence
+          persistentVolumeClaim:
+            claimName: {{ include "zrok.fullname" . }}-persistence
+        {{- end }}
 

@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "zrok.fullname" . }}-database
+  name: {{ include "zrok.fullname" . }}-persistence
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "zrok.labelsController" . | nindent 4 }}
