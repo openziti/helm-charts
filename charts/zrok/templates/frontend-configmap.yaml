@@ -21,15 +21,15 @@ data:
         
         # find Ziti ID of frontend
         FRONTEND_ID=$(
-            ziti edge list identities 'name="frontend"' --csv \
-                | awk -F, '$2~/frontend/ {print $1;}'
+            ziti edge list identities 'name="public"' --csv \
+                | awk -F, '$2~/public/ {print $1;}'
         )
         until [[ -n "$FRONTEND_ID" ]]; do
             echo "DEBUG: waiting for frontend identity to be created"
             sleep 3
             FRONTEND_ID=$(
-                ziti edge list identities 'name="frontend"' --csv \
-                    | awk -F, '$2~/frontend/ {print $1;}'
+                ziti edge list identities 'name="public"' --csv \
+                    | awk -F, '$2~/public/ {print $1;}'
             )
         done
         echo "DEBUG: FRONTEND_ID=$FRONTEND_ID"
@@ -56,7 +56,7 @@ data:
         #    / /| | | (_) |   <
         #   /___|_|  \___/|_|\_\
         # frontend configuration
-
+        v: {{ .Values.frontend.specVersion }}
         host_match: {{ .Values.dnsZone | quote }}
         address: 0.0.0.0:{{ .Values.frontend.service.containerPort }}
 

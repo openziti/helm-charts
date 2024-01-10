@@ -1,0 +1,16 @@
+controller:
+  ingress:
+    enabled: true
+    scheme: http
+    className: nginx
+    hosts: ["ctrl.zrok.192.168.49.2.sslip.io"]
+
+frontend:
+  ingress:
+    enabled: true
+    scheme: http
+    className: nginx
+    hosts: ["share.zrok.192.168.49.2.sslip.io"]
+
+ziti:
+  advertisedHost: ziti-controller-client.miniziti.svc.cluster.local
