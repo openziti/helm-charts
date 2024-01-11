@@ -111,8 +111,7 @@ jobs:
             --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
             --set "ziti.password=${ZITI_PWD}" \
             --set "dnsZone=${ZROK_ZONE}" \
-            --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE} \
-            --set "frontend.ingress.hosts[0]=*.${ZROK_ZONE}" \
+            --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
             zrok ./charts/zrok
 
       - name: Wait for the zrok API to become available
