@@ -101,7 +101,8 @@ jobs:
           helm upgrade \
             --install \
             --namespace zrok --create-namespace \
-            --values=./charts/zrok/values-ingress-nginx.yaml \
+            --values ./charts/zrok/values-ingress-nginx.yaml \
+            --set ziti.advertisedHost=ziti-controller-client.miniziti.svc.cluster.local \
             --set ziti.password="${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}" \
             --set controller.ingress.hosts[0]=ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
             --set frontend.ingress.hosts[0]=share.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
@@ -113,11 +114,11 @@ jobs:
           resource: http-get://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
           delay: 1000
           interval: 1000
-          timeout: 10000
+          timeout: 20000
           verbose: true
 
       - name: Print the proxy log
         if: always()
         run: |
-          curl -v http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
+          miniziti kubectl get pods -A
           cat /tmp/miniziti-client.log
