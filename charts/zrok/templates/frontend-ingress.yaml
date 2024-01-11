@@ -29,7 +29,7 @@ spec:
   {{- if .Values.frontend.ingress.tls }}
   tls:
     - hosts:
-        - "*.{{ .Values.dnZone }}"
+        - "*.{{ .Values.dnsZone }}"
     {{- range .Values.frontend.ingress.tls }}
         {{- range .hosts }}
         - {{ . | quote }}
@@ -38,7 +38,7 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    - host: "*.{{ .Values.dnZone }}"
+    - host: "*.{{ .Values.dnsZone }}"
       http:
         paths:
           - path: /
