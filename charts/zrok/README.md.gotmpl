@@ -33,8 +33,8 @@ This example does not configure TLS termination for the API or public shares, me
 ZITI_NAMESPACE=miniziti
 ZITI_MGMT_API_HOST=ziti-controller-client.${ZITI_NAMESPACE}.svc.cluster.local
 ZITI_PWD=$(kubectl -n "${ZITI_NAMESPACE}" get secrets "ziti-controller-admin-secret" \
-    --output go-template='{{index .data "admin-password" | base64decode }}')
-ZROK_ZONE: zrok.example.com
+    --output go-template="{{"{{"}}index .data \"admin-password\" | base64decode{{"}}"}}")
+    ZROK_ZONE: zrok.example.com
 helm upgrade \
     --install \
     --namespace zrok --create-namespace \

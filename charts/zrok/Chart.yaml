@@ -1,6 +1,6 @@
 apiVersion: v2
 name: zrok
-description: A Helm chart for Kubernetes
+description: Run the zrok controller and zrok frontend components as a K8s deployment
 
 # A chart can be either an 'application' or a 'library' chart.
 #

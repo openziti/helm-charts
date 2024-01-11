@@ -4,7 +4,7 @@
 
 ![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.20](https://img.shields.io/badge/AppVersion-0.4.20-informational?style=flat-square)
 
-A Helm chart for Kubernetes
+Run the zrok controller and zrok frontend components as a K8s deployment
 
 ## Overview
 
@@ -16,7 +16,42 @@ A Helm chart for Kubernetes
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-## Minimal Installation
+## Minimal Example with Nginx Ingress
+
+This example does not configure TLS termination for the API or public shares, metrics, or limits.
+
+```bash
+ZITI_NAMESPACE=miniziti
+ZITI_MGMT_API_HOST=ziti-controller-client.${ZITI_NAMESPACE}.svc.cluster.local
+ZITI_PWD=$(kubectl -n "${ZITI_NAMESPACE}" get secrets "ziti-controller-admin-secret" \
+    --output go-template="{{index .data \"admin-password\" | base64decode}}")
+    ZROK_ZONE: zrok.example.com
+helm upgrade \
+    --install \
+    --namespace zrok --create-namespace \
+    --values https://openziti.io/helm-charts/charts/zrok/values-ingress-nginx.yaml \
+    --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
+    --set "ziti.password=${ZITI_PWD}" \
+    --set "dnsZone=${ZROK_ZONE}" \
+    --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
+    zrok openziti/zrok
+```
+
+## TLS termination with Nginx
+
+One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
+
+1. Install Cert Manager
+1. Create a ClusterIssuer with a Let's Encrypt account and DNS challenge solver. Solving the DNS challenge is one way
+    for Cert Manager to obtain a wildcard certificate which is necessary for zrok frontend's Ingress.
+1. Annotate zrok's Ingresses with the name of the ClusterIssuer.
+
+    ```bash
+    helm upgrade zrok \
+        --set "frontend.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        --set "controller.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        openziti/zrok
+    ```
 
 ## Values Reference
 
