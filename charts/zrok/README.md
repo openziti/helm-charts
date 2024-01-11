@@ -81,7 +81,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | frontend.ingress.annotations | object | `{}` | The annotations to use for the frontend's ingress resource |
 | frontend.ingress.className | string | `""` | The annotations to use for the frontend's ingress resource |
 | frontend.ingress.enabled | bool | `false` | enable the frontend's ingress resource |
-| frontend.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The hostnames to use for the frontend's ingress resource |
+| frontend.ingress.hosts | list | `[]` | *.{{ .Values.dnsZone }} is always set when ingress enabled; specify optional, additional wildcard hostnames to use for the frontend's ingress resource |
 | frontend.ingress.scheme | string | `"https"` | URI scheme to advertise for the frontend's ingress resource |
 | frontend.ingress.tls | list | `[]` | The TLS configuration for the frontend's ingress resource |
 | frontend.service.advertisedPort | int | `80` | The port to advertise for the zrok frontend service |
