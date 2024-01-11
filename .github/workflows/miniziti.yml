@@ -8,6 +8,7 @@ on:
       - 'charts/ziti-router/**'
       - 'charts/ziti-console/**'
       - 'charts/httpbin/**'
+      - 'charts/zrok/**'
 
 # cancel older, redundant runs of same workflow on same branch
 concurrency:
@@ -26,6 +27,10 @@ jobs:
         uses: medyagh/setup-minikube@v0.0.14
         with:
           start-args: --profile miniziti
+
+      - name: Find minikube IP address
+        id: minikube_ip
+        run: echo "minikube_ip=$(minikube ip)" >> $GITHUB_OUTPUT
 
       - name: install ziti cli
         uses: supplypike/setup-bin@v3
@@ -49,6 +54,13 @@ jobs:
 
       - name: Upgrade miniziti with charts from this branch
         run: miniziti start --no-hosts --verbose --charts ./charts
+
+      - name: Find the ziti admin password
+        id: ziti_pwd
+        run: |
+          miniziti kubectl get secrets "ziti-controller-admin-secret" \
+            --output go-template='{{index .data "admin-password" | base64decode }}' \
+            | xargs -IZITI_PWD echo "ziti_pwd=ZITI_PWD" >> $GITHUB_OUTPUT
 
       - name: Enroll client identity
         run: >
@@ -81,6 +93,26 @@ jobs:
             echo "Got '$AWESOME' instead of 'awesome'" >&2
             exit 1
           fi
+
+      - name: Install zrok chart
+        shell: bash
+        run: >
+          helm upgrade
+            --install
+            --namespace zrok --create-namespace
+            --set ziti.password="${{ steps.ziti_pwd.outputs.ziti_pwd }}"
+            --set controller.ingress.hosts[0].host=ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+            --set frontend.ingress.hosts[0].host=share.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+            --values=./charts/zrok/minimal-values.yml
+              zrok ./charts/zrok
+
+      - name: Wait for the zrok API to become available
+        uses: iFaxity/wait-on-action@v1
+        with:
+          resource: http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}/api/v1/version
+          delay: 1000
+          interval: 1000
+          timeout: 10000
 
       - name: Print the proxy log
         if: always()
