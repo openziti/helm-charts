@@ -19,6 +19,8 @@ jobs:
   miniziti:
     runs-on: ubuntu-latest
     name: deploy to minikube
+    env:
+      ZITI_NAMESPACE: miniziti
     steps:
       - name: Checkout workspace
         uses: actions/checkout@v3
@@ -26,11 +28,11 @@ jobs:
       - name: Start minikube
         uses: medyagh/setup-minikube@v0.0.14
         with:
-          start-args: --profile miniziti
+          start-args: --profile ${{ env.ZITI_NAMESPACE }}
 
       - name: Find minikube IP address
         id: minikube_ip
-        run: echo "minikube_ip=$(minikube --profile miniziti ip)" >> $GITHUB_OUTPUT
+        run: echo "minikube_ip=$(minikube --profile ${ZITI_NAMESPACE} ip)" >> $GITHUB_OUTPUT
 
       - name: install ziti cli
         uses: supplypike/setup-bin@v3
@@ -65,13 +67,13 @@ jobs:
       - name: Enroll client identity
         run: >
           ziti edge enroll
-          --jwt ~/.local/state/miniziti/profiles/miniziti/identities/miniziti-client.jwt
-          --out ~/.local/state/miniziti/profiles/miniziti/identities/miniziti-client.json
+          --jwt ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.jwt
+          --out ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
 
       - name: Run client proxy
         run: >
           nohup ziti tunnel proxy "httpbin-service:4321"
-          --identity ~/.local/state/miniziti/profiles/miniziti/identities/miniziti-client.json
+          --identity ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
           --verbose </dev/null &>/tmp/miniziti-client.log &
 
       - name: Wait for proxy to serve the httpbin service
@@ -97,28 +99,38 @@ jobs:
       # helm dependency build ./charts/zrok
       - name: Install zrok chart
         shell: bash
+        env:
+          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZROK_ZONE: zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
           helm upgrade \
             --install \
             --namespace zrok --create-namespace \
             --values ./charts/zrok/values-ingress-nginx.yaml \
-            --set ziti.advertisedHost=ziti-controller-client.miniziti.svc.cluster.local \
-            --set ziti.password="${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}" \
-            --set controller.ingress.hosts[0]=ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
-            --set frontend.ingress.hosts[0]=share.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
+            --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
+            --set "ziti.password=${ZITI_PWD}" \
+            --set "dnsZone=${ZROK_ZONE}" \
+            --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE} \
+            --set "frontend.ingress.hosts[0]=*.${ZROK_ZONE}" \
             zrok ./charts/zrok
 
       - name: Wait for the zrok API to become available
         uses: iFaxity/wait-on-action@v1
         with:
           resource: http-get://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
-          delay: 1000
-          interval: 1000
-          timeout: 20000
+          delay: 3000
+          interval: 3000
+          timeout: 30000
           verbose: true
 
-      - name: Print the proxy log
+      - name: Print debug info
         if: always()
+        shell: bash
         run: |
+          set +e
+          set -x
           miniziti kubectl get pods -A
+          miniziti kubectl get services -A
+          miniziti kubectl get ingresses -A
           cat /tmp/miniziti-client.log
