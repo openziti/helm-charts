@@ -103,8 +103,8 @@ jobs:
             --namespace zrok --create-namespace \
             --values=./charts/zrok/values-ingress-nginx.yaml \
             --set ziti.password="${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}" \
-            --set controller.ingress.hosts[0].host=ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
-            --set frontend.ingress.hosts[0].host=share.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
+            --set controller.ingress.hosts[0]=ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
+            --set frontend.ingress.hosts[0]=share.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io \
             zrok ./charts/zrok
 
       - name: Wait for the zrok API to become available
