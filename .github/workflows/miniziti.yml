@@ -30,7 +30,7 @@ jobs:
 
       - name: Find minikube IP address
         id: minikube_ip
-        run: echo "minikube_ip=$(minikube ip)" >> $GITHUB_OUTPUT
+        run: echo "minikube_ip=$(minikube --profile miniziti ip)" >> $GITHUB_OUTPUT
 
       - name: install ziti cli
         uses: supplypike/setup-bin@v3
