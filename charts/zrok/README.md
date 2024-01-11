@@ -6,12 +6,6 @@
 
 A Helm chart for Kubernetes
 
-## Requirements
-
-| Repository | Name | Version |
-|------------|------|---------|
-| https://helm.influxdata.com/ | influxdb2 | 2.1.2 |
-
 ## Overview
 
 ## Requirements
