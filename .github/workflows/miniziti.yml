@@ -114,7 +114,10 @@ jobs:
           delay: 1000
           interval: 1000
           timeout: 10000
+          verbose: true
 
       - name: Print the proxy log
         if: always()
-        run: cat /tmp/miniziti-client.log
+        run: |
+          curl -v http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
+          cat /tmp/miniziti-client.log
