@@ -120,7 +120,7 @@ jobs:
           resource: http-get://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
           delay: 3000
           interval: 3000
-          timeout: 30000
+          timeout: 60000
           verbose: true
 
       - name: Print debug info
