@@ -110,7 +110,7 @@ jobs:
       - name: Wait for the zrok API to become available
         uses: iFaxity/wait-on-action@v1
         with:
-          resource: http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}/api/v1/version
+          resource: http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
           delay: 1000
           interval: 1000
           timeout: 10000
