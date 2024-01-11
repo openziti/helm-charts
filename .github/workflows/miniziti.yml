@@ -123,7 +123,7 @@ jobs:
             sleep 3
             (( ATTEMPTS-- ))
           done
-          curl --silent --show-errors --fail-with-body http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
+          curl --silent --show-error --fail-with-body http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
 
       - name: Print debug info
         if: always()
