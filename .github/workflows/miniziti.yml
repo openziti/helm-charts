@@ -98,13 +98,13 @@ jobs:
         shell: bash
         run: >
           helm upgrade
-            --install
-            --namespace zrok --create-namespace
-            --set ziti.password="${{ steps.ziti_pwd.outputs.ziti_pwd }}"
-            --set controller.ingress.hosts[0].host=ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
-            --set frontend.ingress.hosts[0].host=share.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
-            --values=./charts/zrok/minimal-values.yml
-              zrok ./charts/zrok
+          --install
+          --namespace zrok --create-namespace
+          --set ziti.password="${{ steps.ziti_pwd.outputs.ziti_pwd }}"
+          --set controller.ingress.hosts[0].host=ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+          --set frontend.ingress.hosts[0].host=share.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+          --values=./charts/zrok/minimal-values.yml
+          zrok ./charts/zrok
 
       - name: Wait for the zrok API to become available
         uses: iFaxity/wait-on-action@v1
