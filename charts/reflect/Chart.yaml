@@ -4,4 +4,4 @@ description: Deploy a pod running the Ziti-embeded version of go-httpbin, a REST
   server.
 name: reflect
 type: application
-version: 0.3.8
+version: 0.3.9
