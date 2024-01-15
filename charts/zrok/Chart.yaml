@@ -1,6 +1,6 @@
 apiVersion: v2
 name: zrok
-description: A Helm chart for Kubernetes
+description: Run the zrok controller and zrok frontend components as a K8s deployment
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -15,16 +15,17 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.17
+version: 0.2.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "v0.3.6"
+appVersion: "0.4.20"
 
-dependencies:
-  - name: influxdb2  # v2 provides an API token
-    version: 2.1.1
-    repository: https://helm.influxdata.com/
-    condition: influxdb2.enabled
+dependencies: []
+  # removing this dependency until it becomes clear that it makes sense as a subchart
+  # - name: influxdb2  # v2 provides an API token
+  #   version: 2.1.2
+  #   repository: https://helm.influxdata.com/
+  #   condition: influxdb2.enabled

@@ -2,15 +2,9 @@
 
 # zrok
 
-![Version: 0.1.17](https://img.shields.io/badge/Version-0.1.17-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.3.6](https://img.shields.io/badge/AppVersion-v0.3.6-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.20](https://img.shields.io/badge/AppVersion-0.4.20-informational?style=flat-square)
 
-A Helm chart for Kubernetes
-
-## Requirements
-
-| Repository | Name | Version |
-|------------|------|---------|
-| https://helm.influxdata.com/ | influxdb2 | 2.1.1 |
+Run the zrok controller and zrok frontend components as a K8s deployment
 
 ## Overview
 
@@ -22,7 +16,47 @@ A Helm chart for Kubernetes
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-## Minimal Installation
+## Minimal Example with Nginx Ingress
+
+This example does not configure TLS termination for the API or public shares, metrics, or limits. You must configure a
+wildcard DNS record (A record) that resolve to the value of `ZROK_ZONE`.
+
+Use an `sslip.io` wildcard/zone like `zrok.192.168.49.2.sslip.io` for testing and tiny scale deployments if you
+want to avoid setting up DNS. This works with any IP address.
+
+```bash
+ZROK_ZONE=zrok.example.com
+ZITI_NAMESPACE=miniziti
+ZITI_MGMT_API_HOST=ziti-controller-client.${ZITI_NAMESPACE}.svc.cluster.local
+ZITI_PWD=$(kubectl -n "${ZITI_NAMESPACE}" get secrets "ziti-controller-admin-secret" \
+    --output go-template='{{index .data "admin-password" | base64decode}}')
+
+helm upgrade \
+    --install \
+    --namespace zrok --create-namespace \
+    --values https://openziti.io/helm-charts/charts/zrok/values-ingress-nginx.yaml \
+    --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
+    --set "ziti.password=${ZITI_PWD}" \
+    --set "dnsZone=${ZROK_ZONE}" \
+    --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
+    zrok openziti/zrok
+```
+
+## TLS termination with Nginx
+
+One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
+
+1. Install Cert Manager
+1. Create a ClusterIssuer with a Let's Encrypt account and DNS challenge solver. Solving the DNS challenge is one way
+    for Cert Manager to obtain a wildcard certificate which is necessary for zrok frontend's Ingress.
+1. Annotate zrok's Ingresses with the name of the ClusterIssuer.
+
+    ```bash
+    helm upgrade zrok \
+        --set "frontend.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        --set "controller.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        openziti/zrok
+    ```
 
 ## Values Reference
 
@@ -40,8 +74,10 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | controller.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The hosts to use for the zrok controller ingress resource |
 | controller.ingress.scheme | string | `"https"` | URI scheme to advertise for the controller's ingress resource |
 | controller.ingress.tls | list | `[]` | The TLS configuration for the zrok controller ingress resource |
+| controller.invites.open | bool | `true` | enable the zrok controller to onboard new users when they run "zrok invite" |
+| controller.invites.token_required | bool | `false` | require new users to submit an invitation token when they run "zrok invite", tokens are generated with "zrok admin generate" |
 | controller.metrics.agent.source.type | string | `"websocketSource"` | initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics |
-| controller.metrics.enabled | bool | `true` | enable metrics collection and reporting for the zrok controller |
+| controller.metrics.enabled | bool | `false` | enable metrics collection and reporting for the zrok controller |
 | controller.metrics.limits.bandwidth.per_account.limit.rx | int | `-1` | per-account limit threshold for receive bandwidth usage |
 | controller.metrics.limits.bandwidth.per_account.limit.total | int | `10485760` | per-account limit threshold for total bandwidth usage |
 | controller.metrics.limits.bandwidth.per_account.limit.tx | int | `-1` | per-account limit threshold for transmit bandwidth usage |
@@ -78,19 +114,20 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | controller.service.advertisedPort | int | `80` | The port to advertise for the zrok controller service |
 | controller.service.containerPort | int | `18080` | The port to expose on the zrok controller container |
 | controller.service.type | string | `"ClusterIP"` | The service type to use for the zrok controller |
-| controller.specVersion | int | `2` |  |
+| controller.specVersion | int | `3` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
 | frontend.deleteIdentityScriptFile | string | `"delete-identity.sh"` |  |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
 | frontend.ingress.annotations | object | `{}` | The annotations to use for the frontend's ingress resource |
 | frontend.ingress.className | string | `""` | The annotations to use for the frontend's ingress resource |
 | frontend.ingress.enabled | bool | `false` | enable the frontend's ingress resource |
-| frontend.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The hostnames to use for the frontend's ingress resource |
+| frontend.ingress.hosts | list | `[]` | *.{{ .Values.dnsZone }} is always set when ingress enabled; specify optional, additional wildcard hostnames to use for the frontend's ingress resource |
 | frontend.ingress.scheme | string | `"https"` | URI scheme to advertise for the frontend's ingress resource |
 | frontend.ingress.tls | list | `[]` | The TLS configuration for the frontend's ingress resource |
 | frontend.service.advertisedPort | int | `80` | The port to advertise for the zrok frontend service |
 | frontend.service.containerPort | int | `8080` | The port to expose on the zrok frontend container |
 | frontend.service.type | string | `"ClusterIP"` | The service type to use for the zrok frontend |
+| frontend.specVersion | int | `3` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"openziti/zrok"` |  |
@@ -99,7 +136,7 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 | influxdb2.adminUser.existingSecret | string | `""` | The name of an existing secret with admin-password and admin-token for the InfluxDB service |
 | influxdb2.adminUser.password | string | `"admin"` | The admin password for the InfluxDB service |
 | influxdb2.adminUser.username | string | `"admin"` | The admin username for the InfluxDB service |
-| influxdb2.enabled | bool | `true` | enable the influxdb2 subchart |
+| influxdb2.enabled | bool | `false` | enable the influxdb2 subchart |
 | influxdb2.service.port | int | `8086` | The port to advertise for the InfluxDB service |
 | influxdb2.service.type | string | `"ClusterIP"` | The service type to use for the InfluxDB service |
 | influxdb2.service.url | string | `""` | set URL of the InfluxDB service if subchart is disabled |

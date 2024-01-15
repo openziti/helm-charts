@@ -35,7 +35,7 @@ securityContext: {}
   # runAsUser: 1000
 
 controller:
-  specVersion: 2
+  specVersion: 3
   service:
     # -- The service type to use for the zrok controller
     type: ClusterIP
@@ -43,6 +43,12 @@ controller:
     advertisedPort: 80
     # -- The port to expose on the zrok controller container
     containerPort: 18080
+  invites:
+    # -- enable the zrok controller to onboard new users when they run "zrok invite"
+    open: true
+    # -- require new users to submit an invitation token when they run "zrok invite", tokens are generated with "zrok
+    # admin generate"
+    token_required: false
   ingress:
     # -- enable the ingress resource for 
     enabled: false
@@ -67,7 +73,7 @@ controller:
     #      - chart-example.local
   metrics:
     # -- enable metrics collection and reporting for the zrok controller
-    enabled: true
+    enabled: false
     agent:
       source:
         # -- initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics
@@ -176,10 +182,8 @@ controller:
     # password:                       ""
     # from:                           ziggy@zrok.io
 
-
-
-
 frontend:
+  specVersion: 3
   service:
     # -- The service type to use for the zrok frontend
     type: ClusterIP
@@ -196,19 +200,17 @@ frontend:
     className: ""
     # -- The annotations to use for the frontend's ingress resource
     annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-    # -- The hostnames to use for the frontend's ingress resource
-    hosts:
-      - host: chart-example.local
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
+      # cert-manager.io/cluster-issuer: my-cluster-issuer-with-a-dns-challenge-solver-for-the-zrok-zone
+    # -- *.{{ .Values.dnsZone }} is always set when ingress enabled; specify optional, additional wildcard hostnames to
+    # use for the frontend's ingress resource
+    hosts: []
     # -- The TLS configuration for the frontend's ingress resource
     tls: []
-    #  - secretName: chart-example-tls
+    #  - secretName: name-of-k8s-secret-where-cert-manager-provides-cert-and-key
+    #    # -- *.{{ .Values.dnsZone }} is always set when ingress tls is enabled; specify optional, additional wildcard
+    #    # hostnames to obtain TLS certificates for
     #    hosts:
-    #      - chart-example.local
+    #      - *.zrok.example.com
   # -- a read-only mountpoint for the frontend's Ziti identity is "homeDir"
   # because zrok always looks in $HOME/.zrok/identities
   homeDir: /var/lib/zrok
@@ -262,7 +264,7 @@ affinity: {}
 
 influxdb2:
   # -- enable the influxdb2 subchart
-  enabled: true
+  enabled: false
   service:
     # -- The service type to use for the InfluxDB service
     type: ClusterIP

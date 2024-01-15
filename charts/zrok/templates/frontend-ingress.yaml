@@ -28,8 +28,9 @@ spec:
   {{- end }}
   {{- if .Values.frontend.ingress.tls }}
   tls:
-    {{- range .Values.frontend.ingress.tls }}
     - hosts:
+        - "*.{{ .Values.dnsZone }}"
+    {{- range .Values.frontend.ingress.tls }}
         {{- range .hosts }}
         - {{ . | quote }}
         {{- end }}
@@ -37,14 +38,12 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.frontend.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: "*.{{ .Values.dnsZone }}"
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
-            pathType: {{ .pathType }}
+          - path: /
+            {{- if (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
+            pathType: Prefix
             {{- end }}
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
@@ -56,6 +55,23 @@ spec:
               serviceName: {{ $fullName }}
               servicePort: {{ $svcPort }}
               {{- end }}
-          {{- end }}
+    {{- range .Values.frontend.ingress.hosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: /
+            {{- if (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
+            pathType: Prefix
+            {{- end }}
+            backend:
+              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: {{ $fullName }}
+              servicePort: {{ $svcPort }}
+              {{- end }}
     {{- end }}
 {{- end }}

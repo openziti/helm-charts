@@ -1,0 +1,23 @@
+
+# these minimal input values serve the GitHub Actions workflow miniziti.yml which installs this chart in a minikube
+# cluster that is also running a minimal Ziti network, scripted by miniziti.bash
+
+controller:
+  ingress:
+    enabled: true
+    scheme: http
+    className: nginx
+    hosts: []
+    # hosts: ["ctrl.zrok.192.168.49.2.sslip.io"]
+
+frontend:
+  ingress:
+    enabled: true
+    scheme: http
+    className: nginx
+    hosts: []
+    # hosts: ["share.zrok.192.168.49.2.sslip.io"]
+
+ziti:
+  advertisedHost:
+  # advertisedHost: ziti-controller-client.miniziti.svc.cluster.local
