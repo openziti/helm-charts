@@ -3,6 +3,18 @@ entries:
   hello-toy:
   - apiVersion: v2
     appVersion: v1
+    created: "2024-01-15T17:24:37.973957911Z"
+    description: 'Run the lightweight toy web server, optionally with a custom service
+      domain name in cluster DNS e.g.   helm install my-toy-release openziti/hello-toy
+      --set serviceDomainName=my-toy-service-dns '
+    digest: 66020abc779cebb618b27c67a31ed28d710b61f53af44a60d0b4195b8306a5f8
+    name: hello-toy
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/hello-toy-3.0.2/hello-toy-3.0.2.tgz
+    version: 3.0.2
+  - apiVersion: v2
+    appVersion: v1
     created: "2023-10-03T18:56:04.102631188Z"
     description: 'Run the lightweight toy web server, optionally with a custom service
       domain name in cluster DNS e.g.   helm install my-toy-release openziti/hello-toy
@@ -62,6 +74,16 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/hello-toy-1.3.1/hello-toy-1.3.1.tgz
     version: 1.3.1
   httpbin:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2024-01-15T17:24:38.089545546Z"
+    description: Run the Ziti fork of go-httpbin
+    digest: 8d42a9f2bedc7cef1c3b724eeffb24b37b8f7753fe0967532313d3d5762a1628
+    name: httpbin
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/httpbin-0.1.12/httpbin-0.1.12.tgz
+    version: 0.1.12
   - apiVersion: v2
     appVersion: latest
     created: "2023-10-03T18:56:04.359053663Z"
@@ -191,6 +213,17 @@ entries:
   reflect:
   - apiVersion: v2
     appVersion: 0.0.4
+    created: "2024-01-15T17:24:38.209735968Z"
+    description: Deploy a pod running the Ziti-embeded version of go-httpbin, a REST
+      API server.
+    digest: c8bd9fd7f5e4c651b479e931d88b8dd13d5c742f5a5531016f441a287ac0aa9c
+    name: reflect
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/reflect-0.3.9/reflect-0.3.9.tgz
+    version: 0.3.9
+  - apiVersion: v2
+    appVersion: 0.0.4
     created: "2023-10-03T18:56:04.494269111Z"
     description: Deploy a pod running the Ziti-embeded version of go-httpbin, a REST
       API server.
@@ -256,6 +289,16 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/reflect-0.3.3/reflect-0.3.3.tgz
     version: 0.3.3
   ziti-console:
+  - apiVersion: v2
+    appVersion: 2.9.0
+    created: "2024-01-15T17:24:38.343043964Z"
+    description: Deploy OpenZiti console as kubernetes service
+    digest: 9b38d652b04a941c4756a7f49da0df04f0317dc49c193f28d0e23a3be7ebcbe4
+    name: ziti-console
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.4.3/ziti-console-0.4.3.tgz
+    version: 0.4.3
   - apiVersion: v2
     appVersion: 2.9.0
     created: "2023-10-03T20:53:50.55528826Z"
@@ -357,6 +400,29 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.1.1/ziti-console-0.1.1.tgz
     version: 0.1.1
   ziti-controller:
+  - apiVersion: v3
+    appVersion: 0.30.4
+    created: "2024-01-15T17:24:38.45528691Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.4.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: dec9ee2cc279a682bfb8992137f7e3d49dba2a2bd33a7d465f59301f31df5705
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-0.7.3/ziti-controller-0.7.3.tgz
+    version: 0.7.3
   - apiVersion: v3
     appVersion: 0.30.4
     created: "2023-11-22T17:32:37.206160835Z"
@@ -1081,6 +1147,17 @@ entries:
   ziti-host:
   - apiVersion: v2
     appVersion: 0.21.5
+    created: "2024-01-15T17:24:38.594030227Z"
+    description: Host OpenZiti services with a tunneler pod
+    digest: b765f93b318601a01a9ebbe56ef934f455672ef337468628fcd83f804377cb6d
+    kubeVersion: '>= 1.20.0-0'
+    name: ziti-host
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.4.7/ziti-host-0.4.7.tgz
+    version: 0.4.7
+  - apiVersion: v2
+    appVersion: 0.21.5
     created: "2023-10-03T18:56:04.981267249Z"
     description: Host OpenZiti services with a tunneler pod
     digest: 90f44f088b29341e969f99b66946e15d072e16ea47ae4333f622820b612768ab
@@ -1190,6 +1267,16 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.5/ziti-host-0.3.5.tgz
     version: 0.3.5
   ziti-router:
+  - apiVersion: v3
+    appVersion: 0.31.0
+    created: "2024-01-15T17:24:38.815636506Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 1ac18002fb12cf6f0954a09d2145cabb687d8da5de5d7cff1b84b4482089baa5
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-0.9.2/ziti-router-0.9.2.tgz
+    version: 0.9.2
   - apiVersion: v3
     appVersion: 0.31.0
     created: "2023-11-22T17:32:37.674190218Z"
@@ -1442,6 +1529,16 @@ entries:
     version: 0.1.3
   zrok:
   - apiVersion: v2
+    appVersion: 0.4.20
+    created: "2024-01-15T17:24:38.96648484Z"
+    description: Run the zrok controller and zrok frontend components as a K8s deployment
+    digest: 9a4f35d844cb375372ee1e4bb4ad0c8e99db788e85eadb40ebe82f9624f1ea63
+    name: zrok
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/zrok-0.2.0/zrok-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
     appVersion: v0.3.6
     created: "2023-04-19T14:41:07.936866956Z"
     dependencies:
@@ -1471,4 +1568,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2023-11-27T22:17:51.33133172Z"
+generated: "2024-01-15T17:24:38.967008673Z"
