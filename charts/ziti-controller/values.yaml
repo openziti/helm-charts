@@ -85,7 +85,7 @@ prometheus:
     labels: {}
     annotations: {}
 
-ca:
+ca:execMountDir
   # Note: The renewBefore and duration fields must be specified using a Go
   # time.Duration string format, which does not allow the d (days) suffix.
   # You must specify these values using s, m, and h suffixes instead.
