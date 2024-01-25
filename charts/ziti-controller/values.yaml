@@ -85,7 +85,7 @@ prometheus:
     labels: {}
     annotations: {}
 
-ca:
+ca:execMountDir
   # Note: The renewBefore and duration fields must be specified using a Go
   # time.Duration string format, which does not allow the d (days) suffix.
   # You must specify these values using s, m, and h suffixes instead.
@@ -146,20 +146,12 @@ image:
   # -- container entrypoint command
   command: ["ziti", "controller", "run"]
   # -- args for the entrypoint command
-  args: ["{{ .Values.configMountDir }}/ziti-controller.yaml"]
+  args: ["{{ include configMountDir . }}/ziti-controller.yaml"]
 
-# -- a directory included in the init and run containers' executable search path
-execMountDir:   /usr/local/bin   # read-only mountpoint for executables (must be in image's executable search PATH) 
-# -- read-only mountpoint where configFile and various read-only identity dirs are projected
-configMountDir: /etc/ziti
-# -- writeable mountpoint where the controller will create dbFile during init
-dataMountDir:   /persistent
 # -- name of the BoltDB file
 dbFile:         ctrl.db
 # -- read-only mountpoint for run container to read the ctrl plane trust bundle created during init
 ctrlPlaneCaDir: ctrl-plane-cas
-# -- filename of the ctrl plane trust bundle
-ctrlPlaneCasFile: ctrl-plane-cas.crt
 
 ctrlPlaneCasBundle:
   # -- namespaces where trust-manager will create the Bundle resource containing

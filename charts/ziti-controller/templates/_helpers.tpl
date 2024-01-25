@@ -61,3 +61,31 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/* 
+A directory included in the init and run containers' executable search path
+*/}}
+{{- define "execMountDir" -}}
+/usr/local/bin  
+{{- end }}
+
+{{/* 
+Read-only mountpoint where configFile and various read-only identity dirs are projected
+*/}}
+{{- define "configMountDir" -}}
+/etc/ziti
+{{- end }}
+
+{{/* 
+Writeable mountpoint where the controller will create dbFile during init
+*/}}
+{{- define "dataMountDir" -}}
+/persistent
+{{- end }}
+
+{{/*
+Filename of the ctrl plane trust bundle
+*/}}
+{{- define "ziti-controller.ctrlPlaneCasFile" -}}
+ctrl-plane-cas.crt
+{{- end }}
