@@ -8,7 +8,7 @@ metadata:
   labels:
     {{- include "ziti-router.labels" . | nindent 4 }}
 data:
-  # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
+  # post-install-hook Job runs this to enroll the router
   {{ .Values.initScriptFile }}: |-
     #!/usr/bin/env bash
     set -o errexit

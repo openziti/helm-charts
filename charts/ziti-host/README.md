@@ -72,7 +72,7 @@ When you don't want to use the default key name `persisted-identity` you can def
 | ports | list | `[]` |  |
 | replicas | int | `1` |  |
 | resources | object | `{}` |  |
-| secret | object | `{}` |  |
+| secret.existingSecretName | string | `""` | Use an existing secret name |
 | securityContext | object | `{}` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |

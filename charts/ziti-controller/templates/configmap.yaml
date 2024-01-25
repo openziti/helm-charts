@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-config
+  name: {{ include "ziti-controller.fullname" . }}-configmap
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 data:
@@ -20,6 +20,40 @@ data:
         -u "${ZITI_ADMIN_USER}" \
         -p "${ZITI_ADMIN_PASSWORD}"
     fi
+
+  create-default-router.bash: |-
+    #!/usr/bin/env bash
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+    set -o xtrace
+
+    if kubectl -n {{ .Release.Namespace }} get secret \
+      {{ include "ziti-controller.fullname" . }}-router-token &>/dev/null; then
+      if [[ ${HELM_UPGRADE:-} == true ]]; then
+        echo 'INFO: no-op because secret exists and is Helm upgrade'
+        # exit without error so Helm will delete the post-upgrade hook Job
+        exit 0
+      else
+        echo 'ERROR: secret exists: "{{ include "ziti-controller.fullname" . }}-router-token"' >&2
+        # this should never happen because Helm deletes the secret with pre-uninstall hook
+        exit 1
+      fi
+    else
+      echo "INFO: enrollment secret does not exist, attempting to create router"
+    fi
+
+    zitiLogin
+
+    ziti edge create edge-router {{ .Values.defaultRouter.name }} \
+      --role-attributes {{ join "," .Values.defaultRouter.roleAttributes }} \
+      --tunneler-enabled \
+      --jwt-output-file /tmp/enrollment.jwt
+
+    # secret data key must be "enrollment.jwt" or match the controller chart value of enrollJwtFile 
+    kubectl -n {{ .Release.Namespace }} create secret generic \
+      {{ include "ziti-controller.fullname" . }}-router-token \
+      --from-file=enrollment.jwt=/tmp/enrollment.jwt
 
   zitiLogin: |-
     #!/usr/bin/env bash

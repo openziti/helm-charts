@@ -27,3 +27,7 @@ __snapshot__
 __snapshot__
 .cr-release-packages/
 .cr-index/
+Chart.lock
+
+# ignore testing packages
+/*.tgz

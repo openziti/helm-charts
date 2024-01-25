@@ -209,6 +209,9 @@ edgeSignerPki:
 | ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` | filename of the ctrl plane trust bundle |
 | dataMountDir | string | `"/persistent"` | writeable mountpoint where the controller will create dbFile during init |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
+| defaultRouter.enabled | bool | `false` | optionally use the Ziti mgmt API to create a Ziti router and store the enrollment token in a secret |
+| defaultRouter.name | string | `"default-router"` | the name of the Ziti router to create |
+| defaultRouter.roleAttributes | list | `["public-routers"]` | the Ziti role attributes to assign to the router |
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
