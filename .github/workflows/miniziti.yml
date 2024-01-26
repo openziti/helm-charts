@@ -120,7 +120,7 @@ jobs:
           ATTEMPTS=10
           until !(( ATTEMPTS )) || curl --silent --fail http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version &>/dev/null; do
             echo "Waiting for zrok API to become available..."
-            sleep 3
+            sleep 6
             (( ATTEMPTS-- ))
           done
           curl --silent --show-error --fail-with-body http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
