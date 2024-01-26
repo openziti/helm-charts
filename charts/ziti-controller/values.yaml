@@ -146,7 +146,7 @@ image:
   # -- container entrypoint command
   command: ["ziti", "controller", "run"]
   # -- args for the entrypoint command
-  args: ["{{ include configMountDir . }}/ziti-controller.yaml"]
+  args: ["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]
 
 # -- name of the BoltDB file
 dbFile:         ctrl.db
