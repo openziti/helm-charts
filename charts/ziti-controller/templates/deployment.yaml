@@ -46,7 +46,7 @@ spec:
                   name:  {{ include "ziti-controller.fullname" . }}-admin-secret
                   key: admin-password
             - name: ZITI_CTRL_PLANE_CA
-              value: {{ include configMountDir . }}/{{ .Values.ctrlPlaneCaDir }}
+              value: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
             - name: PFXLOG_NO_JSON
               value: "true"
             - name: HOME
@@ -55,28 +55,28 @@ spec:
             - mountPath: {{ include "execMountDir" . }}/ziti-controller-init.bash
               name: ziti-controller-configmap
               subPath: ziti-controller-init.bash
-            - mountPath: {{ include dataMountDir . }}
+            - mountPath: {{ include "dataMountDir" . }}
               name: data
-            - mountPath: {{ include configMountDir . }}/ziti-controller.yaml
+            - mountPath: {{ include "configMountDir" . }}/ziti-controller.yaml
               name: ziti-controller-configmap
               subPath: ziti-controller.yaml
-            - mountPath: {{ include configMountDir . }}/{{ .Values.ctrlPlaneCaDir }}
+            - mountPath: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
               name: ziti-controller-ctrl-plane-cas
               readOnly: true
-            - mountPath: {{ include configMountDir . }}/ctrl-plane-identity/
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
             {{- if (eq .Values.edgeSignerPki.enabled true) }}
-            - mountPath: {{ include configMountDir . }}/edge-signer/
+            - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
               readOnly: true
             {{- else }}
-            - mountPath: {{ include configMountDir . }}/ctrl-plane-intermediate/
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-intermediate/
               name: cert-ctrl-plane-intermediate
               readOnly: true
             {{- end }}
             {{- if (eq .Values.webBindingPki.enabled true) }}
-            - mountPath: {{ include configMountDir . }}/web-identity/
+            - mountPath: {{ include "configMountDir" . }}/web-identity/
               name: cert-web-identity
               readOnly: true
             {{- end }}
@@ -112,7 +112,7 @@ spec:
             - name: PFXLOG_NO_JSON
               value: "true"
             - name: ZITI_CTRL_PLANE_CA
-              value: {{ include configMountDir . }}/{{ .Values.ctrlPlaneCaDir }}
+              value: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
             - name: HOME
               value: {{ .Values.image.homeDir }}
             - name: ZITI_MGMT_API
@@ -132,34 +132,34 @@ spec:
                   name:  {{ include "ziti-controller.fullname" . }}-admin-secret
                   key: admin-password
           volumeMounts:
-            - mountPath: {{ include dataMountDir . }}
+            - mountPath: {{ include "dataMountDir" . }}
               name: data
             - mountPath: {{ include "execMountDir" . }}/zitiLogin
               name: ziti-controller-configmap
               subPath: zitiLogin
-            - mountPath: {{ include configMountDir . }}/ziti-controller.yaml
+            - mountPath: {{ include "configMountDir" . }}/ziti-controller.yaml
               name: ziti-controller-configmap
               subPath: ziti-controller.yaml
             - mountPath: {{ .Values.image.homeDir }}/.bash_profile
               name: ziti-controller-configmap
               subPath: .bash_profile
-            - mountPath: {{ include configMountDir . }}/{{ .Values.ctrlPlaneCaDir }}
+            - mountPath: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
               name: ziti-controller-ctrl-plane-cas
               readOnly: true
-            - mountPath: {{ include configMountDir . }}/ctrl-plane-identity/
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
             {{- if (eq .Values.edgeSignerPki.enabled true) }}
-            - mountPath: {{ include configMountDir . }}/edge-signer/
+            - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
               readOnly: true
             {{- else }}
-            - mountPath: {{ include configMountDir . }}/ctrl-plane-intermediate/
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-intermediate/
               name: cert-ctrl-plane-intermediate
               readOnly: true
             {{- end }}
             {{- if (eq .Values.webBindingPki.enabled true) }}
-            - mountPath: {{ include configMountDir . }}/web-identity/
+            - mountPath: {{ include "configMountDir" . }}/web-identity/
               name: cert-web-identity
               readOnly: true
             {{- end }}
