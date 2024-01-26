@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.7.3](https://img.shields.io/badge/Version-0.7.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.30.4](https://img.shields.io/badge/AppVersion-0.30.4-informational?style=flat-square)
+![Version: 0.7.4](https://img.shields.io/badge/Version-0.7.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.30.4](https://img.shields.io/badge/AppVersion-0.30.4-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -227,7 +227,7 @@ edgeSignerPki:
 | fabric.events.subscriptions[9].type | string | `"edge.entityCounts"` |  |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
-| image.args | list | `["{{ include configMountDir . }}/ziti-controller.yaml"]` | args for the entrypoint command |
+| image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
