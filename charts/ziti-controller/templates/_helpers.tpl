@@ -84,6 +84,13 @@ Writeable mountpoint where the controller will create dbFile during init
 {{- end }}
 
 {{/*
+Read-only mountpoint for run container to read the ctrl plane trust bundle created during init
+*/}}
+{{- define "ziti-controller.ctrlPlaneCaDir" -}}
+ctrl-plane-cas
+{{- end }}
+
+{{/*
 Filename of the ctrl plane trust bundle
 */}}
 {{- define "ziti-controller.ctrlPlaneCasFile" -}}

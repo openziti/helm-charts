@@ -46,7 +46,7 @@ spec:
                   name:  {{ include "ziti-controller.fullname" . }}-admin-secret
                   key: admin-password
             - name: ZITI_CTRL_PLANE_CA
-              value: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
+              value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: PFXLOG_NO_JSON
               value: "true"
             - name: HOME
@@ -60,7 +60,7 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/ziti-controller.yaml
               name: ziti-controller-configmap
               subPath: ziti-controller.yaml
-            - mountPath: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
+            - mountPath: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
               name: ziti-controller-ctrl-plane-cas
               readOnly: true
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
@@ -112,7 +112,7 @@ spec:
             - name: PFXLOG_NO_JSON
               value: "true"
             - name: ZITI_CTRL_PLANE_CA
-              value: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
+              value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: HOME
               value: {{ .Values.image.homeDir }}
             - name: ZITI_MGMT_API
@@ -143,7 +143,7 @@ spec:
             - mountPath: {{ .Values.image.homeDir }}/.bash_profile
               name: ziti-controller-configmap
               subPath: .bash_profile
-            - mountPath: {{ include "configMountDir" . }}/{{ .Values.ctrlPlaneCaDir }}
+            - mountPath: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
               name: ziti-controller-ctrl-plane-cas
               readOnly: true
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/

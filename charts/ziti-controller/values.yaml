@@ -150,8 +150,6 @@ image:
 
 # -- name of the BoltDB file
 dbFile:         ctrl.db
-# -- read-only mountpoint for run container to read the ctrl plane trust bundle created during init
-ctrlPlaneCaDir: ctrl-plane-cas
 
 ctrlPlaneCasBundle:
   # -- namespaces where trust-manager will create the Bundle resource containing
