@@ -41,7 +41,7 @@ spec:
     {{- end }}
   target:
     configMap:
-      key: {{ .Values.ctrlPlaneCasFile }}
+      key: {{ include "ziti-controller.ctrlPlaneCasFile" . }}
     {{- with .Values.ctrlPlaneCasBundle.namespaceSelector }}
     namespaceSelector:
         {{- toYaml . | nindent 8 }}
