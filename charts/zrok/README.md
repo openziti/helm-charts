@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.20](https://img.shields.io/badge/AppVersion-0.4.20-informational?style=flat-square)
+![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.23](https://img.shields.io/badge/AppVersion-0.4.23-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -68,6 +68,7 @@ One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | controller.email | object | `{}` | send invitation acknowledgements and usage limit warnings from the specified email address |
+| controller.extraConfig | object | `{}` | append additional controller config |
 | controller.ingress.annotations | object | `{}` | The annotations to use for the zrok controller ingress resource |
 | controller.ingress.className | string | `""` | The ingress class to use for the zrok controller |
 | controller.ingress.enabled | bool | `false` | enable the ingress resource for  |
@@ -117,6 +118,7 @@ One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
 | controller.specVersion | int | `3` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
 | frontend.deBootstrapScript | string | `"delete-identity.sh"` |  |
+| frontend.extraConfig | object | `{}` | append additional frontend config |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
 | frontend.ingress.annotations | object | `{}` | The annotations to use for the frontend's ingress resource |
 | frontend.ingress.className | string | `""` | The annotations to use for the frontend's ingress resource |
@@ -149,11 +151,13 @@ One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
 | securityContext | object | `{}` |  |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| test.backoffLimit | int | `3` | retry until firt success unless backoffLimit is reached |
+| test.enabled | bool | `false` | run the 'zrok test loopback public' in a one-off Job to verify the zrok public frontend is working |
 | tolerations | list | `[]` |  |
 | ziti.advertisedHost | string | `"localhost"` | The Ziti Management API host to bootstrap with zrok and to collect fabric metrics from |
 | ziti.advertisedPort | string | `"443"` | The Ziti Management API port |
 | ziti.ca_cert_configmap | string | `"ziti-controller-ctrl-plane-cas"` | name of the configmap containing the Ziti CA certificate trust bundle that trust-manager syncs to namespaces with the label "openziti.io/namespace: enabled"; has format {{controller's Helm release name}}-ctrl-plane-cas |
-| ziti.ca_cert_dir | string | `"/etc/ssl/certs"` | mountpoint of the Ziti CA certificate trust bundle |
+| ziti.ca_cert_dir | string | `"/etc/ziti"` | mountpoint of the Ziti CA certificate trust bundle |
 | ziti.ca_cert_file | string | `"ctrl-plane-cas.crt"` | key name of trust bundle in configmap and filename to project into mountpoint |
 | ziti.password | string | `"admin"` | Ziti admin login password |
 | ziti.username | string | `"admin"` | Ziti admin login name |
