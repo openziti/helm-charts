@@ -116,7 +116,7 @@ One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
 | controller.service.type | string | `"ClusterIP"` | The service type to use for the zrok controller |
 | controller.specVersion | int | `3` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
-| frontend.deleteIdentityScriptFile | string | `"delete-identity.sh"` |  |
+| frontend.deBootstrapScript | string | `"delete-identity.sh"` |  |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
 | frontend.ingress.annotations | object | `{}` | The annotations to use for the frontend's ingress resource |
 | frontend.ingress.className | string | `""` | The annotations to use for the frontend's ingress resource |
