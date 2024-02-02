@@ -242,9 +242,7 @@ data:
     #    server_cert: ~/.ziti/config/certs/192.168.10.11.server.chain.cert
     #    key: ~/.ziti/config/certs/192.168.10.11.key
 
+    {{- if .Values.forwarder }}
     forwarder:
-        latencyProbeInterval: 10
-        xgressDialQueueLength: 1000
-        xgressDialWorkerCount: 128
-        linkDialQueueLength: 1000
-        linkDialWorkerCount: 32
+        {{- toYaml .Values.forwarder | nindent 8 }}
+    {{- end }}
