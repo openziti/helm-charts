@@ -104,7 +104,11 @@ jobs:
           ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
           ZROK_ZONE: zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
+          # the container image override is temporarily necessary to provide the 'zrok admin account create' command
+          # from zrok branch 'admin_create_account'
           helm upgrade \
+            --set image.repository=docker.io/kbinghamnetfoundry/zrok \
+            --set image.tag=kentest \
             --install \
             --namespace zrok --create-namespace \
             --values ./charts/zrok/values-ingress-nginx.yaml \
@@ -112,6 +116,7 @@ jobs:
             --set "ziti.password=${ZITI_PWD}" \
             --set "dnsZone=${ZROK_ZONE}" \
             --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
+            --set "test.enabled=true" \
             zrok ./charts/zrok
 
       - name: Wait for the zrok API to become available
@@ -125,6 +130,11 @@ jobs:
           done
           curl --silent --show-error --fail-with-body http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
 
+      - name: Check zrok test job result
+        shell: bash
+        run: |
+          miniziti kubectl -n zrok wait --for=condition=complete --timeout=120s job/zrok-test-job
+
       - name: Print debug info
         if: always()
         shell: bash
@@ -135,3 +145,4 @@ jobs:
           miniziti kubectl get services -A
           miniziti kubectl get ingresses -A
           cat /tmp/miniziti-client.log
+          miniziti kubectl -n zrok logs job/zrok-test-job

@@ -14,37 +14,77 @@ data:
         set -o pipefail
         set -o xtrace  # FIXME remove this     
 
-        ziti edge login \
-            --username {{ .Values.ziti.username }} \
-            --password {{ .Values.ziti.password }} \
-            {{ .Values.ziti.advertisedHost }}:{{ .Values.ziti.advertisedPort }}
+        # while true;do sleep 1;done
+
+        # mounted script from frontend configmap
+        zitiLogin
         
-        # find Ziti ID of frontend
-        FRONTEND_ID=$(
+        getPublicFrontendZitiId(){
             ziti edge list identities 'name="public"' --csv \
-                | awk -F, '$2~/public/ {print $1;}'
-        )
-        until [[ -n "$FRONTEND_ID" ]]; do
-            echo "DEBUG: waiting for frontend identity to be created"
+                | awk -F, '$2=="public" {print $1;}'
+        }
+
+        # find Ziti ID of default "public" frontend
+        ZITI_PUBLIC_ID=$(getPublicFrontendZitiId)
+        until [[ -n "${ZITI_PUBLIC_ID}" ]]; do
+            echo "DEBUG: waiting for default frontend "public" Ziti identity to be created"
             sleep 3
-            FRONTEND_ID=$(
-                ziti edge list identities 'name="public"' --csv \
-                    | awk -F, '$2~/public/ {print $1;}'
-            )
+            ZITI_PUBLIC_ID=$(getPublicFrontendZitiId)
         done
-        echo "DEBUG: FRONTEND_ID=$FRONTEND_ID"
+        echo "DEBUG: 'public' ZITI_PUBLIC_ID=$ZITI_PUBLIC_ID"
 
         until curl -sSf ${ZROK_API_ENDPOINT}/api/v1/version; do
-            echo "DEBUG: waiting for zrok to be ready"
+            echo "DEBUG: waiting for zrok controller API version endpoint to respond"
             sleep 3
         done
 
-        # test if frontend already exists
-        if zrok admin list frontends|grep -q "${FRONTEND_ID}"; then
-            echo "DEBUG: frontend already exists"
+        getPublicFrontend(){
+            typeset -A FIELDS
+            FIELDS[all]=0
+            FIELDS[token]=1
+            FIELDS[zid]=2
+            FIELDS[name]=3
+            FIELDS[template]=4
+            FIELDS[created]=5
+            FIELDS[updated]=6
+
+            if (( $# )); then
+                RETURNED="$1"
+                shift
+            else
+                RETURNED="all"
+            fi
+            if (( $# )); then
+                echo "WARN: ignoring unexpected parameters: $*" >&2
+            fi
+            if [[ -z ${FIELDS[$RETURNED]} ]]; then
+                echo "ERROR: invalid return field $RETURNED" >&2
+                return 1
+            fi
+            # strip ANSI sequences and return the first position from the line with a name exactly matching "public"
+            zrok admin list frontends | sed 's/\x1b\[[0-9;]*m//g' \
+            | awk '$'${FIELDS[name]}'=="public" {print $'${FIELDS[$RETURNED]}'}'
+        }
+
+        # if default "public" frontend already exists
+        ZROK_PUBLIC_TOKEN=$(getPublicFrontend token)
+        if [[ -n ${ZROK_PUBLIC_TOKEN} ]]; then
+            
+            # ensure the Ziti ID of the public frontend's identity is the same in Ziti and zrok
+            ZROK_PUBLIC_ZID=$(getPublicFrontend zid)
+            if [[ ${ZITI_PUBLIC_ID} != ${ZROK_PUBLIC_ZID} ]]; then
+                echo "ERROR: existing Ziti Identity named 'public' with id '$ZITI_PUBLIC_ID' is from a previous zrok"\
+                "instance life cycle. Delete it then re-run zrok." >&2
+                exit 1
+            fi
+
+            echo "INFO: updating frontend"
+            zrok admin update frontend ${ZROK_PUBLIC_TOKEN} \
+                --url-template "{{ .Values.frontend.ingress.scheme }}://{token}.{{ .Values.dnsZone }}"
         else
             echo "INFO: creating frontend"
-            zrok admin create frontend ${FRONTEND_ID} public "{{ .Values.frontend.ingress.scheme }}://{token}.{{ .Values.dnsZone }}"
+            zrok admin create frontend ${ZITI_PUBLIC_ID} public \
+                "{{ .Values.frontend.ingress.scheme }}://{token}.{{ .Values.dnsZone }}"
         fi
 
         # while true;do sleep 1;done
@@ -59,8 +99,11 @@ data:
         v: {{ .Values.frontend.specVersion }}
         host_match: {{ .Values.dnsZone | quote }}
         address: 0.0.0.0:{{ .Values.frontend.service.containerPort }}
+        {{- if .Values.frontend.extraConfig }}
+        {{ toYaml .Values.frontend.extraConfig }}
+        {{- end }}
 
-    {{ .Values.frontend.deleteIdentityScriptFile }}: |-
+    {{ .Values.frontend.deBootstrapScript }}: |-
         #!/usr/bin/env bash
         set -o errexit
         set -o nounset
@@ -72,10 +115,36 @@ data:
         then
             kubectl -n {{ .Release.Namespace }} delete secret \
                 {{ include "zrok.fullname" . }}-frontend-identity
-            echo "INFO: Finished cleaning up frontend identity. Job will self-destruct in 20s."
-            sleep 10
+            echo "INFO: deleted default 'public' frontend identity."
         else
-            echo "INFO: doing nothing because identity secret does not exist. Job will self-destruct in 20s."
-            sleep 10
-            exit 0
+            echo "INFO: default 'public' frontend identity secret does not exist."
         fi
+
+        if kubectl -n {{ .Release.Namespace }} get secret \
+            {{ include "zrok.fullname" . }}-ziggy-account-token &>/dev/null
+        then
+            kubectl -n {{ .Release.Namespace }} delete secret \
+                {{ include "zrok.fullname" . }}-ziggy-account-token
+            echo "INFO: deleted ziggy account enable token secret"
+        else
+            echo "INFO: ziggy account enable token secret doesn't exist"
+        fi
+
+        set +o errexit
+        # try to remove the two Ziti entities created by zrok admin bootstrap, but catch exceptions because there's no
+        # expectation that the ziti controller is still reachable during zrok uninstall
+        zitiLogin
+        
+        # pending de-bootstrapping feature https://github.com/openziti/zrok/issues/290
+        ziti edge delete identities where 'name="public"'
+        ziti edge delete edge-router-policies where 'name="public"'
+
+    zitiLogin: |-
+        #!/usr/bin/env bash
+        set -o xtrace
+        # no --yes flag is used because this should fail if the server cert can't be verified by the trust bundle
+        # distributed by Trust Manager
+        ziti edge login "${ZITI_MGMT_API}" \
+            --username "${ZITI_ADMIN_USER}" \
+            --password "${ZITI_ADMIN_PASSWORD}" \
+            --ca "{{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}"
