@@ -12,7 +12,7 @@ data:
         set -o errexit
         set -o nounset
         set -o pipefail
-        set -o xtrace  # FIXME remove this     
+        # set -o xtrace  # FIXME remove this
 
         # while true;do sleep 1;done
 
@@ -137,7 +137,7 @@ data:
         set -o errexit
         set -o nounset
         set -o pipefail
-        set -o xtrace
+        # set -o xtrace
 
         if kubectl -n {{ .Release.Namespace }} get secret \
             {{ include "zrok.fullname" . }}-frontend-identity &>/dev/null
@@ -170,9 +170,13 @@ data:
 
     zitiLogin: |-
         #!/usr/bin/env bash
-        set -o xtrace
-        # no --yes flag is used because this should fail if the server cert can't be verified by the trust bundle
-        # distributed by Trust Manager
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+        # set -o xtrace
+
+        # the --yes flag is NOT used here because this attempt MUST fail if the server cert can't be verified by the
+        # Trust Manager Bundle resource mounted on the container
         ziti edge login "${ZITI_MGMT_API}" \
             --username "${ZITI_ADMIN_USER}" \
             --password "${ZITI_ADMIN_PASSWORD}" \
