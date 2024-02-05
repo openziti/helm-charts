@@ -74,7 +74,9 @@ The chart automatically creates a zrok account in the database. You can use the 
 Get the zrok account token:
 
 ```bash
-kubectl -n zrok get secrets zrok-ziggy-account-token -o go-template='{{`{{"\n"}}{{index .data "token" | base64decode }}{{"\n"}}`}}'
+kubectl -n zrok \
+    get secrets zrok-ziggy-account-token \
+    -o go-template='{{`{{"\n"}}{{index .data "token" | base64decode }}{{"\n"}}`}}'
 ```
 
 ```text title="Output"
