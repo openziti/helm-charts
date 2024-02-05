@@ -23,7 +23,7 @@ data:
             local RETURNED
             local -A FIELDS
             FIELDS[all]=0
-            FIELDS[id]=1
+            FIELDS[zid]=1
             FIELDS[name]=2
             FIELDS[type]=3
             FIELDS[attributes]=4
@@ -50,11 +50,11 @@ data:
         }
 
         # find Ziti ID of default "public" frontend
-        ZITI_PUBLIC_ID="$(getZitiPublicFrontend id)"
+        ZITI_PUBLIC_ID="$(getZitiPublicFrontend zid)"
         until [[ -n "${ZITI_PUBLIC_ID}" ]]; do
             echo "DEBUG: waiting for default frontend "public" Ziti identity to be created"
             sleep 3
-            ZITI_PUBLIC_ID="$(getZitiPublicFrontend id)"
+            ZITI_PUBLIC_ID="$(getZitiPublicFrontend zid)"
         done
         echo "DEBUG: 'public' ZITI_PUBLIC_ID=$ZITI_PUBLIC_ID"
 
