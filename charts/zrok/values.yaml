@@ -269,7 +269,7 @@ affinity: {}
 test:
   # -- run the 'zrok test loopback public' in a one-off Job to verify the zrok public frontend is working
   enabled: false
-  # -- retry until firt success unless backoffLimit is reached
+  # -- retry until first success unless backoffLimit is reached
   backoffLimit: 3
 
 influxdb2:
