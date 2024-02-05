@@ -29,8 +29,6 @@ spec:
           mountPath: /zrok/test.bash
           subPath: test.bash
           readOnly: true
-        - name: test-data
-          mountPath: /data
       volumes:
       - name: test-script
         configMap:
@@ -39,8 +37,6 @@ spec:
           items:
             - key: test.bash 
               path: test.bash
-      - name: test-data
-        emptyDir: {}
 
       restartPolicy: Never
 {{- end }}
