@@ -97,33 +97,33 @@ jobs:
           fi
 
       # helm dependency build ./charts/zrok
-      - name: Install the latest release of the zrok chart as a baseline
-        shell: bash
-        env:
-          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
-          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
-          ZROK_ZONE: zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
-        run: |
-          helm upgrade \
-            --install \
-            --namespace zrok --create-namespace \
-            --values ./charts/zrok/values-ingress-nginx.yaml \
-            --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
-            --set "ziti.password=${ZITI_PWD}" \
-            --set "dnsZone=${ZROK_ZONE}" \
-            --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
-            zrok ./charts/zrok
+      # - name: Install the latest release of the zrok chart as a baseline
+      #   shell: bash
+      #   env:
+      #     ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+      #     ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+      #     ZROK_ZONE: zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+      #   run: |
+      #     helm upgrade \
+      #       --install \
+      #       --namespace zrok --create-namespace \
+      #       --values ./charts/zrok/values-ingress-nginx.yaml \
+      #       --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
+      #       --set "ziti.password=${ZITI_PWD}" \
+      #       --set "dnsZone=${ZROK_ZONE}" \
+      #       --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
+      #       zrok ./charts/zrok
 
-      - name: Wait for the zrok API to become available
-        shell: bash
-        run: |
-          ATTEMPTS=10
-          until !(( ATTEMPTS )) || curl --silent --fail http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version &>/dev/null; do
-            echo "Waiting for zrok API to become available..."
-            sleep 3
-            (( ATTEMPTS-- ))
-          done
-          curl --silent --show-error --fail-with-body http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
+      # - name: Wait for the zrok API to become available
+      #   shell: bash
+      #   run: |
+      #     ATTEMPTS=10
+      #     until !(( ATTEMPTS )) || curl --silent --fail http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version &>/dev/null; do
+      #       echo "Waiting for zrok API to become available..."
+      #       sleep 3
+      #       (( ATTEMPTS-- ))
+      #     done
+      #     curl --silent --show-error --fail-with-body http://ctrl.zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/api/v1/version
 
       - name: Upgrade the zrok chart from the latest release with the current branch and run the test job
         shell: bash
