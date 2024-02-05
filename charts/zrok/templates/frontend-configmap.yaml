@@ -25,15 +25,15 @@ data:
         }
 
         # find Ziti ID of default "public" frontend
-        ZITI_PUBLIC_ID=$(getPublicFrontendZitiId)
+        ZITI_PUBLIC_ID="$(getPublicFrontendZitiId)"
         until [[ -n "${ZITI_PUBLIC_ID}" ]]; do
             echo "DEBUG: waiting for default frontend "public" Ziti identity to be created"
             sleep 3
-            ZITI_PUBLIC_ID=$(getPublicFrontendZitiId)
+            ZITI_PUBLIC_ID="$(getPublicFrontendZitiId)"
         done
         echo "DEBUG: 'public' ZITI_PUBLIC_ID=$ZITI_PUBLIC_ID"
 
-        until curl -sSf ${ZROK_API_ENDPOINT}/api/v1/version; do
+        until curl -sSf "${ZROK_API_ENDPOINT}/api/v1/version"; do
             echo "DEBUG: waiting for zrok controller API version endpoint to respond"
             sleep 3
         done
@@ -57,7 +57,7 @@ data:
             if (( $# )); then
                 echo "WARN: ignoring unexpected parameters: $*" >&2
             fi
-            if [[ -z ${FIELDS[$RETURNED]} ]]; then
+            if [[ -z "${FIELDS[$RETURNED]}" ]]; then
                 echo "ERROR: invalid return field $RETURNED" >&2
                 return 1
             fi
@@ -68,22 +68,22 @@ data:
 
         # if default "public" frontend already exists
         ZROK_PUBLIC_TOKEN=$(getPublicFrontend token)
-        if [[ -n ${ZROK_PUBLIC_TOKEN} ]]; then
+        if [[ -n "${ZROK_PUBLIC_TOKEN}" ]]; then
             
             # ensure the Ziti ID of the public frontend's identity is the same in Ziti and zrok
             ZROK_PUBLIC_ZID=$(getPublicFrontend zid)
-            if [[ ${ZITI_PUBLIC_ID} != ${ZROK_PUBLIC_ZID} ]]; then
+            if [[ "${ZITI_PUBLIC_ID}" != "${ZROK_PUBLIC_ZID}" ]]; then
                 echo "ERROR: existing Ziti Identity named 'public' with id '$ZITI_PUBLIC_ID' is from a previous zrok"\
                 "instance life cycle. Delete it then re-run zrok." >&2
                 exit 1
             fi
 
             echo "INFO: updating frontend"
-            zrok admin update frontend ${ZROK_PUBLIC_TOKEN} \
+            zrok admin update frontend "${ZROK_PUBLIC_TOKEN}" \
                 --url-template "{{ .Values.frontend.ingress.scheme }}://{token}.{{ .Values.dnsZone }}"
         else
             echo "INFO: creating frontend"
-            zrok admin create frontend ${ZITI_PUBLIC_ID} public \
+            zrok admin create frontend "${ZITI_PUBLIC_ID}" public \
                 "{{ .Values.frontend.ingress.scheme }}://{token}.{{ .Values.dnsZone }}"
         fi
 
