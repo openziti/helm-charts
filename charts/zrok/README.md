@@ -151,7 +151,7 @@ One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
 | securityContext | object | `{}` |  |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
-| test.backoffLimit | int | `3` | retry until firt success unless backoffLimit is reached |
+| test.backoffLimit | int | `3` | retry until first success unless backoffLimit is reached |
 | test.enabled | bool | `false` | run the 'zrok test loopback public' in a one-off Job to verify the zrok public frontend is working |
 | tolerations | list | `[]` |  |
 | ziti.advertisedHost | string | `"localhost"` | The Ziti Management API host to bootstrap with zrok and to collect fabric metrics from |
