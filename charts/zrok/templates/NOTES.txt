@@ -13,23 +13,46 @@ To learn more about the release, try:
   $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
   $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
 
-1. Test the zrok API by running these commands:
+Access the zrok API by running these commands:
+
 {{- if .Values.controller.ingress.enabled }}
-{{- range $host := .Values.controller.ingress.hosts }}
-  curl -sSf http{{ if $.Values.controller.ingress.tls }}s{{ end }}://{{ . }}/api/v1/version
-{{- end }}
+{{- $host := first .Values.controller.ingress.hosts }}
+ZROK_SCHEME=http{{ if $.Values.controller.ingress.tls }}s{{ end }}
+ZROK_HOST={{ $host }}
+ZROK_PORT={{ if $.Values.controller.ingress.tls }}443{{ else }}80 {{ end }}
 {{- else if contains "NodePort" .Values.controller.service.type }}
-  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "zrok.fullname" . }})
-  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
-  echo http://$NODE_IP:$NODE_PORT
+ZROK_SCHEME=http
+ZROK_HOST=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+ZROK_PORT=$(kubectl get services --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" {{ include "zrok.fullname" . }})
 {{- else if contains "LoadBalancer" .Values.controller.service.type }}
-     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
-           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "zrok.fullname" . }}'
-  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "zrok.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-  echo http://$SERVICE_IP:{{ .Values.controller.service.port }}
+NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+  You can watch the status of by running 'kubectl get services --namespace {{ .Release.Namespace }} -w {{ include "zrok.fullname" . }}'
+ZROK_SCHEME=http{{ if eq (toString $.Values.controller.service.advertisedPort) "443" }}s{{ end }}
+ZROK_HOST=$(kubectl get services --namespace {{ .Release.Namespace }} {{ include "zrok.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+ZROK_PORT={{ .Values.controller.service.advertisedPort }}
 {{- else if contains "ClusterIP" .Values.controller.service.type }}
-  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "zrok.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
-  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
-  echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+ZROK_SCHEME=http
+ZROK_HOST=127.0.0.1
+ZROK_CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} --selector app.kubernetes.io/name=zrok-controller -o jsonpath='{.items[0].spec.containers[0].ports[0].containerPort}')
+ZROK_PORT=8080
+kubectl --namespace {{ .Release.Namespace }} port-forward deployment/zrok $ZROK_PORT:$ZROK_CONTAINER_PORT &
 {{- end }}
+
+: this var must be exported so that the zrok CLI will configure itself
+export ZROK_API_ENDPOINT=$ZROK_SCHEME://$ZROK_HOST:$ZROK_PORT
+
+curl -sSf $ZROK_API_ENDPOINT/api/v1/version
+
+Log in to the zrok console at $ZROK_API_ENDPOINT using the credential obtained with this command:
+
+kubectl -n {{ .Release.Namespace }} \
+    get secrets {{ include "zrok.fullname" . }}-ziggy-account-password \
+    -o go-template='{{`{{"\n"}}{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}`}}'
+
+Enable your zrok account on a device that can reach the API by running:
+
+ZROK_ENABLE_TOKEN=$(kubectl -n {{ .Release.Namespace }} \
+    get secrets {{ include "zrok.fullname" . }}-ziggy-account-token \
+    -o go-template='{{`{{index .data "token" | base64decode }}`}}'
+)
+zrok enable $ZROK_ENABLE_TOKEN
