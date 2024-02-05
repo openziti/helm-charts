@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
       - name: zrok
-        image: openziti/zrok
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command: ["/bin/bash", "-c", "/zrok/test.bash"]
         env:
         - name: ZROK_API_ENDPOINT

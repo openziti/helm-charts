@@ -19,17 +19,42 @@ data:
         # mounted script from frontend configmap
         zitiLogin
         
-        getPublicFrontendZitiId(){
+        getZitiPublicFrontend(){
+            local RETURNED
+            local -A FIELDS
+            FIELDS[all]=0
+            FIELDS[id]=1
+            FIELDS[name]=2
+            FIELDS[type]=3
+            FIELDS[attributes]=4
+            FIELDS[policy]=5
+
+            if (( $# )); then
+                RETURNED="$1"
+                shift
+            else
+                RETURNED="all"
+            fi
+
+            if (( $# )); then
+                echo "WARN: ignoring unexpected parameters: $*" >&2
+            fi
+
+            if [[ -z "${FIELDS[$RETURNED]}" ]]; then
+                echo "ERROR: invalid return field $RETURNED" >&2
+                return 1
+            fi
+
             ziti edge list identities 'name="public"' --csv \
-                | awk -F, '$2=="public" {print $1;}'
+                | awk -F, '$'${FIELDS[name]}'=="public" {print $'${FIELDS[$RETURNED]}';}'
         }
 
         # find Ziti ID of default "public" frontend
-        ZITI_PUBLIC_ID="$(getPublicFrontendZitiId)"
+        ZITI_PUBLIC_ID="$(getZitiPublicFrontend id)"
         until [[ -n "${ZITI_PUBLIC_ID}" ]]; do
             echo "DEBUG: waiting for default frontend "public" Ziti identity to be created"
             sleep 3
-            ZITI_PUBLIC_ID="$(getPublicFrontendZitiId)"
+            ZITI_PUBLIC_ID="$(getZitiPublicFrontend id)"
         done
         echo "DEBUG: 'public' ZITI_PUBLIC_ID=$ZITI_PUBLIC_ID"
 
@@ -38,8 +63,9 @@ data:
             sleep 3
         done
 
-        getPublicFrontend(){
-            typeset -A FIELDS
+        getZrokPublicFrontend(){
+            local RETURNED
+            local -A FIELDS
             FIELDS[all]=0
             FIELDS[token]=1
             FIELDS[zid]=2
@@ -54,24 +80,27 @@ data:
             else
                 RETURNED="all"
             fi
+
             if (( $# )); then
                 echo "WARN: ignoring unexpected parameters: $*" >&2
             fi
+
             if [[ -z "${FIELDS[$RETURNED]}" ]]; then
                 echo "ERROR: invalid return field $RETURNED" >&2
                 return 1
             fi
+
             # strip ANSI sequences and return the first position from the line with a name exactly matching "public"
             zrok admin list frontends | sed 's/\x1b\[[0-9;]*m//g' \
             | awk '$'${FIELDS[name]}'=="public" {print $'${FIELDS[$RETURNED]}'}'
         }
 
         # if default "public" frontend already exists
-        ZROK_PUBLIC_TOKEN=$(getPublicFrontend token)
+        ZROK_PUBLIC_TOKEN=$(getZrokPublicFrontend token)
         if [[ -n "${ZROK_PUBLIC_TOKEN}" ]]; then
             
             # ensure the Ziti ID of the public frontend's identity is the same in Ziti and zrok
-            ZROK_PUBLIC_ZID=$(getPublicFrontend zid)
+            ZROK_PUBLIC_ZID=$(getZrokPublicFrontend zid)
             if [[ "${ZITI_PUBLIC_ID}" != "${ZROK_PUBLIC_ZID}" ]]; then
                 echo "ERROR: existing Ziti Identity named 'public' with id '$ZITI_PUBLIC_ID' is from a previous zrok"\
                 "instance life cycle. Delete it then re-run zrok." >&2
