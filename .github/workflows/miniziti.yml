@@ -132,11 +132,7 @@ jobs:
           ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
           ZROK_ZONE: zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
-          # the container image override is temporarily necessary to provide the 'zrok admin account create' command
-          # from zrok branch 'admin_create_account'
           helm upgrade \
-            --set image.repository=docker.io/kbinghamnetfoundry/zrok \
-            --set image.tag=kentest \
             --install \
             --namespace zrok --create-namespace \
             --values ./charts/zrok/values-ingress-nginx.yaml \
