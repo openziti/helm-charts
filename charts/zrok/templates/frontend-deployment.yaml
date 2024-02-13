@@ -62,6 +62,7 @@ spec:
           volumeMounts:
             - name: frontend-config
               mountPath: /etc/zrok
+              subPath: frontend.yaml
               readOnly: true
             - name: bootstrap-frontend
               mountPath: /usr/local/bin/bootstrap-frontend.bash
@@ -72,6 +73,9 @@ spec:
               mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
               subPath: {{ .Values.ziti.ca_cert_file }}
               readOnly: true
+            - name: frontend-config
+              mountPath: /usr/local/bin/zitiLogin
+              subPath: zitiLogin
       containers:
         - name: {{ .Chart.Name }}-frontend
           securityContext:
@@ -136,6 +140,9 @@ spec:
             items:
               - key: frontend.yaml
                 path: frontend.yaml
+              - key: zitiLogin
+                path: zitiLogin
+                mode: 0555
         - name: bootstrap-frontend
           configMap:
             name: {{ include "zrok.fullname" . }}-frontend-config

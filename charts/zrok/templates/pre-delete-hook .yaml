@@ -32,21 +32,56 @@ spec:
       restartPolicy: Never
       serviceAccountName: {{ include "zrok.serviceAccountName" . }}
       containers:
-      - name: pre-install-job
-        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        env:
-        volumeMounts:
-          - mountPath: /usr/local/bin/{{ .Values.frontend.deleteIdentityScriptFile }}
-            name: zrok-config
-            subPath: {{ .Values.frontend.deleteIdentityScriptFile }}
-        command: ["{{ .Values.frontend.deleteIdentityScriptFile }}"]
-        # command: ["sh", "-c", "while true; do sleep 86400; done"]
+        - name: pre-install-job
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: ZITI_MGMT_API
+              value: {{ .Values.ziti.advertisedHost }}:{{ .Values.ziti.advertisedPort }}
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "zrok.fullname" . }}-ziti-mgmt-secret
+                  key: admin-username
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "zrok.fullname" . }}-ziti-mgmt-secret
+                  key: admin-password
+            # - name: PFXLOG_NO_JSON
+            #   value: "true"
+            # this is needed for ziti CLI to work because it assumes a writeable config dir
+            - name: HOME
+              value: /tmp
+          volumeMounts:
+            - name: zrok-config
+              mountPath: /usr/local/bin/{{ .Values.frontend.deBootstrapScript }}
+              subPath: {{ .Values.frontend.deBootstrapScript }}
+            # used by ziti CLI in zitiLogin
+            - name: ziti-ctrl-plane-cas
+              mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
+              subPath: {{ .Values.ziti.ca_cert_file }}
+              readOnly: true
+            - mountPath: /usr/local/bin/zitiLogin
+              name: zrok-config
+              subPath: zitiLogin
+          command: ["{{ .Values.frontend.deBootstrapScript }}"]
+          # command: ["sh", "-c", "while true; do sleep 86400; done"]
       volumes:
         - name: zrok-config
           configMap:
             name: {{ include "zrok.fullname" . }}-frontend-config
             items:
-              - key: {{ .Values.frontend.deleteIdentityScriptFile }}
-                path: {{ .Values.frontend.deleteIdentityScriptFile }}
+              - key: {{ .Values.frontend.deBootstrapScript }}
+                path: {{ .Values.frontend.deBootstrapScript }}
                 mode: 0555
+              - key: zitiLogin
+                path: zitiLogin
+                mode: 0555
+        - name: ziti-ctrl-plane-cas
+          configMap:
+            name: {{ .Values.ziti.ca_cert_configmap }}
+            defaultMode: 0444
+            items:
+              - key: {{ .Values.ziti.ca_cert_file }}
+                path: {{ .Values.ziti.ca_cert_file }}

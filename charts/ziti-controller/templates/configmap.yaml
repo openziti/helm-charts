@@ -23,7 +23,7 @@ data:
 
   zitiLogin: |-
     #!/usr/bin/env bash
-    ziti edge login "${ZITI_MGMT_API}" --yes \
+    ziti edge login "${ZITI_MGMT_API}" \
       --username "${ZITI_ADMIN_USER}" \
       --password "${ZITI_ADMIN_PASSWORD}" \
       --ca "${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}"

@@ -4,4 +4,4 @@ description: Host OpenZiti services with a tunneler pod
 kubeVersion: '>= 1.20.0-0'
 name: ziti-host
 type: application
-version: 0.4.8
+version: 0.4.9

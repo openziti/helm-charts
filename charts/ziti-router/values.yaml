@@ -215,3 +215,12 @@ fabric:
   metrics:
     # -- configure fabric metrics in the router config
     enabled: false
+
+forwarder:
+  latencyProbeInterval: 10
+  xgressDialQueueLength: 1000
+  xgressDialWorkerCount: 128
+  linkDialQueueLength: 1000
+  linkDialWorkerCount: 32
+  rateLimitedQueueLength: 5000
+  rateLimitedWorkerCount: 64
