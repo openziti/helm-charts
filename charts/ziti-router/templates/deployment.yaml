@@ -29,7 +29,10 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      hostNetwork: {{ .Values.hostNetwork }}
       dnsPolicy: {{ .Values.dnsPolicy }}
+      dnsConfig: 
+        {{- toYaml .Values.dnsConfig | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -64,6 +67,10 @@ spec:
             - mountPath: {{ .Values.configMountDir }}/{{ .Values.configFile }}
               name: ziti-router-config
               subPath: {{ .Values.configFile }}  # project the read-only config into the writeable volume to allow router to write ./endpoints state file in same dir as config
+            {{- range .Values.additionalVolumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -95,4 +102,26 @@ spec:
             claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
         {{- else }}
           emptyDir: {}
+        {{- end }}
+        {{- range .Values.additionalVolumes }}
+        - name: {{ .name }}
+          {{- if eq .volumeType "secret" }}
+          secret:
+            secretName: {{ .secretName }}
+          {{- else if eq .volumeType "configMap" }}
+          configMap:
+            name: {{ .configMapName }}
+            defaultMode: {{ .defaultMode | default 0644}}
+          {{- else if eq .volumeType "csi" }}
+          csi:
+            driver: {{ .driverName }}
+            volumeAttributes:
+              {{- toYaml .attributes | nindent 14 }}
+          {{- else if eq .volumeType "hostPath" }}
+          hostPath:
+            path: {{ .mountPath }}
+            type: {{ .behavior }}
+          {{- else if eq .volumeType "emptyDir" }}
+          emptyDir: {}
+          {{- end }}
         {{- end }}

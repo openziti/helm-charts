@@ -40,6 +40,10 @@ spec:
             value: {{ .Values.configMountDir }}
           - name: PFXLOG_NO_JSON
             value: "true"
+          {{- if .Values.proxy }}
+          - name: HTTPS_PROXY
+            value: {{ .Values.proxy.type }}://{{ .Values.proxy.address }}:{{ .Values.proxy.port }}
+          {{- end }} 
         volumeMounts:
           - mountPath: {{ .Values.execMountDir }}/{{ .Values.initScriptFile }}
             name: ziti-router-config
