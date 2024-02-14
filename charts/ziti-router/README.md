@@ -157,6 +157,7 @@ tunnel:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| additionalVolumes | list | `[]` | additional volumes to mount to ziti-router container |
 | advertisedHost | string | `nil` | common advertise-host for transport and edge listeners can also be specified separately via `edge.advertisedHost` and `linkListeners.transport.advertisedHost` |
 | affinity | object | `{}` | deployment template spec affinity |
 | configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
@@ -165,6 +166,7 @@ tunnel:
 | csr.sans.ip | list | `[]` | additional IP SANs |
 | ctrl.endpoint | string | `nil` | required control plane endpoint |
 | deleteIdentityScriptFile | string | `"delete-identity.bash"` | exec by Helm post-delete hook |
+| dnsConfig | object | `{}` |  |
 | dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
 | edge.advertisedHost | string | `nil` | DNS name that edge clients will use to reach this router's edge listener |
 | edge.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
@@ -213,6 +215,7 @@ tunnel:
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the endpoints state file |
+| proxy | object | `{}` |  |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
