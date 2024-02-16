@@ -3,8 +3,9 @@ ctrl:
   # -- required control plane endpoint
   endpoint: # ctrl.example.com:6262
 
-# Explicit proxy setting in the router configuration. Router can be deployed in a site where all egress traffic is forwarded through an explicit proxy.
-# The enrollment will also be forwarded through the proxy
+# -- Explicit proxy setting in the router configuration. Router can be deployed in a site 
+# where all egress traffic is forwarded through an explicit proxy.
+# The enrollment will also be forwarded through the proxy.
 proxy: {}
 #  type: http
 #  address: 192.168.0.142
@@ -88,7 +89,8 @@ tunnel:
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
   # lanIf: eth0   # interface device name for tproxy?
-  # diverterPath: /path/to/userspace/bpf-program
+  # -- the path to the bpf program can be passed here
+  diverterPath: 
   # -- list of definitions to configure proxy services and according kubernetes services for these if mode "proxy"
   proxyServices: []
     #  # -- name of the Openziti service to forward data to
