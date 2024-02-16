@@ -209,10 +209,11 @@ tunnel:
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the endpoints state file |
-| proxy | object | `{}` |  |
+| proxy | object | `{}` | Explicit proxy setting in the router configuration. Router can be deployed in a site  where all egress traffic is forwarded through an explicit proxy. The enrollment will also be forwarded through the proxy. |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
+| tunnel.diverterPath | string | `nil` | the path to the bpf program can be passed here |
 | tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
 | tunnel.proxyAdditionalK8sServices | list | `[]` | additional Kubernetes services created additionally to the "default" proxy listener service, only if mode is "proxy" |
 | tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | default Kubernetes service object listening to proxy ports defined in "proxyServices", only if tunnel mode is "proxy" |
