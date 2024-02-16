@@ -89,7 +89,9 @@ tunnel:
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
   # lanIf: eth0   # interface device name for tproxy?
-  # -- the path to the bpf program can be passed here
+  # -- the tproxy mode can be switched from iptables based interception to bpf interception by passing
+  # the user space bpf program path. bpf kernel space program is expected to be loaded prior or during
+  # router deployment, e.g. bpfman agent, hostpath, etc
   diverterPath: 
   # -- list of definitions to configure proxy services and according kubernetes services for these if mode "proxy"
   proxyServices: []
@@ -147,7 +149,7 @@ image:
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet
 
-# if dnsPolicy is None:
+# -- it allows to override dns options when dnsPolicy is set to None.
 dnsConfig: {}
 #  nameservers: []
 #  searches: []
@@ -191,7 +193,7 @@ podSecurityContext:
   # persist the endpoints state file
   fsGroup: 2171
 
-# Host networking requested for a pod, interception at the node level required
+# -- Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace.
 # i.e. egress gateway
 hostNetwork: False
 
