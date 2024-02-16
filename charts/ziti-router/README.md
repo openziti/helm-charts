@@ -166,7 +166,7 @@ tunnel:
 | csr.sans.ip | list | `[]` | additional IP SANs |
 | ctrl.endpoint | string | `nil` | required control plane endpoint |
 | deleteIdentityScriptFile | string | `"delete-identity.bash"` | exec by Helm post-delete hook |
-| dnsConfig | object | `{}` |  |
+| dnsConfig | object | `{}` | it allows to override dns options when dnsPolicy is set to None. |
 | dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
 | edge.advertisedHost | string | `nil` | DNS name that edge clients will use to reach this router's edge listener |
 | edge.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
@@ -219,7 +219,7 @@ tunnel:
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| tunnel.diverterPath | string | `nil` | the path to the bpf program can be passed here |
+| tunnel.diverterPath | string | `nil` | the tproxy mode can be switched from iptables based interception to bpf interception by passing the user space bpf program path. bpf kernel space program is expected to be loaded prior or during router deployment, e.g. bpfman agent, hostpath, etc |
 | tunnel.mode | string | `"host"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
 | tunnel.proxyAdditionalK8sServices | list | `[]` | additional Kubernetes services created additionally to the "default" proxy listener service, only if mode is "proxy" |
 | tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | default Kubernetes service object listening to proxy ports defined in "proxyServices", only if tunnel mode is "proxy" |
