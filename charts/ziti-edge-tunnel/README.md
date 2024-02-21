@@ -100,6 +100,7 @@ kubectl rollout restart -n kube-system deployment/coredns
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
+| livenessProbe | list | see values.yaml | Periodic probe of container liveness. |
 | log.timeFormat | string | `"utc"` |  |
 | log.tlsUVLevel | int | `3` |  |
 | log.zitiLevel | int | `3` |  |

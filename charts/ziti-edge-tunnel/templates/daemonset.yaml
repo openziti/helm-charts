@@ -50,6 +50,10 @@ spec:
               value: {{ .Values.log.tlsUVLevel | default 3 | quote }}
             - name: ZITI_TIME_FORMAT
               value: {{ .Values.log.timeFormat | default "ms" | quote }}
+          {{- if .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - mountPath: /ziti-edge-tunnel
               name: persisted-identity
