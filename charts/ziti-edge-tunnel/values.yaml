@@ -37,6 +37,19 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# Configures the liveness probe for the tunnel pod
+livenessProbe:
+  exec:
+    command:
+      - /bin/bash
+      - -c
+      - /usr/local/bin/ziti-edge-tunnel tunnel_status | grep -c '"Success":true'
+  failureThreshold: 3
+  initialDelaySeconds: 180
+  periodSeconds: 60
+  successThreshold: 1
+  timeoutSeconds: 10
+
 log:
   # Ziti log level, from 0 to 6 (see README.md Reference)
   zitiLevel: 3
