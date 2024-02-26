@@ -259,6 +259,11 @@ fabric:
   events:
     # -- enable fabric event logger and file handler
     enabled: false
+    network:
+      # -- matching interval age and reporting interval ensures coherent metrics from fabric events
+      intervalAgeThreshold: 5s
+      # -- matching interval age and reporting interval ensures coherent metrics from fabric events
+      metricsReportInterval: 5s
     mountDir: /var/run/ziti
     fileName: fabric-events.json
     subscriptions:
@@ -276,6 +281,46 @@ fabric:
       - type: services
       - type: edge.entityCounts
         interval: 5s
+
+network:
+  # -- routeTimeoutSeconds controls the number of seconds the controller will wait for a route attempt to succeed.
+  routeTimeoutSeconds:  10
+
+  # -- createCircuitRetries controls the number of retries that will be attempted to create a path (and terminate it)
+  # for new circuits.
+  createCircuitRetries: 2
+
+  # -- pendingLinkTimeoutSeconds controls how long we'll wait before creating a new link between routers where
+  # there isn't an established link, but a link request has been sent
+  pendingLinkTimeoutSeconds: 10
+
+  # -- Defines the period that the controller re-evaluates the performance of all of the circuits
+  # running on the network.
+  cycleSeconds: 15
+
+  # -- Sets router minimum cost. Defaults to 10
+  minRouterCost: 10
+
+  # -- Sets how often a new control channel connection can take over for a router with an existing control channel connection
+  # Defaults to 1 minute
+  routerConnectChurnLimit: 1m
+
+  # -- Sets the latency of link when it's first created. Will be overwritten as soon as latency from the link is actually
+  # reported from the routers. Defaults to 65 seconds.
+  initialLinkLatency: 65s
+
+  smart:
+    # -- Defines the fractional upper limit of underperforming circuits that are candidates to be re-routed. If
+    # smart routing detects 100 circuits that are underperforming, and `smart.rerouteFraction` is set to `0.02`,
+    # then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to
+    # 2 (2% of 100).
+    rerouteFraction: 0.02
+
+    # -- Defines the hard upper limit of underperforming circuits that are candidates to be re-routed. If smart
+    # routing detects 100 circuits that are underperforming, and `smart.rerouteCap` is set to `1`, and
+    # `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this
+    # `cycleSeconds` period will be limited to 1.
+    rerouteCap: 4
 
 # A note about sub-charts: these values may serve as a partial reference for
 # configuring the charts on which this chart depends. However, I wasn't able to
