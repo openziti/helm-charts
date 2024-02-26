@@ -216,6 +216,8 @@ edgeSignerPki:
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
+| fabric.events.network.intervalAgeThreshold | string | `"5s"` | matching interval age and reporting interval ensures coherent metrics from fabric events |
+| fabric.events.network.metricsReportInterval | string | `"5s"` | matching interval age and reporting interval ensures coherent metrics from fabric events |
 | fabric.events.subscriptions[0].type | string | `"fabric.circuits"` |  |
 | fabric.events.subscriptions[1].type | string | `"fabric.links"` |  |
 | fabric.events.subscriptions[2].type | string | `"fabric.routers"` |  |
@@ -248,6 +250,15 @@ edgeSignerPki:
 | managementApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | managementApi.service.enabled | bool | `false` | create a cluster service for the deployment |
 | managementApi.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| network.createCircuitRetries | int | `2` | createCircuitRetries controls the number of retries that will be attempted to create a path (and terminate it) for new circuits. |
+| network.cycleSeconds | int | `15` | Defines the period that the controller re-evaluates the performance of all of the circuits running on the network. |
+| network.initialLinkLatency | string | `"65s"` | Sets the latency of link when it's first created. Will be overwritten as soon as latency from the link is actually reported from the routers. Defaults to 65 seconds. |
+| network.minRouterCost | int | `10` | Sets router minimum cost. Defaults to 10 |
+| network.pendingLinkTimeoutSeconds | int | `10` | pendingLinkTimeoutSeconds controls how long we'll wait before creating a new link between routers where there isn't an established link, but a link request has been sent |
+| network.routeTimeoutSeconds | int | `10` | routeTimeoutSeconds controls the number of seconds the controller will wait for a route attempt to succeed. |
+| network.routerConnectChurnLimit | string | `"1m"` | Sets how often a new control channel connection can take over for a router with an existing control channel connection Defaults to 1 minute |
+| network.smart.rerouteCap | int | `4` | Defines the hard upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteCap` is set to `1`, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 1. |
+| network.smart.rerouteFraction | float | `0.02` | Defines the fractional upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 2 (2% of 100). |
 | nodeSelector | object | `{}` | deployment template spec node selector |
 | persistence.VolumeName | string | `nil` | PVC volume name |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
