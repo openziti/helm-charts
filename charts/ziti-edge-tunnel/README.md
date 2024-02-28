@@ -36,7 +36,7 @@ After adding the charts repo to Helm then you may enroll the identity and instal
 
 ```console
 ziti edge enroll --jwt /tmp/k8s-tunneler.jwt --out /tmp/k8s-tunneler.json
-helm install ziti-run-node openziti/ziti-edge-tunnel --set-file zitiIdentity=/tmp/k8s-tunneler-03.json
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set-file zitiIdentity=/tmp/k8s-tunneler-03.json
 ```
 
 ### Installation using a existing / pre-created secret
@@ -52,7 +52,7 @@ kubectl create secret generic k8s-tunneler-identity --from-file=persisted-identi
 When you deploy the helm chart refer to the existing secret:
 
 ```console
-helm install ziti-run-node openziti/ziti-edge-tunnel --set secret.existingSecretName=k8s-tunneler-identity
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set secret.existingSecretName=k8s-tunneler-identity
 ```
 
 When you don't want to use the default key name `persisted-identity` you can define your own name by adding `--set secret.keyName=myKeyName`.
@@ -100,6 +100,14 @@ kubectl rollout restart -n kube-system deployment/coredns
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
+| livenessProbe.exec.command[0] | string | `"/bin/bash"` |  |
+| livenessProbe.exec.command[1] | string | `"-c"` |  |
+| livenessProbe.exec.command[2] | string | `"ziti-edge-tunnel tunnel_status | grep -c '\"Success\":true'"` |  |
+| livenessProbe.failureThreshold | int | `3` |  |
+| livenessProbe.initialDelaySeconds | int | `180` |  |
+| livenessProbe.periodSeconds | int | `60` |  |
+| livenessProbe.successThreshold | int | `1` |  |
+| livenessProbe.timeoutSeconds | int | `10` |  |
 | log.timeFormat | string | `"utc"` |  |
 | log.tlsUVLevel | int | `3` |  |
 | log.zitiLevel | int | `3` |  |
@@ -126,6 +134,7 @@ kubectl rollout restart -n kube-system deployment/coredns
 ```console
 helm upgrade {release} {source dir}
 ```
+
 ### Log Level Reference
 
 [OpenZiti tunneler](https://openziti.io/docs/reference/tunnelers/linux/linux-tunnel-options/#ziti-edge-tunnel-environment-variables) and [TLSUV](https://github.com/openziti/tlsuv) log levels are represented by integers, as follows,
