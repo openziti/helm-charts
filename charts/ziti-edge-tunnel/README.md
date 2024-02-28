@@ -100,7 +100,14 @@ kubectl rollout restart -n kube-system deployment/coredns
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
-| livenessProbe | list | see values.yaml | Periodic probe of container liveness. |
+| livenessProbe.exec.command[0] | string | `"/bin/bash"` |  |
+| livenessProbe.exec.command[1] | string | `"-c"` |  |
+| livenessProbe.exec.command[2] | string | `"ziti-edge-tunnel tunnel_status | grep -c '\"Success\":true'"` |  |
+| livenessProbe.failureThreshold | int | `3` |  |
+| livenessProbe.initialDelaySeconds | int | `180` |  |
+| livenessProbe.periodSeconds | int | `60` |  |
+| livenessProbe.successThreshold | int | `1` |  |
+| livenessProbe.timeoutSeconds | int | `10` |  |
 | log.timeFormat | string | `"utc"` |  |
 | log.tlsUVLevel | int | `3` |  |
 | log.zitiLevel | int | `3` |  |
