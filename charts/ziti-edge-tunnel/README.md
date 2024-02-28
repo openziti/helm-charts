@@ -104,7 +104,7 @@ kubectl rollout restart -n kube-system deployment/coredns
 | log.tlsUVLevel | int | `3` |  |
 | log.zitiLevel | int | `3` |  |
 | nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
+| nodeSelector | object | `{}` | constrain worker nodes where the ziti-edge-tunnel pod can be scheduled |
 | persistence.accessMode | string | `"ReadWriteOnce"` |  |
 | persistence.enabled | bool | `true` |  |
 | persistence.size | string | `"100Mi"` |  |
