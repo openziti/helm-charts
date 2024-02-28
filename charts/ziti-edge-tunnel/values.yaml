@@ -69,8 +69,8 @@ resources: {}
 
 ports: []
 
-nodeSelector:
-  node-role.kubernetes.io/node: worker
+nodeSelector: {}
+  #  node-role.kubernetes.io/node: worker
 
 tolerations: []
   # - key: node-role.kubernetes.io/master
