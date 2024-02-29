@@ -1,10 +1,10 @@
 apiVersion: v2
-appVersion: 0.22.12
+appVersion: 0.22.23
 description: Host OpenZiti services with a tunneler pod
 kubeVersion: '>= 1.20.0-0'
 name: ziti-edge-tunnel
 type: application
-version: 0.0.5
+version: 0.0.9
 icon: https://openziti.io/img/ziti-logo-dark.svg
 home: https://github.com/openziti/ziti
 sources:

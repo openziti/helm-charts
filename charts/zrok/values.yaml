@@ -181,6 +181,8 @@ controller:
     # username:                       ""
     # password:                       ""
     # from:                           ziggy@zrok.io
+  # -- append additional controller config
+  extraConfig: {}
 
 frontend:
   specVersion: 3
@@ -214,7 +216,9 @@ frontend:
   # -- a read-only mountpoint for the frontend's Ziti identity is "homeDir"
   # because zrok always looks in $HOME/.zrok/identities
   homeDir: /var/lib/zrok
-  deleteIdentityScriptFile: delete-identity.sh
+  deBootstrapScript: delete-identity.sh
+  # -- append additional frontend config
+  extraConfig: {}
 
 ziti:
   # -- The Ziti Management API host to bootstrap with zrok and to collect fabric metrics from
@@ -230,7 +234,7 @@ ziti:
   # "openziti.io/namespace: enabled"; has format {{controller's Helm release name}}-ctrl-plane-cas
   ca_cert_configmap: ziti-controller-ctrl-plane-cas
   # -- mountpoint of the Ziti CA certificate trust bundle
-  ca_cert_dir: /etc/ssl/certs
+  ca_cert_dir: /etc/ziti
   # -- key name of trust bundle in configmap and filename to project into mountpoint
   ca_cert_file: ctrl-plane-cas.crt
 
@@ -261,6 +265,12 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+test:
+  # -- run the 'zrok test loopback public' in a one-off Job to verify the zrok public frontend is working
+  enabled: false
+  # -- retry until first success unless backoffLimit is reached
+  backoffLimit: 3
 
 influxdb2:
   # -- enable the influxdb2 subchart
