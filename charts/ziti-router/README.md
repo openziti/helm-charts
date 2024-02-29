@@ -189,6 +189,7 @@ tunnel:
 | forwarder.rateLimitedWorkerCount | int | `64` |  |
 | forwarder.xgressDialQueueLength | int | `1000` |  |
 | forwarder.xgressDialWorkerCount | int | `128` |  |
+| hostNetwork | bool | `false` | Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace. i.e. egress gateway |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
 | image.args | list | `["{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
 | image.command | list | `["ziti","router","run"]` | deployment container command |
