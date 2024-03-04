@@ -3,11 +3,18 @@ ctrl:
   # -- required control plane endpoint
   endpoint: # ctrl.example.com:6262
 
+# -- Explicit proxy setting in the router configuration. Router can be deployed in a site 
+# where all egress traffic is forwarded through an explicit proxy.
+# The enrollment will also be forwarded through the proxy.
+proxy: {}
+#  type: http
+#  address: 192.168.0.142
+#  port: 3128
+
 # -- common advertise-host for transport and edge listeners can also be
 # specified separately via `edge.advertisedHost` and
 # `linkListeners.transport.advertisedHost`
 advertisedHost:
-
 
 # Certificate signing request basic data
 csr:
@@ -82,6 +89,10 @@ tunnel:
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
   # lanIf: eth0   # interface device name for tproxy?
+  # -- the tproxy mode can be switched from iptables based interception to bpf interception by passing
+  # the user space bpf program path. bpf kernel space program is expected to be loaded prior or during
+  # router deployment, e.g. bpfman agent, hostpath, etc
+  diverterPath: 
   # -- list of definitions to configure proxy services and according kubernetes services for these if mode "proxy"
   proxyServices: []
     #  # -- name of the Openziti service to forward data to
@@ -138,8 +149,39 @@ image:
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet
 
+# -- it allows to override dns options when dnsPolicy is set to None.
+dnsConfig: {}
+#  nameservers: []
+#  searches: []
+#  options: []
+
 # nameOverride: ""
 # fullnameOverride: ""
+
+# -- additional volumes to mount to ziti-router container
+additionalVolumes: []
+#  - name: additional-volume-1
+#    volumeType: emptyDir
+#    mountPath: /path/to/mount/1
+#    secretName: name-of-secret
+#  - name: additional-volume-2
+#    volumeType: configMap
+#    defaultMode: 0644
+#    mountPath: /path/to/configmap/mount
+#    configMapName: your-configmap-name
+#  - name: additional-volume-3
+#    volumeType: csi
+#    driverName: csi.bpfd.dev
+#    attributes: volumeAttributes
+#    mountPath: /path/to/mount/3
+#  - name: additional-volume-4
+#    volumeType: emptyDir 
+#    mountPath: /path/to/mount/4
+#  - name: additional-volume-5
+#    volumeType: hostPath 
+#    behavior: DirectoryOrCreate
+#    mountPath: /path/to/mount/4
+#
 
 # -- annotations to apply to all pods deployed by this chart
 podAnnotations: {}
@@ -150,6 +192,10 @@ podSecurityContext:
   # to any files created by the router process in the emptyDir volume used to
   # persist the endpoints state file
   fsGroup: 2171
+
+# -- Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace.
+# i.e. egress gateway
+hostNetwork: False
 
 # -- deployment container security context
 securityContext:

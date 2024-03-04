@@ -76,10 +76,18 @@ data:
       echo "INFO: identity secret does not exist, attempting router enrollment"
     fi
 
+    if [[ -n "{{ .Values.proxy.type }}" && -n "{{ .Values.proxy.address }}" && -n "{{ .Values.proxy.port }}" ]]; then
+      export HTTPS_PROXY={{ .Values.proxy.type }}://{{ .Values.proxy.address }}:{{ .Values.proxy.port }}
+    fi
+
     ziti router enroll \
       {{ .Values.configMountDir }}/{{ .Values.configFile }} \
       --jwt {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }} \
       --verbose
+    
+    if [[ -n "{{ .Values.proxy.type }}" && -n "{{ .Values.proxy.address }}" && -n "{{ .Values.proxy.port }}" ]]; then
+      unset HTTPS_PROXY
+    fi
 
     kubectl -n {{ .Release.Namespace }} create secret generic \
       {{ include "ziti-router.fullname" . }}-identity \
@@ -87,7 +95,6 @@ data:
 
     # purge generated private from persistent volume
     rm "${ZITI_ROUTER_IDENTITY_DIR}/tls.key"
-
 
   {{ .Values.deleteIdentityScriptFile }}: |-
     #!/usr/bin/env bash
@@ -123,6 +130,11 @@ data:
       # router control plane API (:6262)
       endpoint:    tls:{{ required "You must set .Values.ctrl.endpoint to the control plane advertised address. Try adding --set ctrl.endpoint=ziti-controller.example.com:6262 to your Helm command" .Values.ctrl.endpoint }}
 
+    {{- if .Values.proxy }}
+    proxy:
+      type: {{ .Values.proxy.type }}
+      address: {{ .Values.proxy.address }}:{{ .Values.proxy.port }}
+    {{- end }}
     link:
       dialers:
         - binding: transport
@@ -151,7 +163,11 @@ data:
     {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "none" ) }}
       - binding: tunnel
         options:
+          {{- if and .Values.tunnel.diverterPath ( ne .Values.tunnel.diverterPath "none" ) }}
+            mode: {{ .Values.tunnel.mode }}:{{ .Values.tunnel.diverterPath }}
+          {{- else }}
             mode: {{ .Values.tunnel.mode }}
+          {{- end }}
           {{- if eq .Values.tunnel.mode "tproxy" }}
             resolver: {{ .Values.tunnel.resolver }}
             lanIf: {{ .Values.tunnel.lanIf }}
