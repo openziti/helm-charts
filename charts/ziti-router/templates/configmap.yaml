@@ -163,7 +163,7 @@ data:
     {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "none" ) }}
       - binding: tunnel
         options:
-          {{- if ne .Values.tunnel.diverterPath "none" }}
+          {{- if and .Values.tunnel.diverterPath ( ne .Values.tunnel.diverterPath "none" ) }}
             mode: {{ .Values.tunnel.mode }}:{{ .Values.tunnel.diverterPath }}
           {{- else }}
             mode: {{ .Values.tunnel.mode }}
