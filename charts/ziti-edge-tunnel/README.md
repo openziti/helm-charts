@@ -99,7 +99,6 @@ kubectl rollout restart -n kube-system deployment/coredns
 | image.repository | string | `"openziti/ziti-edge-tunnel"` |  |
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
-| ingress.enabled | bool | `false` |  |
 | livenessProbe.exec.command[0] | string | `"/bin/bash"` |  |
 | livenessProbe.exec.command[1] | string | `"-c"` |  |
 | livenessProbe.exec.command[2] | string | `"ziti-edge-tunnel tunnel_status | grep -c '\"Success\":true'"` |  |
@@ -113,9 +112,6 @@ kubectl rollout restart -n kube-system deployment/coredns
 | log.zitiLevel | int | `3` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` | constrain worker nodes where the ziti-edge-tunnel pod can be scheduled |
-| persistence.accessMode | string | `"ReadWriteOnce"` |  |
-| persistence.enabled | bool | `true` |  |
-| persistence.size | string | `"100Mi"` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
 | ports | list | `[]` |  |
