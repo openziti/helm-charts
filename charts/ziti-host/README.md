@@ -61,12 +61,8 @@ When you don't want to use the default key name `persisted-identity` you can def
 | image.pullPolicy | string | `"Always"` |  |
 | image.repository | string | `"openziti/ziti-host"` |  |
 | imagePullSecrets | list | `[]` |  |
-| ingress.enabled | bool | `false` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| persistence.accessMode | string | `"ReadWriteOnce"` |  |
-| persistence.enabled | bool | `true` |  |
-| persistence.size | string | `"100Mi"` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
 | ports | list | `[]` |  |
