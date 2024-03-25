@@ -4,7 +4,7 @@
 image:
   registry: docker.io
   repository: openziti/ziti-edge-tunnel
-  pullPolicy: Always    # Never IfNotPresent
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
   args: []  # the ziti-edge-tunnel image execs "ziti-edge-tunnel run" to intercept/proxy, and DNS
