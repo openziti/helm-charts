@@ -94,7 +94,7 @@ kubectl rollout restart -n kube-system deployment/coredns
 | fullnameOverride | string | `""` |  |
 | hostNetwork | bool | `true` |  |
 | image.args | list | `[]` |  |
-| image.pullPolicy | string | `"Always"` |  |
+| image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.registry | string | `"docker.io"` |  |
 | image.repository | string | `"openziti/ziti-edge-tunnel"` |  |
 | image.tag | string | `""` |  |
