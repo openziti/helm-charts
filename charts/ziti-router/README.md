@@ -76,7 +76,6 @@ edge:
     annotations:
       kubernetes.io/ingress.allow-http: "false"
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-      nginx.ingress.kubernetes.io/secure-backends: "true"
 ```
 
 Now upgrade your router chart release with the values file.
@@ -110,7 +109,6 @@ linkListeners:
       annotations:
         kubernetes.io/ingress.allow-http: "false"
         nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-        nginx.ingress.kubernetes.io/secure-backends: "true"
 ```
 
 Notice that we've chosen a distinct DNS name for this new ingress. This allows us to have any number of 443/tcp virtual servers on the same IP address. You may find it convenient to delegate a DNS zone with a wildcard record resolving to your Nginx LoadBalancer IP.
