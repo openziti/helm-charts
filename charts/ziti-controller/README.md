@@ -16,6 +16,18 @@ Host an OpenZiti controller in Kubernetes
 
 Note that ingress-nginx is not strictly required, but the chart is parameterized to allow for conveniently declaring pass-through TLS.
 
+You must patch the `ingress-nginx` deployment to enable the SSL passthrough option.
+
+```bash
+kubectl patch deployment "ingress-nginx-controller" \
+    --namespace ingress-nginx \
+    --type json \
+    --patch '[{"op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value":"--enable-ssl-passthrough"
+    }]'
+```
+
 ## Overview
 
 This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. Delete the controller pod after an upgrade for the new controller configuration to take effect.
