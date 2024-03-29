@@ -10,13 +10,13 @@ data:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    if [[ -s "{{ .Values.dataMountDir }}/{{ .Values.dbFile }}" ]]; then
-      echo "INFO: noop because BoltDB exists in {{ .Values.dataMountDir }}/{{ .Values.dbFile }}"
+    if [[ -s "{{ include "dataMountDir" . }}/{{ .Values.dbFile }}" ]]; then
+      echo "INFO: noop because BoltDB exists in {{ include "dataMountDir" . }}/{{ .Values.dbFile }}"
       exit 0
     else
       echo "INFO: initializing Ziti Controller"
       ziti controller edge init \
-        "{{ .Values.configMountDir }}/ziti-controller.yaml" \
+        "{{ include "configMountDir" . }}/ziti-controller.yaml" \
         -u "${ZITI_ADMIN_USER}" \
         -p "${ZITI_ADMIN_PASSWORD}"
     fi
@@ -26,7 +26,7 @@ data:
     ziti edge login "${ZITI_MGMT_API}" \
       --username "${ZITI_ADMIN_USER}" \
       --password "${ZITI_ADMIN_PASSWORD}" \
-      --ca "${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}"
+      --ca "${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}"
   
   .bash_profile: |-
 
@@ -44,14 +44,14 @@ data:
     #  memory:
     #    path: ctrl.memprof
 
-    db:                     {{ .Values.dataMountDir }}/{{ .Values.dbFile }}
+    db:                     {{ include "dataMountDir" . }}/{{ .Values.dbFile }}
 
     identity:
       #ClientCertKeyReuseIssue
-      cert:                 {{ .Values.configMountDir }}/ctrl-plane-identity/tls.crt
-      server_cert:          {{ .Values.configMountDir }}/ctrl-plane-identity/tls.crt
-      key:                  {{ .Values.configMountDir }}/ctrl-plane-identity/tls.key
-      ca:                   ${ZITI_CTRL_PLANE_CA}/{{ .Values.ctrlPlaneCasFile }}
+      cert:                 {{ include "configMountDir" . }}/ctrl-plane-identity/tls.crt
+      server_cert:          {{ include "configMountDir" . }}/ctrl-plane-identity/tls.crt
+      key:                  {{ include "configMountDir" . }}/ctrl-plane-identity/tls.key
+      ca:                   ${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
 
     # Network Configuration
     #
@@ -123,11 +123,11 @@ data:
         # will be added to the /.well-known CA store that is used to bootstrap trust with the Ziti Controller.
         signingCert:
           {{- if .Values.edgeSignerPki.enabled }}
-          cert: {{ .Values.configMountDir }}/edge-signer/tls.crt
-          key:  {{ .Values.configMountDir }}/edge-signer/tls.key
+          cert: {{ include "configMountDir" . }}/edge-signer/tls.crt
+          key:  {{ include "configMountDir" . }}/edge-signer/tls.key
           {{- else }}
-          cert: {{ .Values.configMountDir }}/ctrl-plane-intermediate/tls.crt
-          key:  {{ .Values.configMountDir }}/ctrl-plane-intermediate/tls.key
+          cert: {{ include "configMountDir" . }}/ctrl-plane-intermediate/tls.crt
+          key:  {{ include "configMountDir" . }}/ctrl-plane-intermediate/tls.key
           {{- end }}
         # edgeIdentity - optional
         # A section for identity enrollment specific settings
@@ -168,10 +168,10 @@ data:
         # Allows the webListener to have a specific identity instead of defaulting to the ctrl plane 'identity' section.
         identity:
           #ClientCertKeyReuseIssue
-          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
-          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
-          key:         {{ .Values.configMountDir }}/web-identity/tls.key
-          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+          cert:        {{ include "configMountDir" . }}/web-identity/tls.crt
+          server_cert: {{ include "configMountDir" . }}/web-identity/tls.crt
+          key:         {{ include "configMountDir" . }}/web-identity/tls.key
+          ca:          {{ include "configMountDir" . }}/web-identity/ca.crt
         {{- end }}
         # options - optional
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
@@ -236,10 +236,10 @@ data:
         {{- if .Values.webBindingPki.enabled }}
         identity:
           #ClientCertKeyReuseIssue
-          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
-          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
-          key:         {{ .Values.configMountDir }}/web-identity/tls.key
-          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+          cert:        {{ include "configMountDir" . }}/web-identity/tls.crt
+          server_cert: {{ include "configMountDir" . }}/web-identity/tls.crt
+          key:         {{ include "configMountDir" . }}/web-identity/tls.key
+          ca:          {{ include "configMountDir" . }}/web-identity/ca.crt
         {{- end }}
         # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
         # used for all http servers started by the current webListener.
@@ -298,10 +298,10 @@ data:
         {{- if .Values.webBindingPki.enabled }}
         identity:
           #ClientCertKeyReuseIssue
-          cert:        {{ .Values.configMountDir }}/web-identity/tls.crt
-          server_cert: {{ .Values.configMountDir }}/web-identity/tls.crt
-          key:         {{ .Values.configMountDir }}/web-identity/tls.key
-          ca:          {{ .Values.configMountDir }}/web-identity/ca.crt
+          cert:        {{ include "configMountDir" . }}/web-identity/tls.crt
+          server_cert: {{ include "configMountDir" . }}/web-identity/tls.crt
+          key:         {{ include "configMountDir" . }}/web-identity/tls.key
+          ca:          {{ include "configMountDir" . }}/web-identity/ca.crt
         {{- end }}
         options: { }
         apis:

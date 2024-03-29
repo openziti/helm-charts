@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.8.3](https://img.shields.io/badge/Version-0.8.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.32.2](https://img.shields.io/badge/AppVersion-0.32.2-informational?style=flat-square)
+![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.34.2](https://img.shields.io/badge/AppVersion-0.34.2-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -194,7 +194,6 @@ edgeSignerPki:
 | clientApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| configMountDir | string | `"/etc/ziti"` | read-only mountpoint where configFile and various read-only identity dirs are projected |
 | ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | ctrlPlane.alternativeIssuer | string | `nil` | kind and name of alternative issuer for the controller's identity |
@@ -204,15 +203,11 @@ edgeSignerPki:
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | ctrlPlane.service.enabled | bool | `true` | create a cluster service for the deployment |
 | ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| ctrlPlaneCaDir | string | `"ctrl-plane-cas"` | read-only mountpoint for run container to read the ctrl plane trust bundle created during init |
 | ctrlPlaneCasBundle.namespaceSelector | object | `{}` | namespaces where trust-manager will create the Bundle resource containing Ziti's trusted CA certs (default: empty means all namespaces) |
-| ctrlPlaneCasFile | string | `"ctrl-plane-cas.crt"` | filename of the ctrl plane trust bundle |
-| dataMountDir | string | `"/persistent"` | writeable mountpoint where the controller will create dbFile during init |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
-| execMountDir | string | `"/usr/local/bin"` | a directory included in the init and run containers' executable search path |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
@@ -234,7 +229,7 @@ edgeSignerPki:
 | fabric.events.subscriptions[9].type | string | `"edge.entityCounts"` |  |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
-| image.args | list | `["{{ .Values.configMountDir }}/ziti-controller.yaml"]` | args for the entrypoint command |
+| image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
