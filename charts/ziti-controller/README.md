@@ -107,7 +107,6 @@ clientApi:
         annotations:
             kubernetes.io/ingress.allow-http: "false"
             nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-            nginx.ingress.kubernetes.io/secure-backends: "true"
 ```
 
 Now install or upgrade this controller chart with your values file.
@@ -137,7 +136,6 @@ ctrlPlane:
         annotations:
             kubernetes.io/ingress.allow-http: "false"
             nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-            nginx.ingress.kubernetes.io/secure-backends: "true"
 ```
 
 ## Extra Security for the Management API
