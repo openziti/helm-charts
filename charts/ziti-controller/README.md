@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.34.2](https://img.shields.io/badge/AppVersion-0.34.2-informational?style=flat-square)
+![Version: 0.9.1](https://img.shields.io/badge/Version-0.9.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.34.1](https://img.shields.io/badge/AppVersion-0.34.1-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -15,6 +15,18 @@ Host an OpenZiti controller in Kubernetes
 | https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.5.2 |
 
 Note that ingress-nginx is not strictly required, but the chart is parameterized to allow for conveniently declaring pass-through TLS.
+
+You must patch the `ingress-nginx` deployment to enable the SSL passthrough option.
+
+```bash
+kubectl patch deployment "ingress-nginx-controller" \
+    --namespace ingress-nginx \
+    --type json \
+    --patch '[{"op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value":"--enable-ssl-passthrough"
+    }]'
+```
 
 ## Overview
 
@@ -107,7 +119,6 @@ clientApi:
         annotations:
             kubernetes.io/ingress.allow-http: "false"
             nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-            nginx.ingress.kubernetes.io/secure-backends: "true"
 ```
 
 Now install or upgrade this controller chart with your values file.
@@ -137,7 +148,6 @@ ctrlPlane:
         annotations:
             kubernetes.io/ingress.allow-http: "false"
             nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-            nginx.ingress.kubernetes.io/secure-backends: "true"
 ```
 
 ## Extra Security for the Management API

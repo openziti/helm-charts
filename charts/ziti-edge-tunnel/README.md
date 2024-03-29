@@ -84,6 +84,15 @@ Reload CoreDNS config,
 kubectl rollout restart -n kube-system deployment/coredns
 ```
 
+### Air gapped installations
+
+For air gapped clusters, which mirrors their registries over this OpenZiti tunneler,
+the upgrade will present the chicken-and-egg problem, and the DaemonSet will stay
+at the *ImagePullBackOff* state for ever.
+To work this problem around, you can install the [prepull-daemonset](https://github.com/enthus-it/helm-charts/tree/main/charts/prepull-daemonset)
+Helm chart, which can pull the new `ziti-edge-tunnel` image Version needed in beforehand.
+Once the image is present on every node, you can proceed to upgrade the tunneler without problems.
+
 ## Values Reference
 
 | Key | Type | Default | Description |
