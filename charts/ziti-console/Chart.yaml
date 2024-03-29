@@ -1,7 +1,7 @@
 apiVersion: v2
-appVersion: 3.0.3
+appVersion: 3.0.8
 description: Deploy OpenZiti console as kubernetes service
 name: ziti-console
 type: application
-version: 0.5.0
+version: 0.5.1
 
