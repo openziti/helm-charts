@@ -67,6 +67,50 @@ One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
         openziti/zrok
     ```
 
+## Default account
+
+The chart automatically creates a zrok account in the database. You can use the account token to enable a device environment with `zrok enable ${ZROK_ENABLE_TOKEN}` and you can log in to the zrok console with the username and password.
+
+Get the zrok account token:
+
+```bash
+kubectl -n zrok \
+    get secrets zrok-ziggy-account-token \
+    -o go-template='{{`{{"\n"}}{{index .data "token" | base64decode }}{{"\n"}}`}}'
+```
+
+```text title="Output"
+
+qEP0MNtA74T3
+
+```
+
+Get the zrok console login credentials:
+
+```bash
+kubectl -n zrok \
+    get secrets zrok-ziggy-account-password \
+    -o go-template='{{`{{"\n"}}{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}`}}'
+```
+
+```text title="Output"
+
+password: p7XWVyjHbMWazLc6PZveF2b8SB2wzxDD
+username: ziggy@zrok.192.168.49.2.sslip.io
+
+```
+
+The zrok console URL depends on how you configure ingress. If you used the NGINX Ingress example, then you can query the URL with:
+
+```bash
+kubectl -n zrok get ingress zrok  
+```
+
+```text title="Output"
+NAME   CLASS   HOSTS                             ADDRESS        PORTS   AGE
+zrok   nginx   ctrl.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
+```
+
 ## Values Reference
 
 {{ template "chart.valuesTable" . }}

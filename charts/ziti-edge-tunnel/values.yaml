@@ -1,19 +1,10 @@
 # Default values for ziti-edge-tunnel.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
-ingress:
-  enabled: false
-
-persistence:
-  enabled: true
-  accessMode: ReadWriteOnce
-  size: 100Mi
-
 image:
   registry: docker.io
   repository: openziti/ziti-edge-tunnel
-  pullPolicy: Always    # Never IfNotPresent
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
   args: []  # the ziti-edge-tunnel image execs "ziti-edge-tunnel run" to intercept/proxy, and DNS
@@ -36,6 +27,19 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+# Configures the liveness probe for the tunnel pod
+livenessProbe:
+  exec:
+    command:
+      - /bin/bash
+      - -c
+      - if (ziti-edge-tunnel tunnel_status | sed -E 's/(^received\sresponse\s<|>$)//g' | jq '.Success'); then true; else false; fi
+  failureThreshold: 3
+  initialDelaySeconds: 180
+  periodSeconds: 60
+  successThreshold: 1
+  timeoutSeconds: 10
 
 log:
   # Ziti log level, from 0 to 6 (see README.md Reference)
@@ -69,8 +73,9 @@ resources: {}
 
 ports: []
 
-nodeSelector:
-  node-role.kubernetes.io/node: worker
+# -- constrain worker nodes where the ziti-edge-tunnel pod can be scheduled
+nodeSelector: {}
+  #  node-role.kubernetes.io/node: worker
 
 tolerations: []
   # - key: node-role.kubernetes.io/master
