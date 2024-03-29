@@ -57,6 +57,18 @@ This example demonstrates creating TLS pass-through Ingress resources for use wi
 
 Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
 
+If not enabled, then you must patch the `ingress-nginx` deployment to enable the SSL passthrough option.
+
+```bash
+kubectl patch deployment "ingress-nginx-controller" \
+    --namespace ingress-nginx \
+    --type json \
+    --patch '[{"op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value":"--enable-ssl-passthrough"
+    }]'
+```
+
 ```bash
 # subscribe to ingress-nginx
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
