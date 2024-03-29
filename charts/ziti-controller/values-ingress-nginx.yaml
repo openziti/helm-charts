@@ -2,8 +2,6 @@ ctrlPlane:
   service:
     enabled: true
     type: ClusterIP
-    annotations:
-      kubernetes.io/ingress.class: nginx
   ingress:
     enabled: true
     ingressClassName: nginx
@@ -15,8 +13,6 @@ clientApi:
   service:
     enabled: true
     type: ClusterIP
-    annotations:
-      kubernetes.io/ingress.class: nginx
   ingress:
     enabled: true
     ingressClassName: nginx
