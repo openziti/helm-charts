@@ -34,7 +34,7 @@ livenessProbe:
     command:
       - /bin/bash
       - -c
-      - ziti-edge-tunnel tunnel_status | grep -c '"Success":true'
+      - if (ziti-edge-tunnel tunnel_status | sed -E 's/(^received\sresponse\s<|>$)//g' | jq '.Success'); then true; else false; fi
   failureThreshold: 3
   initialDelaySeconds: 180
   periodSeconds: 60
