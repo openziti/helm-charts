@@ -51,8 +51,9 @@ jobs:
           name: miniziti
           version: quickstartrelease
 
-      - name: Run miniziti with latest release charts
-        run: miniziti start --no-hosts --verbose
+      # temporarily bypass latest release charts because the controller chart is broken
+      # - name: Run miniziti with latest release charts
+      #   run: miniziti start --no-hosts --verbose
 
       - name: Upgrade miniziti with charts from this branch
         run: miniziti start --no-hosts --verbose --charts ./charts
