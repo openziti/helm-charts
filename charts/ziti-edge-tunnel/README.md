@@ -5,11 +5,11 @@
 
 Host OpenZiti services with a tunneler pod
 
-**Homepage:** <https://github.com/openziti/ziti>
+**Homepage:** <https://openziti.io>
 
 ## Source Code
 
-* <https://github.com/openziti/ziti>
+* <https://github.com/openziti/ziti-tunnel-sdk-c>
 
 ## Requirements
 
