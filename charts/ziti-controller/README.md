@@ -49,7 +49,7 @@ already exist in Kubernetes before installing the controller chart.
 
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
-kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.4.0/deploy/crds/trust.cert-manager.io_bundles.yaml
+kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.9.0/deploy/crds/trust.cert-manager.io_bundles.yaml
 ```
 
 ## Minimal Installation
