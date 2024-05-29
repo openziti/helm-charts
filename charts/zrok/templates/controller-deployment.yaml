@@ -51,8 +51,6 @@ spec:
           command: ["bootstrap-ziti.bash"]
           # command: ["bash", "-c", "while true; do sleep 3600; done"]
           env:
-            - name: PFXLOG_NO_JSON
-              value: "true"
             - name: HOME
               value: {{ .Values.controller.persistence.mount_dir }}
           volumeMounts:
@@ -86,8 +84,6 @@ spec:
                   key: admin-token
             - name: ZROK_API_ENDPOINT
               value: http://127.0.0.1:{{ .Values.controller.service.containerPort }}
-            - name: PFXLOG_NO_JSON
-              value: "true"
             - name: HOME
               value: {{ .Values.controller.persistence.mount_dir }}
           volumeMounts:
