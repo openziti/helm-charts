@@ -101,7 +101,7 @@ jobs:
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
           ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
-          ZROK_ZONE: zrok.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
           helm upgrade \
             --install \
@@ -109,8 +109,8 @@ jobs:
             --values ./charts/zrok/values-ingress-nginx.yaml \
             --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
             --set "ziti.password=${ZITI_PWD}" \
-            --set "dnsZone=${ZROK_ZONE}" \
-            --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
+            --set "dnsZone=${ZROK_DNS_ZONE}" \
+            --set "controller.ingress.hosts[0]=zrok.${ZROK_DNS_ZONE}" \
             --set "test.enabled=true" \
             zrok ./charts/zrok
 
