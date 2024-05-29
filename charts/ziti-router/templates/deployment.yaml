@@ -71,10 +71,10 @@ spec:
               value: {{ .Values.configMountDir | quote }}
             - name: ZITI_ROUTER_NAME
               value: {{ include "ziti-router.fullname" . | quote }}
-          {{- range .Values.env }}
-            - name: {{ .name }}
-              value: {{ .value | quote }}
-          {{- end }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key | quote }}
+              value: {{ $val | quote }}
+            {{- end }}
           volumeMounts:
             - mountPath: {{ .Values.configMountDir }}
               name: config-data

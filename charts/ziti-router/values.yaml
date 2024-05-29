@@ -36,8 +36,8 @@ csr:
 
 # -- set name to value in containers' environment
 env:
-  # - name: SOME_ENV
-  #   value: "true"
+  # SOME_ENV: "true"
+  
 
 # listen for router links
 linkListeners:
