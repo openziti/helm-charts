@@ -189,11 +189,7 @@ tunnel:
 | edge.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | enrollJwtFile | string | `"enrollment.jwt"` |  |
 | enrollmentJwt | string | `nil` | enrollment one time token from the controller's management API |
-| env | list | `[{"name":"ZITI_BOOTSTRAP","value":"true"},{"name":"ZITI_BOOTSTRAP_CONFIG","value":"false"},{"name":"ZITI_BOOTSTRAP_ENROLLMENT","value":"true"},{"name":"ZITI_AUTO_RENEW_CERTS","value":"true"}]` | ziti env vars for the deployment's containers |
-| env[0] | object | `{"name":"ZITI_BOOTSTRAP","value":"true"}` | bootstrap the router if "true" |
-| env[1] | object | `{"name":"ZITI_BOOTSTRAP_CONFIG","value":"false"}` | make config file from env vars and defaults if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true |
-| env[2] | object | `{"name":"ZITI_BOOTSTRAP_ENROLLMENT","value":"true"}` | enroll with controller if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true |
-| env[3] | object | `{"name":"ZITI_AUTO_RENEW_CERTS","value":"true"}` | renew certs every startup |
+| env | string | `nil` | set name to value in containers' environment |
 | execMountDir | string | `"/usr/local/bin"` | read-only mountpoint for executables (must be in image's executable search PATH) |
 | fabric.metrics.enabled | bool | `false` | configure fabric metrics in the router config |
 | forwarder.latencyProbeInterval | int | `10` |  |
@@ -205,7 +201,7 @@ tunnel:
 | forwarder.xgressDialWorkerCount | int | `128` |  |
 | hostNetwork | bool | `false` | Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace. i.e. egress gateway |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
-| image.args | list | `["run","{{ .Values.configMountDir }}/{{ .Values.configFile }}","--verbose"]` | deployment container command args and opts |
+| image.args | list | `["run","{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
 | image.command | list | `["/entrypoint.bash"]` | deployment container command |
 | image.pullPolicy | string | `"Always"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-router"` | container image tag for deployment |
