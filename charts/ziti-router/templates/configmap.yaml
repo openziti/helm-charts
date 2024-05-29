@@ -8,123 +8,15 @@ metadata:
   labels:
     {{- include "ziti-router.labels" . | nindent 4 }}
 data:
-  # post-install-hook Job runs this first to enroll the router and install the Kubernetes Python client library
-  {{ .Values.initScriptFile }}: |-
-    #!/usr/bin/env bash
-    set -o errexit
-    set -o nounset
-    set -o pipefail
-    set -o xtrace
-
-    # delayed exit to allow for debugging life-cycle hook Job
-    trap 'echo "ERROR: ${BASH_SOURCE[0]}:${LINENO} exited with code $?" >&2; sleep 600' ERR
-
-    if kubectl -n {{ .Release.Namespace }} get secret \
-      {{ include "ziti-router.fullname" . }}-identity &>/dev/null
-    then
-      if [[ ${HELM_UPGRADE:-} == true ]]
-      then
-        # prior versions of the chart stored certs in a Secret resource, so this copies those certs to the persistent
-        # volume unless a file already exists in the persistent volume
-        echo 'INFO: checking for old shape of existing identity secret'
-        typeset -a KEYS=(
-          $(
-            kubectl -n {{ .Release.Namespace }} get secret \
-              {{ include "ziti-router.fullname" . }}-identity \
-                --output go-template='{{"{{"}}range $k,$v := .data{{"}}"}}{{"{{"}}if $v{{"}}"}}{{"{{"}}printf "%s " $k{{"}}"}}{{"{{"}}end{{"}}"}}{{"{{"}}end{{"}}"}}'
-          )
-        )
-        echo "DEBUG: found dictionary keys: ${KEYS[*]}"
-        MIGRATE_SECRET=0
-        for KEY in ${KEYS[@]}; do
-          if [[ ${KEY} =~ ^(tls|client|ca)\.crt$ ]]
-          then
-            MIGRATE_SECRET=1
-            if [[ -s "${ZITI_ROUTER_IDENTITY_DIR}/${KEY}" ]]
-            then
-              echo "INFO: ${KEY} already exists in persistent volume, skipping"
-            else
-              echo "INFO: copying ${KEY} to persistent volume"
-              kubectl -n {{ .Release.Namespace }} get secret \
-                {{ include "ziti-router.fullname" . }}-identity \
-                  --output go-template='{{"{{"}}index .data "'${KEY}'" | base64decode {{"}}"}}' \
-                    > "${ZITI_ROUTER_IDENTITY_DIR}/${KEY}"
-            fi
-          fi
-        done
-        if (( MIGRATE_SECRET ))
-        then
-          TMPFILE="$(mktemp)"
-          kubectl -n {{ .Release.Namespace }} get secret \
-            {{ include "ziti-router.fullname" . }}-identity \
-              --output go-template='{{"{{"}}index .data "tls.key" | base64decode {{"}}"}}' \
-                > "${TMPFILE}"
-          kubectl -n {{ .Release.Namespace }} delete secret \
-            {{ include "ziti-router.fullname" . }}-identity
-          kubectl -n {{ .Release.Namespace }} create secret generic \
-            {{ include "ziti-router.fullname" . }}-identity \
-            --from-file=tls.key="${TMPFILE}"
-          rm "${TMPFILE}"
-        fi
-        exit
-      else
-        echo 'ERROR: secret exists: "{{ include "ziti-router.fullname" . }}-identity"' >&2
-        # this should never happen because Helm deletes the secret with pre-uninstall hook
-        exit 1
-      fi
-    else
-      echo "INFO: identity secret does not exist, attempting router enrollment"
-    fi
-
-    if [[ -n "{{ .Values.proxy.type }}" && -n "{{ .Values.proxy.address }}" && -n "{{ .Values.proxy.port }}" ]]; then
-      export HTTPS_PROXY={{ .Values.proxy.type }}://{{ .Values.proxy.address }}:{{ .Values.proxy.port }}
-    fi
-
-    ziti router enroll \
-      {{ .Values.configMountDir }}/{{ .Values.configFile }} \
-      --jwt {{ .Values.configMountDir }}/{{ .Values.enrollJwtFile }} \
-      --verbose
-    
-    if [[ -n "{{ .Values.proxy.type }}" && -n "{{ .Values.proxy.address }}" && -n "{{ .Values.proxy.port }}" ]]; then
-      unset HTTPS_PROXY
-    fi
-
-    kubectl -n {{ .Release.Namespace }} create secret generic \
-      {{ include "ziti-router.fullname" . }}-identity \
-      --from-file=tls.key="${ZITI_ROUTER_IDENTITY_DIR}/tls.key"
-
-    # purge generated private from persistent volume
-    rm "${ZITI_ROUTER_IDENTITY_DIR}/tls.key"
-
-  {{ .Values.deleteIdentityScriptFile }}: |-
-    #!/usr/bin/env bash
-    set -o errexit
-    set -o nounset
-    set -o pipefail
-    set -o xtrace
-
-    if kubectl -n {{ .Release.Namespace }} get secret \
-      {{ include "ziti-router.fullname" . }}-identity &>/dev/null
-    then
-      kubectl -n {{ .Release.Namespace }} delete secret \
-        {{ include "ziti-router.fullname" . }}-identity
-      echo "INFO: Finished cleaning up router identity. Job will self-destruct in 20s."
-      sleep 10
-    else
-      echo "INFO: no-op because identity secret does not exist. Job will self-destruct in 20s."
-      sleep 10
-      exit 0
-    fi
-
   {{ .Values.configFile }}: |-
 
     v: 3
 
     identity:
-      cert:        ${ZITI_ROUTER_IDENTITY_DIR}/client.crt
-      server_cert: ${ZITI_ROUTER_IDENTITY_DIR}/tls.crt
-      key:         ${ZITI_ROUTER_IDENTITY_DIR}/tls.key
-      ca:          ${ZITI_ROUTER_IDENTITY_DIR}/ca.crt
+      cert:        {{ .Values.configMountDir }}/client.crt
+      server_cert: {{ .Values.configMountDir }}/tls.crt
+      key:         {{ .Values.configMountDir }}/tls.key
+      ca:          {{ .Values.configMountDir }}/ca.crt
 
     ctrl:
       # router control plane API (:6262)

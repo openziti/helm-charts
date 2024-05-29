@@ -34,6 +34,21 @@ csr:
   #     - "192.168.10.0"
 
 
+# -- ziti env vars for the deployment's containers
+env:
+  # -- bootstrap the router if "true"
+  - name: ZITI_BOOTSTRAP
+    value: "true"
+  # -- make config file from env vars and defaults if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true
+  - name: ZITI_BOOTSTRAP_CONFIG
+    value: "false"
+  # -- enroll with controller if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true
+  - name: ZITI_BOOTSTRAP_ENROLLMENT
+    value: "true"
+  # -- renew certs every startup
+  - name: ZITI_AUTO_RENEW_CERTS
+    value: "true"
+
 # listen for router links
 linkListeners:
   transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
@@ -114,11 +129,6 @@ tunnel:
 
 # -- read-only mountpoint for executables (must be in image's executable search PATH)
 execMountDir:     /usr/local/bin
-# -- exec by Helm post-install hook
-initScriptFile:   ziti-router-init.bash
-# -- exec by Helm post-delete hook
-deleteIdentityScriptFile: delete-identity.bash
-# -- projected subpath where the enrollment token will be mounted
 enrollJwtFile: enrollment.jwt
 # -- enrollment one time token from the controller's management API
 enrollmentJwt:
@@ -133,18 +143,20 @@ configFile:       ziti-router.yaml
 image:
   # -- container image tag for deployment
   repository: docker.io/openziti/ziti-router
+  # -- container image tag (default is Chart's appVersion)
+  tag:
   # -- deployment image pull policy
   pullPolicy: Always
   # pullSecrets:
   # command: ["sh", "-c", "while true; do sleep 86400; done"]
   # -- deployment container command
-  command: ["ziti", "router", "run"]
+  command: ['/entrypoint.bash']
   # The templates inside this list are evalated by the tpl function in the
   # deployment template because Helm values can not be directly referenced
   # inside the Values.yaml file (because it's just a data structure, not a
   # template).
   # -- deployment container command args and opts
-  args: [ "{{ .Values.configMountDir }}/{{ .Values.configFile }}"]
+  args: [ 'run', '{{ .Values.configMountDir }}/{{ .Values.configFile }}', '--verbose']
 
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet
@@ -252,7 +264,7 @@ persistence:
   # If the PV uses a different storage class, specify that here.
   storageClass: ""
   # -- PVC volume name
-  VolumeName:
+  volumeName:
   # -- PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed)
   accessMode: ReadWriteOnce
   # -- 50Mi is plenty for this state file 

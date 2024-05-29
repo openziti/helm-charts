@@ -8,7 +8,6 @@ metadata:
     {{- include "ziti-router.labels" . | nindent 4 }}
     app.kubernetes.io/component: "ziti-router"
 {{- if .Values.persistence.annotations }}
-  annotations:
 {{ toYaml .Values.persistence.annotations | trimSuffix "\n" | indent 4 }}
 {{- end }}
 spec:
@@ -26,6 +25,6 @@ spec:
 {{- end }}
 {{- end }}
 {{- if .Values.persistence.VolumeName }}
-  volumeName: "{{ .Values.persistence.VolumeName }}"
+  volumeName: "{{ .Values.persistence.volumeName }}"
 {{- end }}
 {{- end }}
