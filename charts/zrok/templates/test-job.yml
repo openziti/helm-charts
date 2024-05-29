@@ -17,8 +17,6 @@ spec:
           value: http://{{ include "zrok.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.controller.service.advertisedPort }}
         - name: HOME
           value: /tmp
-        - name: PFXLOG_NO_JSON
-          value: "true"
         - name: ZROK_ENABLE_TOKEN
           valueFrom:
             secretKeyRef:

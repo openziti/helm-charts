@@ -54,8 +54,6 @@ spec:
                 secretKeyRef:
                   name:  {{ include "zrok.fullname" . }}-ziti-mgmt-secret
                   key: admin-password
-            - name: PFXLOG_NO_JSON
-              value: "true"
             # this is needed for ziti CLI to work because it assumes a writeable config dir
             - name: HOME
               value: /tmp
@@ -92,8 +90,6 @@ spec:
                   key: admin-token
             - name: ZROK_API_ENDPOINT
               value: http://{{ include "zrok.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.controller.service.advertisedPort }}
-            - name: PFXLOG_NO_JSON
-              value: "true"
             - name: HOME
               value: {{ .Values.frontend.homeDir }}
           volumeMounts:

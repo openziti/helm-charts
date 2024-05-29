@@ -47,8 +47,6 @@ spec:
                   key: admin-password
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
-            - name: PFXLOG_NO_JSON
-              value: "true"
             - name: HOME
               value: {{ .Values.image.homeDir }}
           volumeMounts:
@@ -109,8 +107,6 @@ spec:
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
           env:
-            - name: PFXLOG_NO_JSON
-              value: "true"
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: HOME
