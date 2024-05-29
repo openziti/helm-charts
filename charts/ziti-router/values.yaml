@@ -141,7 +141,7 @@ image:
   # command: ["sh", "-c", "while true; do sleep 86400; done"]
   # -- deployment container command
   command: ['/entrypoint.bash']
-  # The templates inside this list are evalated by the tpl function in the
+  # The templates inside this list are evaluated by the tpl function in the
   # deployment template because Helm values can not be directly referenced
   # inside the Values.yaml file (because it's just a data structure, not a
   # template).
