@@ -13,10 +13,14 @@ data:
     v: 3
 
     identity:
-      cert:        {{ .Values.configMountDir }}/client.crt
-      server_cert: {{ .Values.configMountDir }}/tls.crt
-      key:         {{ .Values.configMountDir }}/tls.key
-      ca:          {{ .Values.configMountDir }}/ca.crt
+      # expected filename defined in SetZitiRouterIdentityCert()
+      cert:        {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.cert
+      # expected filename defined in SetZitiRouterIdentityServerCert()
+      server_cert: {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.server.chain.cert
+      # expected filename defined in SetZitiRouterIdentityKey()
+      key:         {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.key
+      # expected filename defined in SetZitiRouterIdentityCA()
+      ca:          {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.cas
 
     ctrl:
       # router control plane API (:6262)

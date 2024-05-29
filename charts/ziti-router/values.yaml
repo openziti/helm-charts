@@ -34,20 +34,10 @@ csr:
   #     - "192.168.10.0"
 
 
-# -- ziti env vars for the deployment's containers
+# -- set name to value in containers' environment
 env:
-  # -- bootstrap the router if "true"
-  - name: ZITI_BOOTSTRAP
-    value: "true"
-  # -- make config file from env vars and defaults if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true
-  - name: ZITI_BOOTSTRAP_CONFIG
-    value: "false"
-  # -- enroll with controller if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true
-  - name: ZITI_BOOTSTRAP_ENROLLMENT
-    value: "true"
-  # -- renew certs every startup
-  - name: ZITI_AUTO_RENEW_CERTS
-    value: "true"
+  # - name: SOME_ENV
+  #   value: "true"
 
 # listen for router links
 linkListeners:
@@ -156,7 +146,7 @@ image:
   # inside the Values.yaml file (because it's just a data structure, not a
   # template).
   # -- deployment container command args and opts
-  args: [ 'run', '{{ .Values.configMountDir }}/{{ .Values.configFile }}', '--verbose']
+  args: [ 'run', '{{ .Values.configMountDir }}/{{ .Values.configFile }}']
 
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet
