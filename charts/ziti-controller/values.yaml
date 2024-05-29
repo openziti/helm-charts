@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # -- permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release)
-trustDomain:
+trustDomain: ~
 
 ctrlPlane:
   # -- cluster service target port on the container
@@ -11,7 +11,7 @@ ctrlPlane:
   # -- global DNS name by which routers can resolve a reachable IP for this
   # service: default is cluster service DNS name which assumes all routers are
   # inside the same cluster
-  advertisedHost:
+  advertisedHost: ~
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: 443
   service:
@@ -23,9 +23,9 @@ ctrlPlane:
     # -- create an ingress for the cluster service
     enabled: false
     # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations:
+    annotations: {}
   # -- kind and name of alternative issuer for the controller's identity
-  alternativeIssuer:
+  alternativeIssuer: {}
     # -- type of alternative issuer for the controller's identity: Issuer, ClusterIssuer
     # kind:
     # -- metadata name of the alternative issuer
@@ -46,10 +46,23 @@ clientApi:
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: LoadBalancer  # this is the only service that really needs to be exposed
   ingress:
-    # -- create an ingress for the cluster service
+    # -- create a TLS-passthrough ingress for the client API's ClusterIP service
     enabled: false
+    # -- ingress class name, e.g., "nginx"
+    ingressClassName: ~
     # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations:
+    annotations: {}
+  altIngress:
+    # -- create an ingress for the client API's ClusterIP service with a trusted certificate for clients that require a trusted certificate, e.g., BrowZer, ZAC
+    enabled: false
+    # -- alternative ingress host, e.g., ziti.example.com
+    advertisedHost: ~
+    # -- ingress class name, e.g., "nginx"
+    ingressClassName: ~
+    # -- ingress annotations, e.g., to request a certificate from cert-manager and configure the backend protocol
+    annotations: {}
+      # cert-manager.io/cluster-issuer: "cloudflare-dns01-issuer"
+      # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
   # -- additional DNS SANs
   dnsNames: []
 
@@ -74,11 +87,11 @@ managementApi:
   dnsNames: []
 
 # -- set name to value in containers' environment
-env:
+env: {}
 # SOME_ENV: "true"
 
 # -- set secrets as environment variables in the container
-envSecrets:
+envSecrets: {}
 #  - name: SOME_SECRET_ENV
 #    valueFrom:
 #      secretKeyRef:
@@ -91,7 +104,7 @@ prometheus:
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: 443
   # -- DNS name to advertise in place of the default internal cluster name built from the Helm release name
-  advertisedHost: ""
+  advertisedHost: ~
   service:
     # -- create a cluster service for the deployment
     enabled: false
@@ -177,6 +190,11 @@ webBindingPki:
   # -- generate a separate PKI root of trust for web bindings, i.e., client,
   # management, and prometheus APIs
   enabled: true
+  altServerCerts:
+    enabled: true
+    serverCerts: []
+      - dnsName: ""
+        issuer: ""
 
 spireAgent:
   # -- if you are running a container with the spire-agent binary installed
@@ -192,7 +210,7 @@ image:
   # -- container image repository for app deployment
   repository: docker.io/openziti/ziti-controller
   # -- override the container image tag specified in the chart
-  tag: ""
+  tag: ~
   # -- deployment image pull policy
   pullPolicy: IfNotPresent
   # -- container entrypoint command
@@ -221,14 +239,14 @@ ctrlPlaneCasBundle:
 # -- additional volumes to mount to ziti-controller container
 additionalVolumes: []
 #  - name: additional-volume-1
-#    volumeType: emptyDir
+#    volumeType: secret
 #    mountPath: /path/to/mount/1
 #    secretName: name-of-secret
 #  - name: additional-volume-2
 #    volumeType: configMap
 #    mountPath: /path/to/configmap/mount
 #    configMapName: your-configmap-name
-#  - name: additional-volume-2
+#  - name: additional-volume-3
 #    volumeType: emptyDir
 #    mountPath: /path/to/mount/2
 
@@ -290,7 +308,7 @@ persistence:
   # -- A manually managed Persistent Volume and Claim Requires
   # persistence.enabled=true. If defined, PVC must be created manually before
   # volume will be bound.
-  existingClaim: ""
+  existingClaim: ~
 
   ## minio data Persistent Volume Storage Class
   ## If defined, storageClassName: <storageClass>
@@ -301,9 +319,9 @@ persistence:
   ##
   # -- Storage class of PV to bind. By default it looks for the default storage class.
   # If the PV uses a different storage class, specify that here.
-  storageClass:
+  storageClass: ~
   # -- PVC volume name
-  VolumeName:
+  VolumeName: ~
   # -- PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed)
   accessMode: ReadWriteOnce
   # -- 2GiB is enough for tens of thousands of entities, but feel free to make it larger

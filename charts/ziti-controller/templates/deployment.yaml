@@ -74,6 +74,9 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-client-identity/
+              name: cert-ctrl-plane-client-identity
+              readOnly: true
             {{- if (eq .Values.edgeSignerPki.enabled true) }}
             - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
@@ -177,6 +180,9 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-client-identity/
+              name: cert-ctrl-plane-client-identity
+              readOnly: true
             {{- if (eq .Values.edgeSignerPki.enabled true) }}
             - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
@@ -240,6 +246,9 @@ spec:
         - name: cert-ctrl-plane-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
+        - name: cert-ctrl-plane-client-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
         {{- if (eq .Values.edgeSignerPki.enabled true) }}
         - name: cert-edge-signer
           secret:
@@ -282,4 +291,11 @@ spec:
           {{- else if eq .volumeType "emptyDir" }}
           emptyDir: {}
           {{- end }}
+        {{- end }}
+        {{- if .Values.webBindingPki.altServerCerts.enabled }}
+        {{- range .Values.webBindingPki.altServerCerts.secrets }}
+        - name: {{ .dirName }}
+          secret:
+            secretName: {{ .secretName }}
+        {{- end }}
         {{- end }}
