@@ -48,8 +48,6 @@ spec:
                 secretKeyRef:
                   name:  {{ include "zrok.fullname" . }}-ziti-mgmt-secret
                   key: admin-password
-            # - name: PFXLOG_NO_JSON
-            #   value: "true"
             # this is needed for ziti CLI to work because it assumes a writeable config dir
             - name: HOME
               value: /tmp

@@ -38,8 +38,6 @@ spec:
         image: {{ .Values.zitiImage.repository }}
         imagePullPolicy: {{ .Values.zitiImage.pullPolicy }}
         env:
-          - name: PFXLOG_NO_JSON
-            value: "true"
           # used by init script to branch on the condition where the identity
           # secret already exists
           - name: HELM_UPGRADE
