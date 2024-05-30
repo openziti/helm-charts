@@ -32,6 +32,11 @@ jobs:
       #       done | sort -u
       #     )
 
+      - name: Configure Git for Chart Releaser
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1
         with:
