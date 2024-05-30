@@ -94,6 +94,7 @@ tunnel:
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
   # lanIf: eth0   # interface device name for tproxy?
+  # dnsSvcIpRange: 100.72.0.0/13 # subnet that is used for the internal service name resolution
   # -- the tproxy mode can be switched from iptables based interception to bpf interception by passing
   # the user space bpf program path. bpf kernel space program is expected to be loaded prior or during
   # router deployment, e.g. bpfman agent, hostpath, etc

@@ -66,6 +66,9 @@ data:
           {{- end }}
           {{- if eq .Values.tunnel.mode "tproxy" }}
             resolver: {{ .Values.tunnel.resolver }}
+            {{- if and .Values.tunnel.dnsSvcIpRange ( ne .Values.tunnel.dnsSvcIpRange "none" ) }}
+            dnsSvcIpRange: {{ .Values.tunnel.dnsSvcIpRange }}
+            {{- end }}
             lanIf: {{ .Values.tunnel.lanIf }}
           {{- else if eq .Values.tunnel.mode "proxy" }}
             services:
