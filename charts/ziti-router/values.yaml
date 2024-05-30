@@ -93,7 +93,11 @@ tunnel:
   mode: none
   # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
   resolver: none
-  # lanIf: eth0   # interface device name for tproxy?
+  # -- ip subnet that is used for the internal service name resolution
+  dnsSvcIpRange:
+  # -- interface device name for setting up ingress firewall rules if fw enabled.
+  # It must be set but not needed in containers. Thus, it is set to lo by default
+  lanIf: lo   
   # -- the tproxy mode can be switched from iptables based interception to bpf interception by passing
   # the user space bpf program path. bpf kernel space program is expected to be loaded prior or during
   # router deployment, e.g. bpfman agent, hostpath, etc
