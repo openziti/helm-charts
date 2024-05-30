@@ -28,13 +28,13 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 ## Minimal Example with Nginx Ingress
 
 This example does not configure TLS termination for the API or public shares, metrics, or limits. You must configure a
-wildcard DNS record (A record) that resolve to the value of `ZROK_ZONE`. 
+wildcard DNS record (A record) that resolve to the value of `ZROK_DNS_ZONE`. 
 
 Use an `sslip.io` wildcard/zone like `zrok.192.168.49.2.sslip.io` for testing and tiny scale deployments if you
 want to avoid setting up DNS. This works with any IP address.
 
 ```bash
-ZROK_ZONE=zrok.example.com
+ZROK_DNS_ZONE=zrok.example.com
 ZITI_NAMESPACE=miniziti
 ZITI_MGMT_API_HOST=ziti-controller-client.${ZITI_NAMESPACE}.svc.cluster.local
 ZITI_PWD=$(kubectl -n "${ZITI_NAMESPACE}" get secrets "ziti-controller-admin-secret" \
@@ -46,8 +46,8 @@ helm upgrade \
     --values https://openziti.io/helm-charts/charts/zrok/values-ingress-nginx.yaml \
     --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
     --set "ziti.password=${ZITI_PWD}" \
-    --set "dnsZone=${ZROK_ZONE}" \
-    --set "controller.ingress.hosts[0]=ctrl.${ZROK_ZONE}" \
+    --set "dnsZone=${ZROK_DNS_ZONE}" \
+    --set "controller.ingress.hosts[0]=ctrl.${ZROK_DNS_ZONE}" \
     zrok openziti/zrok
 ```
 

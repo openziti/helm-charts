@@ -52,15 +52,30 @@ spec:
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
           env:
-            - name: ZITI_ROUTER_IDENTITY_DIR
-              value: {{ .Values.configMountDir }}
-            - name: PFXLOG_NO_JSON
+            - name: ZITI_ENROLL_TOKEN
+              value: {{ .Values.enrollmentJwt | quote }}
+            # must be true or enroll() will not be called
+            - name: ZITI_BOOTSTRAP
               value: "true"
+            # -- enroll with controller if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true
+            - name: ZITI_BOOTSTRAP_ENROLLMENT
+              value: "true"
+            # suppress generating a config.yml because in K8s we mount a configMap rendered by Helm
+            - name: ZITI_BOOTSTRAP_CONFIG
+              value: "false"
+            # entrypoint will append --extend to run command if "true"
+            - name: ZITI_AUTO_RENEW_CERTS
+              value: "true"
+            # used by entrypoint's enroll() function to predict the path to the enrolled identity's cert
+            - name: ZITI_HOME
+              value: {{ .Values.configMountDir | quote }}
+            - name: ZITI_ROUTER_NAME
+              value: {{ include "ziti-router.fullname" . | quote }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key | quote }}
+              value: {{ $val | quote }}
+            {{- end }}
           volumeMounts:
-            - mountPath: {{ .Values.configMountDir }}/tls.key
-              name: ziti-router-identity
-              subPath: tls.key
-              readOnly: true
             - mountPath: {{ .Values.configMountDir }}
               name: config-data
               readOnly: false
@@ -71,6 +86,24 @@ spec:
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
             {{- end }}
+          # deployment condition ready and receive traffic when this passes
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - ziti agent stats
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          # delete pod if this fails
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - ziti agent stats
+            initialDelaySeconds: 10
+            periodSeconds: 10
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -84,14 +117,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: ziti-router-identity
-          secret:
-            secretName: {{ include "ziti-router.fullname" . }}-identity
-            defaultMode: 0444
-            items:
-              - key: tls.key
-                path: tls.key
-                mode: 0555
         - name: ziti-router-config
           configMap:
             name: {{ include "ziti-router.fullname" . }}-config
