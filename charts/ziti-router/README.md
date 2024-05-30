@@ -231,6 +231,8 @@ tunnel:
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
 | tunnel.diverterPath | string | `nil` | the tproxy mode can be switched from iptables based interception to bpf interception by passing the user space bpf program path. bpf kernel space program is expected to be loaded prior or during router deployment, e.g. bpfman agent, hostpath, etc |
+| tunnel.dnsSvcIpRange | string | `nil` | ip subnet that is used for the internal service name resolution |
+| tunnel.lanIf | string | `"lo"` | interface device name for setting up ingress firewall rules if fw enabled. It must be set but not needed in containers. Thus, it is set to lo by default |
 | tunnel.mode | string | `"none"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
 | tunnel.proxyAdditionalK8sServices | list | `[]` | additional Kubernetes services created additionally to the "default" proxy listener service, only if mode is "proxy" |
 | tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | default Kubernetes service object listening to proxy ports defined in "proxyServices", only if tunnel mode is "proxy" |
