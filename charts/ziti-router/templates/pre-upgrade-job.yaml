@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pre-upgrade-job
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 0
+  completions: 1
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      name: {{ .Release.Name }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- include "ziti-router.labels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "ziti-router.fullname" . }}-hook-serviceaccount
+      containers:
+      - name: pre-upgrade-job
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+          - mountPath: {{ .Values.execMountDir }}/migrate-identity.bash
+            name: migrate-script
+            subPath: migrate-identity.bash
+          - mountPath: {{ .Values.configMountDir }}
+            name: config-data
+            readOnly: false
+        command: ["migrate-identity.bash"]
+        # command: ["sh", "-c", "while true; do sleep 86400; done"]
+      volumes:
+        - name: migrate-script
+          configMap:
+            name: {{ include "ziti-router.fullname" . }}-pre-upgrade-hook
+            items:
+              - key: migrate-identity.bash
+                path: migrate-identity.bash
+                mode: 0555
+        - name: config-data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-router.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
