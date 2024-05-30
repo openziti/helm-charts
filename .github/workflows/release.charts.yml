@@ -15,22 +15,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: v3.15.1
+      # - name: Install Helm
+      #   uses: azure/setup-helm@v4
+      #   with:
+      #     version: v3.15.1
 
-      - name: Add Helm repositories required to install dependencies
+      # - name: Add Helm repositories required to install dependencies
+      #   run: |
+      #     while read -r DEP_REPO; do
+      #       helm repo add "${DEP_REPO//(https:\/\/|\/)/_}" "${DEP_REPO}"
+      #     done < <(
+      #       for CHART_DIR in $(find ./charts -mindepth 2 -maxdepth 2 -type f -name Chart.yaml -exec dirname {} \;); do
+      #         if [ -f "${CHART_DIR}/Chart.lock" ]; then
+      #           awk '/repository:/ {print $2}' "./${CHART_DIR}/Chart.lock"
+      #         fi
+      #       done | sort -u
+      #     )
+
+      - name: Configure Git for Chart Releaser
         run: |
-          while read -r DEP_REPO; do
-            helm repo add "${DEP_REPO//(https:\/\/|\/)/_}" "${DEP_REPO}"
-          done < <(
-            for CHART_DIR in $(find ./charts -mindepth 2 -maxdepth 2 -type f -name Chart.yaml -exec dirname {} \;); do
-              if [ -f "${CHART_DIR}/Chart.lock" ]; then
-                awk '/repository:/ {print $2}' "./${CHART_DIR}/Chart.lock"
-              fi
-            done | sort -u
-          )
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1
