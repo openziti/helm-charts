@@ -44,7 +44,7 @@ jobs:
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
       - name: install miniziti
-        uses: supplypike/setup-bin@v3
+        uses: supplypike/setup-bin@v4
         with:
           # uri: https://raw.githubusercontent.com/qrkourier/ziti/d8a2d6e6da0c5edbf67357969a672daffc468bf3/quickstart/kubernetes/miniziti.bash
           uri: https://get.openziti.io/miniziti.bash
