@@ -108,10 +108,10 @@ tunnel:
     #- zitiService: my_ziti_service
     #  # -- name suffix when not using the "default" proxy tunnel service, see above: "additionalK8sServices"
     #  k8sService: my_k8s_suffix
-    #  # -- port the router opens to listen for data
-    #  containerPort: 8443
     #  # -- port the kubernetes service uses as listen port
     #  advertisedPort: 80
+    #  # -- override the container port (default: advertisedPort)
+    #  containerPort: 8443
   # -- if tunnel mode is "proxy", create the a cluster service named {{ release }}-proxy-default listening on each "advertisedPort" defined in "proxyServices"
   proxyDefaultK8sService:
     enabled: true
