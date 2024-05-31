@@ -170,7 +170,7 @@ spec:
   {{- end }}
   ports:
   {{- range .Values.tunnel.proxyServices }}
-    {{- if or (not .k8sservice) (ne .k8sservice "default") }}
+    {{- if or (not .k8sService) (ne .k8sService "default") }}
     - port: {{ .advertisedPort }}
       targetPort: {{ .containerPort }}
       protocol: {{ .serviceProtocol | default "TCP" }}
@@ -237,7 +237,7 @@ spec:
   ports:
   {{- $service_name := .name }}
   {{- range $root.Values.tunnel.proxyServices }}
-    {{- if and .k8sservice (eq .k8sservice $service_name) }}
+    {{- if and .k8sService (eq .k8sService $service_name) }}
     - port: {{ .advertisedrPort }}
       targetPort: {{ .containerPortPort }}
       protocol: {{ .serviceProtocol | default "TCP" }}
