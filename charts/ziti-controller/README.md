@@ -182,6 +182,15 @@ edgeSignerPki:
     enabled: true
 ```
 
+## Prometheus Monitoring
+
+This chart provides a default disabled `ziti-controller-prometheus` k8s service for prometheus,
+which can be enabled with `prometheus.service.enabled`. Enabling it will create a prometheus ServiceMonitor
+for configuring the prometheus endpoint. It is also important that you enable
+`fabric.events.enabled` for getting a full set of metrics.
+
+For more information, please check [here](https://openziti.io/docs/learn/core-concepts/metrics/prometheus/).
+
 ## Values Reference
 
 | Key | Type | Default | Description |
@@ -280,8 +289,20 @@ edgeSignerPki:
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
 | prometheus.service.annotations | object | `{}` |  |
 | prometheus.service.enabled | bool | `false` | create a cluster service for the deployment |
-| prometheus.service.labels | object | `{}` |  |
+| prometheus.service.labels | object | `{"app":"prometheus"}` | extra labels for matching only this service, ie. serviceMonitor |
 | prometheus.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| prometheus.serviceMonitor.annotations | object | `{}` | ServiceMonitor annotations |
+| prometheus.serviceMonitor.enabled | bool | `true` | If enabled, and prometheus service is enabled, ServiceMonitor resources for Prometheus Operator are created |
+| prometheus.serviceMonitor.interval | string | `nil` | ServiceMonitor scrape interval |
+| prometheus.serviceMonitor.labels | object | `{}` | Additional ServiceMonitor labels |
+| prometheus.serviceMonitor.metricRelabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples as the last step before ingestion https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `metric_relabel_configs`) |
+| prometheus.serviceMonitor.namespace | string | `nil` | Alternative namespace for ServiceMonitor resources |
+| prometheus.serviceMonitor.namespaceSelector | object | `{}` | Namespace selector for ServiceMonitor resources |
+| prometheus.serviceMonitor.relabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples before scraping https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `relabel_configs`) |
+| prometheus.serviceMonitor.scheme | string | `"https"` | ServiceMonitor will use http by default, but you can pick https as well |
+| prometheus.serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout in Go duration format (e.g. 15s) |
+| prometheus.serviceMonitor.targetLabels | list | `[]` | ServiceMonitor will add labels from the service to the Prometheus metric https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#servicemonitorspec |
+| prometheus.serviceMonitor.tlsConfig | string | `nil` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
