@@ -183,6 +183,15 @@ edgeSignerPki:
     enabled: true
 ```
 
+## Prometheus Monitoring
+
+This chart provides a default disabled `ziti-controller-prometheus` k8s service for prometheus,
+which can be enabled with `prometheus.service.enabled`. Enabling it will create a prometheus ServiceMonitor
+for configuring the prometheus endpoint. It is also important that you enable
+`fabric.events.enabled` for getting a full set of metrics.
+
+For more information, please check [here](https://openziti.io/docs/learn/core-concepts/metrics/prometheus/).
+
 ## Values Reference
 
 {{ template "chart.valuesTable" . }}
