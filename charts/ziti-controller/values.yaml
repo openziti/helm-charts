@@ -358,31 +358,31 @@ network:
     rerouteCap: 4
 
 # A note about sub-charts: these values may serve as a partial reference for
-# configuring the charts on which this chart depends. However, I wasn't able to
-# get dependency solving working with Helm, which doesn't install dependencies
-# first the way I expected. For now, it's necessary to express the dependency
-# with Terraform or some other external configuration system.
+# configuring the charts on which this chart depends.
+
 cert-manager:
-  # -- install the cert-manager subchart to provide CRDs Certificate, Issuer
+  # -- install the cert-manager subchart
   enabled: false
   # -- clean up secret when certificate is deleted
   enableCertificateOwnerRef: true
   # -- CRDs must be applied in advance of installing the parent chart
   installCRDs: false
+
 trust-manager:
-  # -- install the trust-manager subchart to provide CRD Bundle
+  # -- install the trust-manager subchart
   enabled: false
   app:
     trust:
       # -- trust-manager needs to be configured to trust the namespace in which
       # the controller is deployed so that it will create the Bundle resource
       # for the ctrl plane trust bundle
-      namespace: ziti
+      namespace: "{{ .Release.Namespace }}"
   crds:
     # -- CRDs must be applied in advance of installing the parent chart
     enabled: false
+
 ingress-nginx:
-  # -- recommended: install the ingress-nginx subchart (may be necessary for managed k8s)
+  # -- install the ingress-nginx subchart
   enabled: false
   controller:
     extraArgs:
