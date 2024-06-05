@@ -302,7 +302,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | prometheus.serviceMonitor.scheme | string | `"https"` | ServiceMonitor will use http by default, but you can pick https as well |
 | prometheus.serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout in Go duration format (e.g. 15s) |
 | prometheus.serviceMonitor.targetLabels | list | `[]` | ServiceMonitor will add labels from the service to the Prometheus metric https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#servicemonitorspec |
-| prometheus.serviceMonitor.tlsConfig | string | `nil` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
+| prometheus.serviceMonitor.tlsConfig | object | `{"insecureSkipVerify":true}` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
+| prometheus.serviceMonitor.tlsConfig.insecureSkipVerify | bool | `true` | set TLS skip verify, because the SAN will not match with the pod IP |
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
