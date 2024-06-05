@@ -118,7 +118,9 @@ prometheus:
     # -- ServiceMonitor will use http by default, but you can pick https as well
     scheme: https
     # -- ServiceMonitor will use these tlsConfig settings to make the health check requests
-    tlsConfig: null
+    tlsConfig:
+      # -- set TLS skip verify, because the SAN will not match with the pod IP
+      insecureSkipVerify: true
 
 ca:
   # Note: The renewBefore and duration fields must be specified using a Go
