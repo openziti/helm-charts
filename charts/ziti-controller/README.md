@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.0.3](https://img.shields.io/badge/Version-1.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.0.4](https://img.shields.io/badge/Version-1.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -11,7 +11,7 @@ Host an OpenZiti controller in Kubernetes
 | Repository | Name | Version |
 |------------|------|---------|
 | https://charts.jetstack.io | cert-manager | ~1.11.0 |
-| https://charts.jetstack.io | trust-manager | ~0.4.0 |
+| https://charts.jetstack.io | trust-manager | ~0.7.0 |
 | https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.5.2 |
 
 Note that ingress-nginx is not strictly required, but the chart is parameterized to allow for conveniently declaring pass-through TLS.
@@ -201,7 +201,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
-| cert-manager.enabled | bool | `false` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
+| cert-manager.enabled | bool | `false` | install the cert-manager subchart |
 | cert-manager.installCRDs | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | cert.duration | string | `"87840h"` | server certificate duration as Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
@@ -255,7 +255,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
-| ingress-nginx.enabled | bool | `false` | recommended: install the ingress-nginx subchart (may be necessary for managed k8s) |
+| ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
 | managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
@@ -308,9 +308,9 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
 | spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| trust-manager.app.trust.namespace | string | `"ziti"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
+| trust-manager.app.trust.namespace | string | `"{{ .Release.Namespace }}"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
-| trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
+| trust-manager.enabled | bool | `false` | install the trust-manager subchart |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 
 ## TODO's
