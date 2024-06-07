@@ -251,6 +251,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
+| image.pfxlog_no_json | string | `"false"` | log format, set to "true" for plain text logs |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |

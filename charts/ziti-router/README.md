@@ -203,6 +203,7 @@ tunnel:
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
 | image.args | list | `["run","{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
 | image.command | list | `["/entrypoint.bash"]` | deployment container command |
+| image.pfxlog_no_json | string | `"false"` | log format, set to "true" for plain text logs |
 | image.pullPolicy | string | `"Always"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-router"` | container image tag for deployment |
 | image.tag | string | `nil` | container image tag (default is Chart's appVersion) |
