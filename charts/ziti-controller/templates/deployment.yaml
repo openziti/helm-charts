@@ -107,7 +107,6 @@ spec:
           {{ end }}
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
-          additionalArgs:
             {{- tpl (toYaml .Values.image.additionalArgs) . | nindent 12 }}
           env:
             - name: ZITI_CTRL_PLANE_CA
@@ -120,6 +119,10 @@ spec:
               {{- else }}
               value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.clientApi.advertisedPort }}
               {{- end }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key | quote }}
+              value: {{ $val | quote }}
+            {{- end }}
             - name: ZITI_ADMIN_USER
               valueFrom:
                 secretKeyRef:

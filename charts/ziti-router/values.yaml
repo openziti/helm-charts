@@ -152,9 +152,9 @@ image:
   # -- deployment container command args and opts
   args: [ 'run', '{{ .Values.configMountDir }}/{{ .Values.configFile }}']
   # -- Additional arguments can be passed directly to the container to modify ziti runtime arguments
-  #  additionalArgs:
-  #    - --log-formatter
-  #    - pfxlog
+  env:
+    - name: --log-formatter
+    - pfxlog
 
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet
