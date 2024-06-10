@@ -251,7 +251,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | fabric.events.subscriptions[9].type | string | `"edge.entityCounts"` |  |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
-| image.additionalArgs | list | `["--log-formatter","pfxlog"]` | Additional arguments can be passed directly to the container to modify ziti runtime arguments use "json" for json formatted logs |
+| image.additionalArgs | list | `["--log-formatter","pfxlog"]` | additional arguments can be passed directly to the container to modify ziti runtime arguments |
 | image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
