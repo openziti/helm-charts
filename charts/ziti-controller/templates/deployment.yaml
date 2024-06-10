@@ -50,9 +50,6 @@ spec:
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: HOME
               value: {{ .Values.image.homeDir }}
-            - name: PFXLOG_NO_JSON
-              value: {{ .Values.image.pfxlog_no_json | quote }}
-
           volumeMounts:
             - mountPath: {{ include "execMountDir" . }}/ziti-controller-init.bash
               name: ziti-controller-configmap
@@ -110,6 +107,8 @@ spec:
           {{ end }}
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+          additionalArgs:
+            {{- tpl (toYaml .Values.image.additionalArgs) . | nindent 12 }}
           env:
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}

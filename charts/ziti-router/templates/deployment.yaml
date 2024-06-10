@@ -52,6 +52,8 @@ spec:
           {{ end }}
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+          additionalArgs:
+            {{- tpl (toYaml .Values.image.additionalArgs) . | nindent 12 }}
           env:
             - name: ZITI_ENROLL_TOKEN
               value: {{ .Values.enrollmentJwt | quote }}
@@ -72,8 +74,6 @@ spec:
               value: {{ .Values.configMountDir | quote }}
             - name: ZITI_ROUTER_NAME
               value: {{ include "ziti-router.fullname" . | quote }}
-            - name: PFXLOG_NO_JSON
-              value: {{ .Values.image.pfxlog_no_json | quote }}
             {{- range $key, $val := .Values.env }}
             - name: {{ $key | quote }}
               value: {{ $val | quote }}

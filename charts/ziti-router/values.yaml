@@ -151,8 +151,10 @@ image:
   # template).
   # -- deployment container command args and opts
   args: [ 'run', '{{ .Values.configMountDir }}/{{ .Values.configFile }}']
-  # -- log format, set to "true" for plain text logs
-  pfxlog_no_json: "false"
+  # -- Additional arguments can be passed directly to the container to modify ziti runtime arguments
+  #  additionalArgs:
+  #    - --log-formatter
+  #    - pfxlog
 
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet
