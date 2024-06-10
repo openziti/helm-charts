@@ -151,8 +151,6 @@ image:
   # template).
   # -- deployment container command args and opts
   args: [ 'run', '{{ .Values.configMountDir }}/{{ .Values.configFile }}']
-  # -- log format, set to "true" for plain text logs
-  pfxlog_no_json: "false"
 
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet
