@@ -153,8 +153,6 @@ image:
   args: [ 'run', '{{ .Values.configMountDir }}/{{ .Values.configFile }}']
   # -- additional arguments can be passed directly to the container to modify ziti runtime arguments
   additionalArgs: []
-  # -- additional environment variables to pass into runtime
-  env: []
 
 # deployment DNS policy
 dnsPolicy: ClusterFirstWithHostNet

@@ -70,6 +70,10 @@ managementApi:
   # -- additional DNS SANs
   dnsNames: []
 
+# -- set name to value in containers' environment
+env:
+# SOME_ENV: "true"
+
 prometheus:
   # -- cluster service target port on the container
   containerPort: 9090
@@ -186,8 +190,6 @@ image:
   args: ["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]
   # -- additional arguments can be passed directly to the container to modify ziti runtime arguments
   additionalArgs: []
-  # -- additional environment variables to pass into runtime
-  env: []
 
 # -- name of the BoltDB file
 dbFile:         ctrl.db
