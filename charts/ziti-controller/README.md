@@ -198,6 +198,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| additionalConfigs | string | `nil` |  |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
@@ -231,19 +232,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
 | env | string | `nil` | set name to value in containers' environment |
-| events.enabled | bool | `true` | enable fabric event logger and file handler |
-| events.network.intervalAgeThreshold | string | `"60s"` | matching interval age and reporting interval ensures coherent metrics from fabric events |
-| events.network.metricsReportInterval | string | `"60s"` | matching interval age and reporting interval ensures coherent metrics from fabric events |
-| events.outputs.jsonLogger.handler.format | string | `"json"` |  |
-| events.outputs.jsonLogger.handler.maxbackups | int | `3` |  |
-| events.outputs.jsonLogger.handler.maxsizemb | int | `1024` |  |
-| events.outputs.jsonLogger.handler.path | string | `"/var/log/ziti/utilization-metrics.log"` |  |
-| events.outputs.jsonLogger.handler.type | string | `"file"` |  |
-| events.outputs.jsonLogger.subscriptions[0].metricFilter | string | `"link.latency.*"` |  |
-| events.outputs.jsonLogger.subscriptions[0].type | string | `"metrics"` |  |
-| events.outputs.jsonLogger.subscriptions[1].metricFilter | string | `"(.*session.create.*)|(bolt.*)"` |  |
-| events.outputs.jsonLogger.subscriptions[1].sourceFilter | string | `".*"` |  |
-| events.outputs.jsonLogger.subscriptions[1].type | string | `"metrics"` |  |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
