@@ -52,6 +52,7 @@ spec:
           {{ end }}
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+            {{- tpl (toYaml .Values.image.additionalArgs) . | nindent 12 }}
           env:
             - name: ZITI_ENROLL_TOKEN
               value: {{ .Values.enrollmentJwt | quote }}
