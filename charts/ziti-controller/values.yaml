@@ -185,11 +185,9 @@ image:
   # -- args for the entrypoint command
   args: ["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]
   # -- additional arguments can be passed directly to the container to modify ziti runtime arguments
-  additionalArgs:
-    - --log-formatter
-    - pfxlog
+  additionalArgs: []
   # -- additional environment variables to pass into runtime
-  # env: []
+  env: []
 
 # -- name of the BoltDB file
 dbFile:         ctrl.db
