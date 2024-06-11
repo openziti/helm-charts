@@ -325,6 +325,28 @@ fabric:
       - type: edge.entityCounts
         interval: 5s
 
+
+events:
+  # -- enable fabric event logger and file handler
+  enabled: true
+  network:
+    # -- matching interval age and reporting interval ensures coherent metrics from fabric events
+    intervalAgeThreshold: 5s
+    # -- matching interval age and reporting interval ensures coherent metrics from fabric events
+    metricsReportInterval: 5s
+  outputs:
+    -
+      mountDir: /var/run/ziti
+      fileName: events.json
+      subscriptions:
+        - type: fabric.circuits
+        - type: metrics
+        - type: fabric.usage  # used by zrok for limits enforcement
+          version: 3
+        - type: services
+        - type: edge.entityCounts
+          interval: 60s
+
 network:
   # -- routeTimeoutSeconds controls the number of seconds the controller will wait for a route attempt to succeed.
   routeTimeoutSeconds:  10
