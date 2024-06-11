@@ -230,6 +230,19 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
+| env | string | `nil` | set name to value in containers' environment |
+| events.enabled | bool | `true` | enable fabric event logger and file handler |
+| events.network.intervalAgeThreshold | string | `"5s"` | matching interval age and reporting interval ensures coherent metrics from fabric events |
+| events.network.metricsReportInterval | string | `"5s"` | matching interval age and reporting interval ensures coherent metrics from fabric events |
+| events.outputs[0].fileName | string | `"events.json"` |  |
+| events.outputs[0].mountDir | string | `"/var/run/ziti"` |  |
+| events.outputs[0].subscriptions[0].type | string | `"fabric.circuits"` |  |
+| events.outputs[0].subscriptions[1].type | string | `"metrics"` |  |
+| events.outputs[0].subscriptions[2].type | string | `"fabric.usage"` |  |
+| events.outputs[0].subscriptions[2].version | int | `3` |  |
+| events.outputs[0].subscriptions[3].type | string | `"services"` |  |
+| events.outputs[0].subscriptions[4].interval | string | `"60s"` |  |
+| events.outputs[0].subscriptions[4].type | string | `"edge.entityCounts"` |  |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
@@ -254,7 +267,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.additionalArgs | list | `[]` | additional arguments can be passed directly to the container to modify ziti runtime arguments |
 | image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
-| image.env | list | `[]` | additional environment variables to pass into runtime |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
