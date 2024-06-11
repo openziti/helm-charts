@@ -198,7 +198,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| additionalConfigs | string | `nil` |  |
+| additionalConfigs | object | `{}` | allow the insertion of raw/unmodified config blocks |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
