@@ -15,8 +15,9 @@ spec:
       app.kubernetes.io/component: "ziti-controller"
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        configmap-checksum: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -106,6 +107,7 @@ spec:
           {{ end }}
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+            {{- tpl (toYaml .Values.image.additionalArgs) . | nindent 12 }}
           env:
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
@@ -127,6 +129,10 @@ spec:
                 secretKeyRef:
                   name:  {{ include "ziti-controller.fullname" . }}-admin-secret
                   key: admin-password
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key | quote }}
+              value: {{ $val | quote }}
+            {{- end }}
           volumeMounts:
             - mountPath: {{ include "dataMountDir" . }}
               name: data

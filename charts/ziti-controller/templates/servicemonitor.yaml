@@ -1,0 +1,61 @@
+{{- with .Values.prometheus }}
+{{- if and .service.enabled .serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "ziti-controller.fullname" $ }}
+  {{- with .serviceMonitor.namespace }}
+  namespace: {{ . }}
+  {{- end }}
+  {{- with .serviceMonitor.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "ziti-controller.labels" $ | nindent 4 }}
+    {{- with .serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- with .serviceMonitor.namespaceSelector }}
+  namespaceSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ziti-controller.selectorLabels" $ | nindent 6 }}
+      {{- with .service.labels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  endpoints:
+    - port: prometheus
+      {{- with $.Values.httpPathPrefix }}
+      path: {{ printf "%s/metrics" . }}
+      {{- end }}
+      {{- with .serviceMonitor.interval }}
+      interval: {{ . }}
+      {{- end }}
+      {{- with .serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ . }}
+      {{- end }}
+      {{- with .serviceMonitor.relabelings }}
+      relabelings:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .serviceMonitor.metricRelabelings }}
+      metricRelabelings:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .serviceMonitor.scheme }}
+      scheme: {{ . }}
+      {{- end }}
+      {{- with .serviceMonitor.tlsConfig }}
+      tlsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- with .serviceMonitor.targetLabels }}
+  targetLabels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

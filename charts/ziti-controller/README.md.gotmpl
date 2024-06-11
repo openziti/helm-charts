@@ -15,23 +15,16 @@
 
 {{ template "chart.requirementsSection" . }}
 
-Note that ingress-nginx is not strictly required, but the chart is parameterized to allow for conveniently declaring pass-through TLS.
-
-You must patch the `ingress-nginx` deployment to enable the SSL passthrough option.
-
-```bash
-kubectl patch deployment "ingress-nginx-controller" \
-    --namespace ingress-nginx \
-    --type json \
-    --patch '[{"op": "add",
-        "path": "/spec/template/spec/containers/0/args/-",
-        "value":"--enable-ssl-passthrough"
-    }]'
-```
-
 ## Overview
 
 This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. Delete the controller pod after an upgrade for the new controller configuration to take effect.
+
+Here's a checklist that must be satisfied for each of the controller's TLS servers: router control plane (`ctrlPlane`), each web listener(s) (`clientApi`, at least).
+
+1. Each of the controller's TLS servers must have an advertised host (FQDN) and TCP port. The chart ensures the DNS SAN is added for this address. The port is always 443 if ingress is enabled for `ClusterIP` service.
+1. A K8s Service must be configured and reachable by all clients. (i.e., type `ClusterIP`+`Ingress`, `NodePort`, or `LoadBalancer`)
+1. Each K8s Service must be configured for TLS passthrough (i.e., server TLS must not be terminated by an intermediary LB).
+1. All clients must access the controller through the advertised address(es).
 
 ## Requirements
 
@@ -55,7 +48,7 @@ kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0
 
 ## Minimal Installation
 
-This first example shows a minimal installation for a Kubernetes distribution that provides TLS pass-through for Service type LoadBalancer, e.g., K3S, Minikube.
+This first example shows a minimal installation for a Kubernetes distribution that provides TLS pass-through for Service type LoadBalancer, e.g., k3s, k3d, Minikube. This is useful for environments where there's no cost, or justifiable cost, associated with provisioning a LoadBalancer with TLS passthrough.
 
 You must supply one value when you install the chart.
 
@@ -97,13 +90,23 @@ ziti edge login ziti-controller-minimal.example.com:1280 \
 ```
 <!-- {% endraw %} -->
 
-## Managed Kubernetes Installation
+## Using ClusterIP Services with an Ingress Controller
 
-Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because edge clients and routers authenticate with client certificates. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
-
-This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installing-nic/installation-with-helm/).
+The default K8s service type for this chart is `ClusterIP`. You can publish these cluster-internal services with an `Ingress` resource. You need an Ingress Controller. Here's an example of using [the community `ingress-nginx` chart](https://docs.nginx.com/nginx-ingress-controller/installation/installing-nic/installation-with-helm/) to provision ingresses for the controller's `ClusterIP` services.
 
 Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
+
+If necessary, patch the `ingress-nginx` deployment to enable TLS passthrough.
+
+```bash
+kubectl patch deployment "ingress-nginx-controller" \
+    --namespace ingress-nginx \
+    --type json \
+    --patch '[{"op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value":"--enable-ssl-passthrough"
+    }]'
+```
 
 Create a Helm chart values file like this.
 
@@ -182,6 +185,15 @@ For example, to use a separate CA for the edge signer function, merge this with 
 edgeSignerPki:
     enabled: true
 ```
+
+## Prometheus Monitoring
+
+This chart provides a default disabled `ziti-controller-prometheus` k8s service for prometheus,
+which can be enabled with `prometheus.service.enabled`. Enabling it will create a prometheus ServiceMonitor
+for configuring the prometheus endpoint. It is also important that you enable
+`fabric.events.enabled` for getting a full set of metrics.
+
+For more information, please check [here](https://openziti.io/docs/learn/core-concepts/metrics/prometheus/).
 
 ## Values Reference
 

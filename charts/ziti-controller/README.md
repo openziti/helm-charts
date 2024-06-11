@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.0.2](https://img.shields.io/badge/Version-1.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.0.7](https://img.shields.io/badge/Version-1.0.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -11,26 +11,19 @@ Host an OpenZiti controller in Kubernetes
 | Repository | Name | Version |
 |------------|------|---------|
 | https://charts.jetstack.io | cert-manager | ~1.11.0 |
-| https://charts.jetstack.io | trust-manager | ~0.4.0 |
+| https://charts.jetstack.io | trust-manager | ~0.7.0 |
 | https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.5.2 |
-
-Note that ingress-nginx is not strictly required, but the chart is parameterized to allow for conveniently declaring pass-through TLS.
-
-You must patch the `ingress-nginx` deployment to enable the SSL passthrough option.
-
-```bash
-kubectl patch deployment "ingress-nginx-controller" \
-    --namespace ingress-nginx \
-    --type json \
-    --patch '[{"op": "add",
-        "path": "/spec/template/spec/containers/0/args/-",
-        "value":"--enable-ssl-passthrough"
-    }]'
-```
 
 ## Overview
 
 This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. Delete the controller pod after an upgrade for the new controller configuration to take effect.
+
+Here's a checklist that must be satisfied for each of the controller's TLS servers: router control plane (`ctrlPlane`), each web listener(s) (`clientApi`, at least).
+
+1. Each of the controller's TLS servers must have an advertised host (FQDN) and TCP port. The chart ensures the DNS SAN is added for this address. The port is always 443 if ingress is enabled for `ClusterIP` service.
+1. A K8s Service must be configured and reachable by all clients. (i.e., type `ClusterIP`+`Ingress`, `NodePort`, or `LoadBalancer`)
+1. Each K8s Service must be configured for TLS passthrough (i.e., server TLS must not be terminated by an intermediary LB).
+1. All clients must access the controller through the advertised address(es).
 
 ## Requirements
 
@@ -54,7 +47,7 @@ kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0
 
 ## Minimal Installation
 
-This first example shows a minimal installation for a Kubernetes distribution that provides TLS pass-through for Service type LoadBalancer, e.g., K3S, Minikube.
+This first example shows a minimal installation for a Kubernetes distribution that provides TLS pass-through for Service type LoadBalancer, e.g., k3s, k3d, Minikube. This is useful for environments where there's no cost, or justifiable cost, associated with provisioning a LoadBalancer with TLS passthrough.
 
 You must supply one value when you install the chart.
 
@@ -96,13 +89,23 @@ ziti edge login ziti-controller-minimal.example.com:1280 \
 ```
 <!-- {% endraw %} -->
 
-## Managed Kubernetes Installation
+## Using ClusterIP Services with an Ingress Controller
 
-Managed Kubernetes providers typically configure server TLS for a Service of type LoadBalancer. Ziti needs pass-through TLS because edge clients and routers authenticate with client certificates. We'll accomplish this by changing the Service type to ClusterIP and creating Ingress resources with pass-through TLS for each cluster service.
-
-This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installing-nic/installation-with-helm/).
+The default K8s service type for this chart is `ClusterIP`. You can publish these cluster-internal services with an `Ingress` resource. You need an Ingress Controller. Here's an example of using [the community `ingress-nginx` chart](https://docs.nginx.com/nginx-ingress-controller/installation/installing-nic/installation-with-helm/) to provision ingresses for the controller's `ClusterIP` services.
 
 Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
+
+If necessary, patch the `ingress-nginx` deployment to enable TLS passthrough.
+
+```bash
+kubectl patch deployment "ingress-nginx-controller" \
+    --namespace ingress-nginx \
+    --type json \
+    --patch '[{"op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value":"--enable-ssl-passthrough"
+    }]'
+```
 
 Create a Helm chart values file like this.
 
@@ -182,6 +185,15 @@ edgeSignerPki:
     enabled: true
 ```
 
+## Prometheus Monitoring
+
+This chart provides a default disabled `ziti-controller-prometheus` k8s service for prometheus,
+which can be enabled with `prometheus.service.enabled`. Enabling it will create a prometheus ServiceMonitor
+for configuring the prometheus endpoint. It is also important that you enable
+`fabric.events.enabled` for getting a full set of metrics.
+
+For more information, please check [here](https://openziti.io/docs/learn/core-concepts/metrics/prometheus/).
+
 ## Values Reference
 
 | Key | Type | Default | Description |
@@ -192,7 +204,7 @@ edgeSignerPki:
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
-| cert-manager.enabled | bool | `false` | install the cert-manager subchart to provide CRDs Certificate, Issuer |
+| cert-manager.enabled | bool | `false` | install the cert-manager subchart |
 | cert-manager.installCRDs | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | cert.duration | string | `"87840h"` | server certificate duration as Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
@@ -218,6 +230,7 @@ edgeSignerPki:
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
+| env | string | `nil` | set name to value in containers' environment |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
@@ -239,6 +252,7 @@ edgeSignerPki:
 | fabric.events.subscriptions[9].type | string | `"edge.entityCounts"` |  |
 | highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
 | highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
+| image.additionalArgs | list | `[]` | additional arguments can be passed directly to the container to modify ziti runtime arguments |
 | image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
@@ -246,7 +260,7 @@ edgeSignerPki:
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
-| ingress-nginx.enabled | bool | `false` | recommended: install the ingress-nginx subchart (may be necessary for managed k8s) |
+| ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
 | managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
@@ -280,16 +294,29 @@ edgeSignerPki:
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
 | prometheus.service.annotations | object | `{}` |  |
 | prometheus.service.enabled | bool | `false` | create a cluster service for the deployment |
-| prometheus.service.labels | object | `{}` |  |
+| prometheus.service.labels | object | `{"app":"prometheus"}` | extra labels for matching only this service, ie. serviceMonitor |
 | prometheus.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| prometheus.serviceMonitor.annotations | object | `{}` | ServiceMonitor annotations |
+| prometheus.serviceMonitor.enabled | bool | `true` | If enabled, and prometheus service is enabled, ServiceMonitor resources for Prometheus Operator are created |
+| prometheus.serviceMonitor.interval | string | `nil` | ServiceMonitor scrape interval |
+| prometheus.serviceMonitor.labels | object | `{}` | Additional ServiceMonitor labels |
+| prometheus.serviceMonitor.metricRelabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples as the last step before ingestion https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `metric_relabel_configs`) |
+| prometheus.serviceMonitor.namespace | string | `nil` | Alternative namespace for ServiceMonitor resources |
+| prometheus.serviceMonitor.namespaceSelector | object | `{}` | Namespace selector for ServiceMonitor resources |
+| prometheus.serviceMonitor.relabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples before scraping https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `relabel_configs`) |
+| prometheus.serviceMonitor.scheme | string | `"https"` | ServiceMonitor will use http by default, but you can pick https as well |
+| prometheus.serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout in Go duration format (e.g. 15s) |
+| prometheus.serviceMonitor.targetLabels | list | `[]` | ServiceMonitor will add labels from the service to the Prometheus metric https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#servicemonitorspec |
+| prometheus.serviceMonitor.tlsConfig | object | `{"insecureSkipVerify":true}` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
+| prometheus.serviceMonitor.tlsConfig.insecureSkipVerify | bool | `true` | set TLS skip verify, because the SAN will not match with the pod IP |
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
 | spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| trust-manager.app.trust.namespace | string | `"ziti"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
+| trust-manager.app.trust.namespace | string | `"{{ .Release.Namespace }}"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
-| trust-manager.enabled | bool | `false` | install the trust-manager subchart to provide CRD Bundle |
+| trust-manager.enabled | bool | `false` | install the trust-manager subchart |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 
 ## TODO's

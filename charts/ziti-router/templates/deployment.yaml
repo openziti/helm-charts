@@ -15,8 +15,9 @@ spec:
       app.kubernetes.io/component: "ziti-router"
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        configmap-checksum: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -51,6 +52,7 @@ spec:
           {{ end }}
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+            {{- tpl (toYaml .Values.image.additionalArgs) . | nindent 12 }}
           env:
             - name: ZITI_ENROLL_TOKEN
               value: {{ .Values.enrollmentJwt | quote }}
