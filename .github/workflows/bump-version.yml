@@ -12,11 +12,11 @@ jobs:
           - hello-toy
           - httpbin
           - reflect
-          - ziti-console
           - ziti-controller
           - ziti-edge-tunnel
           - ziti-host
           - ziti-router
+          - zrok
     runs-on: ubuntu-latest
     steps:
       - name: Bump Chart Versions if Changed
