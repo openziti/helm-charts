@@ -71,23 +71,11 @@ data:
 
     {{- if .Values.events.enabled }}
     events:
-      {{- range $key, $val := .Values.events.outputs }}
-      {{ $key }}:
-        subscriptions:
-          {{- $val.subscriptions | toYaml | nindent 10 }}
-        handler:
-          type: {{ $val.type | quote }}
-          format: {{ $val.format | quote }}
-          path: {{ $val.mountDir }}/{{ $val.fileName }}
-          {{- if $val.type == 'ampq' }}
-          url: {{ $val.url | quote }}
-          queue: {{ $val.queue | quote }}
-          bufferSize: {{ $val.bufferSize }}
-          {{- end }}
+      {{- .Values.events.outputs | toYaml | nindent 6 }}
     {{- end }}
 
     network:
-    {{- if .Values.fabric.events.enabled ||  .Values.events.enabled}}
+    {{- if or .Values.fabric.events.enabled .Values.events.enabled }}
     {{- .Values.fabric.events.network | toYaml | nindent 6 }}
     {{- .Values.events.network | toYaml | nindent 6 }}
     {{- end }}

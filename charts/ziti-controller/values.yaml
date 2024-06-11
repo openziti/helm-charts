@@ -331,21 +331,34 @@ events:
   enabled: true
   network:
     # -- matching interval age and reporting interval ensures coherent metrics from fabric events
-    intervalAgeThreshold: 5s
+    intervalAgeThreshold: 60s
     # -- matching interval age and reporting interval ensures coherent metrics from fabric events
-    metricsReportInterval: 5s
+    metricsReportInterval: 60s
   outputs:
-    -
-      mountDir: /var/run/ziti
-      fileName: events.json
+#    ampqLogger:
+#      subscriptions:
+#        - type: fabric.usage
+#          version: 3
+#      handler:
+#        type: amqp
+#        format: json
+#        url: "amqps://USER:PASSWORD@HOST:5671"
+#        queue: events
+#        # buffer size is how many events can be shipped per interval, larger networks need a larger buffer
+#        bufferSize: 1000
+    jsonLogger:
       subscriptions:
-        - type: fabric.circuits
         - type: metrics
-        - type: fabric.usage  # used by zrok for limits enforcement
-          version: 3
-        - type: services
-        - type: edge.entityCounts
-          interval: 60s
+          metricFilter: "link.latency.*"
+        - type: metrics
+          sourceFilter: .*
+          metricFilter: "(.*session.create.*)|(bolt.*)"
+      handler:
+        type: file
+        format: json
+        path: /var/log/ziti/utilization-metrics.log
+        maxsizemb: 1024
+        maxbackups: 3
 
 network:
   # -- routeTimeoutSeconds controls the number of seconds the controller will wait for a route attempt to succeed.
