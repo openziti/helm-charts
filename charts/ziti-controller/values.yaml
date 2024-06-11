@@ -397,8 +397,8 @@ ingress-nginx:
       # -- configure subchart ingress-nginx to enable the pass-through TLS feature
       enable-ssl-passthrough: "true"
 
-additionalConfigs:
-  # -- allow the insertion of raw/unmodified config blocks
+# -- allow the insertion of raw/unmodified config blocks
+additionalConfigs: {}
   #  events:
   #    ampqLogger:
   #      subscriptions:
