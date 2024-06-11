@@ -69,15 +69,9 @@ data:
           path: {{ .Values.fabric.events.mountDir }}/{{ .Values.fabric.events.fileName }}
     {{- end }}
 
-    {{- if .Values.events.enabled }}
-    events:
-      {{- .Values.events.outputs | toYaml | nindent 6 }}
-    {{- end }}
-
     network:
-    {{- if or .Values.fabric.events.enabled .Values.events.enabled }}
+    {{- if .Values.fabric.events.enabled }}
     {{- .Values.fabric.events.network | toYaml | nindent 6 }}
-    {{- .Values.events.network | toYaml | nindent 6 }}
     {{- end }}
 
     {{- .Values.network | toYaml | nindent 6 }}
@@ -316,4 +310,6 @@ data:
           - binding: health-checks
             options: { }
     {{- end }}
+
+    {{- .Values.additionalConfigs | toYaml | nindent 4 }}
 

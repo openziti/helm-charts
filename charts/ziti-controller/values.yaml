@@ -325,41 +325,6 @@ fabric:
       - type: edge.entityCounts
         interval: 5s
 
-
-events:
-  # -- enable fabric event logger and file handler
-  enabled: true
-  network:
-    # -- matching interval age and reporting interval ensures coherent metrics from fabric events
-    intervalAgeThreshold: 60s
-    # -- matching interval age and reporting interval ensures coherent metrics from fabric events
-    metricsReportInterval: 60s
-  outputs:
-#    ampqLogger:
-#      subscriptions:
-#        - type: fabric.usage
-#          version: 3
-#      handler:
-#        type: amqp
-#        format: json
-#        url: "amqps://USER:PASSWORD@HOST:5671"
-#        queue: events
-#        # buffer size is how many events can be shipped per interval, larger networks need a larger buffer
-#        bufferSize: 1000
-    jsonLogger:
-      subscriptions:
-        - type: metrics
-          metricFilter: "link.latency.*"
-        - type: metrics
-          sourceFilter: .*
-          metricFilter: "(.*session.create.*)|(bolt.*)"
-      handler:
-        type: file
-        format: json
-        path: /var/log/ziti/utilization-metrics.log
-        maxsizemb: 1024
-        maxbackups: 3
-
 network:
   # -- routeTimeoutSeconds controls the number of seconds the controller will wait for a route attempt to succeed.
   routeTimeoutSeconds:  10
@@ -431,3 +396,29 @@ ingress-nginx:
     extraArgs:
       # -- configure subchart ingress-nginx to enable the pass-through TLS feature
       enable-ssl-passthrough: "true"
+
+additionalConfigs:
+  # -- allow the insertion of raw/unmodified config blocks
+  #  events:
+  #    ampqLogger:
+  #      subscriptions:
+  #        - type: fabric.usage
+  #          version: 3
+  #      handler:
+  #        type: amqp
+  #        format: json
+  #        url: "amqps://USER:PASSWORD@HOST:5671"
+  #        queue: events
+  #        # buffer size is how many events can be shipped per interval, larger networks need a larger buffer
+  #        bufferSize: 1000
+  #    jsonLogger:
+  #      subscriptions:
+  #        - type: metrics
+  #          sourceFilter: .*
+  #          metricFilter: .*
+  #      handler:
+  #        type: file
+  #        format: json
+  #        path: /var/run/ziti/metrics.log
+  #        maxsizemb: 1024
+  #        maxbackups: 3
