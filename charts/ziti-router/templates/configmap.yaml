@@ -65,7 +65,9 @@ data:
             mode: {{ .Values.tunnel.mode }}
           {{- end }}
           {{- if eq .Values.tunnel.mode "tproxy" }}
+            {{- if .Values.tunnel.resolver }}
             resolver: {{ .Values.tunnel.resolver }}
+            {{- end }}
             {{- if .Values.tunnel.dnsSvcIpRange }}
             dnsSvcIpRange: {{ .Values.tunnel.dnsSvcIpRange }}
             {{- end }}
@@ -73,7 +75,7 @@ data:
           {{- else if eq .Values.tunnel.mode "proxy" }}
             services:
             {{- range .Values.tunnel.proxyServices }}
-              - "{{ .zitiService }}:{{ .containerPort }}"
+              - "{{ .zitiService }}:{{ .containerPort | default .advertisedPort }}"
             {{- end }}
           {{- end }}
     {{- end }}

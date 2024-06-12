@@ -91,32 +91,32 @@ edge:
 tunnel:
   # -- run mode for the router's built-in tunnel component: host, tproxy, proxy, or none
   mode: none
-  # -- built-in nameserver configuration, e.g. udp://127.1.2.3:53
-  resolver: none
-  # -- ip subnet that is used for the internal service name resolution
+  # -- Ziti nameserver listener where OS must be configured to send DNS queries (default: udp://127.0.0.1:53)
+  resolver:
+  # -- CIDR range for the internal service fqdn to dynamic intercept IP address resolution (default: 100.64.0.0/10)
   dnsSvcIpRange:
-  # -- interface device name for setting up ingress firewall rules if fw enabled.
+  # -- interface device name for setting up INPUT firewall rules if fw enabled.
   # It must be set but not needed in containers. Thus, it is set to lo by default
-  lanIf: lo   
+  lanIf: lo
   # -- the tproxy mode can be switched from iptables based interception to bpf interception by passing
   # the user space bpf program path. bpf kernel space program is expected to be loaded prior or during
   # router deployment, e.g. bpfman agent, hostpath, etc
-  diverterPath: 
-  # -- list of definitions to configure proxy services and according kubernetes services for these if mode "proxy"
+  diverterPath:
+  # -- list of Ziti services for which K8s services are to be created by this deployment, default is one cluster service port per Ziti service
   proxyServices: []
     #  # -- name of the Openziti service to forward data to
-    #- zitiService: my_service.svc
-    #  # -- port the router opens to listen for data
-    #  containerPort: 8443
+    #- zitiService: my_ziti_service
+    #  # -- name suffix when not using the "default" proxy tunnel service, see above: "additionalK8sServices"
+    #  k8sService: my_k8s_suffix
     #  # -- port the kubernetes service uses as listen port
     #  advertisedPort: 80
-    #  # -- name suffix when not using the "default" proxy tunnel service, see above: "additionalK8sServices"
-    #  k8sservice: myservice
-  # -- default Kubernetes service object listening to proxy ports defined in "proxyServices", only if tunnel mode is "proxy"
+    #  # -- override the container port (default: advertisedPort)
+    #  containerPort: 8443
+  # -- if tunnel mode is "proxy", create the a cluster service named {{ release }}-proxy-default listening on each "advertisedPort" defined in "proxyServices"
   proxyDefaultK8sService:
     enabled: true
     type: ClusterIP
-  # -- additional Kubernetes services created additionally to the "default" proxy listener service, only if mode is "proxy"
+  # -- if tunnel mode is "proxy", create a separate cluster service for each Ziti service listed in "proxyServices" which k8sService == name
   proxyAdditionalK8sServices: []
     #- name: myservice
     #  type: ClusterIP
