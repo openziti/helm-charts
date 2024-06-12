@@ -232,7 +232,7 @@ tunnel:
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |
 | tunnel.diverterPath | string | `nil` | the tproxy mode can be switched from iptables based interception to bpf interception by passing the user space bpf program path. bpf kernel space program is expected to be loaded prior or during router deployment, e.g. bpfman agent, hostpath, etc |
-| tunnel.dnsSvcIpRange | string | `nil` | CIDR range for the router's dynamic intercept IP addresses (default: 100.64.0.0/10) |
+| tunnel.dnsSvcIpRange | string | `nil` | CIDR range for the internal service fqdn to dynamic intercept IP address resolution (default: 100.64.0.0/10) |
 | tunnel.lanIf | string | `"lo"` | interface device name for setting up INPUT firewall rules if fw enabled. It must be set but not needed in containers. Thus, it is set to lo by default |
 | tunnel.mode | string | `"none"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
 | tunnel.proxyAdditionalK8sServices | list | `[]` | if tunnel mode is "proxy", create a separate cluster service for each Ziti service listed in "proxyServices" which k8sService == name |
