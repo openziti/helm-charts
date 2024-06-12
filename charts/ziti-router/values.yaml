@@ -93,7 +93,7 @@ tunnel:
   mode: none
   # -- Ziti nameserver listener where OS must be configured to send DNS queries (default: udp://127.0.0.1:53)
   resolver:
-  # -- CIDR range for the router's dynamic intercept IP addresses (default: 100.64.0.0/10)
+  # -- CIDR range for the internal service fqdn to dynamic intercept IP address resolution (default: 100.64.0.0/10)
   dnsSvcIpRange:
   # -- interface device name for setting up INPUT firewall rules if fw enabled.
   # It must be set but not needed in containers. Thus, it is set to lo by default
