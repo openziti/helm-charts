@@ -198,7 +198,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| additionalConfigs | object | `{}` | allow the insertion of raw/unmodified config blocks |
+| additionalConfigs | object | `{}` | allow the insertion of raw/unmodified config blocks Additional configs will be appended to the top-level keys of the ziti controller config ( events, edge, web, network, ctrl) These configs allow for OVERRIDING behavior in any top level config block |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
