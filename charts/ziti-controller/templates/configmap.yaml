@@ -53,12 +53,7 @@ data:
       key:                  {{ include "configMountDir" . }}/ctrl-plane-identity/tls.key
       ca:                   ${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
 
-    # Network Configuration
-    #
-    # Configure how the controller will establish and manage the overlay network, and routing operations on top of
-    # the network.
-    #
-    {{- if .Values.fabric.events.enabled }}
+    {{- if and .Values.fabric.events.enabled (not .Values.additionalConfigs.events) }}
     events:
       jsonLogger:
         subscriptions:
@@ -69,12 +64,26 @@ data:
           path: {{ .Values.fabric.events.mountDir }}/{{ .Values.fabric.events.fileName }}
     {{- end }}
 
+    {{- if .Values.additionalConfigs.events }}
+    events:
+    {{- .Values.additionalConfigs.events | toYaml | nindent 6 }}
+    {{- end }}
+
+    # Network Configuration
+    #
+    # Configure how the controller will establish and manage the overlay network, and routing operations on top of
+    # the network.
+    #
     network:
     {{- if .Values.fabric.events.enabled }}
     {{- .Values.fabric.events.network | toYaml | nindent 6 }}
     {{- end }}
 
     {{- .Values.network | toYaml | nindent 6 }}
+
+    {{- if .Values.additionalConfigs.network }}
+    {{- .Values.additionalConfigs.network | toYaml | nindent 6 }}
+    {{- end }}
 
     # the endpoint that routers will connect to the controller over.
     ctrl:
@@ -87,6 +96,9 @@ data:
       # the number of milliseconds to wait before a hello synchronization fails and closes the connection (30ms to 60000ms, default: 1000ms)
       #connectTimeoutMs:       1000
       listener:                tls:0.0.0.0:{{ .Values.ctrlPlane.containerPort }}
+    {{- if .Values.additionalConfigs.network }}
+    {{- .Values.additionalConfigs.ctrl | toYaml | nindent 6 }}
+    {{- end }}
 
     healthChecks:
       boltCheck:
@@ -96,6 +108,9 @@ data:
         timeout: 20s
         # How long to wait before starting the check. Defaults to 30 seconds
         initialDelay: 30s
+    {{- if .Values.additionalConfigs.healthChecks }}
+    {{- .Values.additionalConfigs.healthChecks | toYaml | nindent 6 }}
+    {{- end }}
 
     # By having an 'edge' section defined, the ziti-controller will attempt to parse the edge configuration. Removing this
     # section, commenting out, or altering the name of the section will cause the edge to not run.
@@ -143,6 +158,11 @@ data:
           # The length of time that a Ziti Edge Router enrollment should remain valid. After
           # this duration, the enrollment will expire and no longer be usable.
           duration: 180m
+
+    {{- if .Values.additionalConfigs.edge }}
+    {{- .Values.additionalConfigs.edge | toYaml | nindent 6 }}
+    {{- end }}
+
 
     # web
     # Defines webListeners that will be hosted by the controller. Each webListener can host many APIs and be bound to many
@@ -216,6 +236,7 @@ data:
             options: { }
           {{- end }}
       # name - required
+
     {{- if .Values.managementApi.service.enabled }}
       # Provides a name for this listener, used for logging output. Not required to be unique, but is highly suggested.
       - name: management
@@ -309,5 +330,9 @@ data:
             options: { }
           - binding: health-checks
             options: { }
+    {{- end }}
+
+    {{- if .Values.additionalConfigs.web }}
+    {{- .Values.additionalConfigs.web | toYaml | nindent 6 }}
     {{- end }}
 

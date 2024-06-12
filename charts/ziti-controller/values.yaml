@@ -298,6 +298,8 @@ persistence:
   # -- 2GiB is enough for tens of thousands of entities, but feel free to make it larger
   size: 2Gi
 
+## DEPRECATED - This will be going away in a future release
+## Use additionalConfigs block for event configuration
 fabric:
   events:
     # -- enable fabric event logger and file handler
@@ -396,3 +398,31 @@ ingress-nginx:
     extraArgs:
       # -- configure subchart ingress-nginx to enable the pass-through TLS feature
       enable-ssl-passthrough: "true"
+
+# -- allow the insertion of raw/unmodified config blocks
+# Additional configs will be appended to the top-level keys of the ziti controller config ( events, edge, web, network, ctrl)
+# These configs allow for OVERRIDING behavior in any top level config block
+additionalConfigs: {}
+  #  events:
+  #    ampqLogger:
+  #      subscriptions:
+  #        - type: fabric.usage
+  #          version: 3
+  #      handler:
+  #        type: amqp
+  #        format: json
+  #        url: "amqps://USER:PASSWORD@HOST:5671"
+  #        queue: events
+  #        # buffer size is how many events can be shipped per interval, larger networks need a larger buffer
+  #        bufferSize: 1000
+  #    jsonLogger:
+  #      subscriptions:
+  #        - type: metrics
+  #          sourceFilter: .*
+  #          metricFilter: .*
+  #      handler:
+  #        type: file
+  #        format: json
+  #        path: /var/run/ziti/metrics.log
+  #        maxsizemb: 1024
+  #        maxbackups: 3
