@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.0.7](https://img.shields.io/badge/Version-1.0.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
+![Version: 1.0.8](https://img.shields.io/badge/Version-1.0.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -198,7 +198,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| additionalConfigs | string | `nil` |  |
+| additionalConfigs | object | `{}` | allow the insertion of raw/unmodified config blocks |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
