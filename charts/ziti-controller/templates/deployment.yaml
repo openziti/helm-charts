@@ -107,7 +107,10 @@ spec:
           {{ end }}
           args:
             {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
-            {{- tpl (toYaml .Values.image.additionalArgs) . | nindent 12 }}
+            {{- range .Values.image.additionalArgs }}
+            - {{ . | quote }}
+            {{- end }}
+
           env:
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
