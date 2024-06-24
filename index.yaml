@@ -301,6 +301,17 @@ entries:
   ziti-console:
   - apiVersion: v2
     appVersion: 3.1.0
+    created: "2024-06-24T20:29:22.956920658Z"
+    deprecated: true
+    description: Deploy OpenZiti console as kubernetes service
+    digest: 43ee4bbb4ac8b393f591168587b8e118a715ca9b264cc5880da4b6ac79c67f45
+    name: ziti-console
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.5.3/ziti-console-0.5.3.tgz
+    version: 0.5.3
+  - apiVersion: v2
+    appVersion: 3.1.0
     created: "2024-04-15T18:22:13.299406993Z"
     description: Deploy OpenZiti console as kubernetes service
     digest: 5f9c223a13d684cc064d798ff74653cd3a5b6457819e844e96993bfc679a5a2d
@@ -440,6 +451,29 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.1.1/ziti-console-0.1.1.tgz
     version: 0.1.1
   ziti-controller:
+  - apiVersion: v3
+    appVersion: 1.1.3
+    created: "2024-06-24T20:29:23.165105738Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.11.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.7.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.5.2
+    description: Host an OpenZiti controller in Kubernetes
+    digest: b1c1511899cec8feb86c5ce03f93f8024acd3264cafd26ee85df9eca8c008c4e
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-1.0.10/ziti-controller-1.0.10.tgz
+    version: 1.0.10
   - apiVersion: v3
     appVersion: 1.1.3
     created: "2024-06-20T20:33:52.432295492Z"
@@ -2338,4 +2372,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2024-06-20T20:33:52.618435974Z"
+generated: "2024-06-24T20:29:23.165588549Z"
