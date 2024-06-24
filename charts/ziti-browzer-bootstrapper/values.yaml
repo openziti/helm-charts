@@ -1,0 +1,159 @@
+# Default values for ziti-browzer-bootstrapper.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+ingress:
+  # -- create an ingress for the cluster service
+  enabled: true
+  # -- "nginx" if using ingress-nginx
+  ingressClassName: ""
+  # -- ingress annotations for the ingress controller
+  annotations: {}
+  # -- ingress labels
+  labels: {}
+  # -- enable TLS ingress by specifying the name of the secret with the tls.crt, tls.key, etc. for the server cert
+  tlsSecret:
+
+
+zitiBrowzer:
+  bootstrapper:
+    # -- bootstrapper loglevel
+    logLevel: info
+    # -- hostname for bootstrapper - required
+    host: ~
+    # -- scheme the container should start with. http is ususally okay for kubernetes, as we should have an ingress router
+    scheme: http
+    # -- Ziti Edge Mgmt APIs to pre-configure
+    targets: []
+      # - vhost: external-name.browsser.ziti
+      #   # Service name to connect to
+      #   service: ziti-service
+      #   path: /
+      #   scheme: http
+      #   idp_issuer_base_url:
+      #   idp_client_id:
+
+  controller:
+    host: ~
+    port: 1280
+  loadBalancer:
+    host: ~
+    port: 443
+  runtime:
+    # -- origin trail token. See https://openziti.discourse.group/t/browzer-setup-error-1014-origintrial-subdomain-mismatch/2481
+    originTrailToken: ~
+    # -- runtime loglevel
+    logLevel: info
+    # -- the hotkey to activate the BrowZer settings dialog modal. default: alt+F12
+    hotKey: alt+F12
+  # -- node environment mode - defaults to production
+  nodeEnv: production
+  nodeTlsRejectUnauthorized: 0
+
+service:
+  # -- create a cluster service for the deployment
+  enabled: true
+  # -- port for the server to bind and cluster service to target
+  containerPort: 1408
+  # -- port for the cluster service, load balancer, nodeport, and ingress to advertise
+  advertisedPort: 80
+  # -- symbolic name of the cluster service port
+  portName: http
+  # -- choose ClusterIP, NodePort, or LoadBalancer
+  type: ClusterIP
+  # -- cluster service labels
+  labels: {}
+  # -- cluster service annotations
+  annotations: {}
+
+image:
+  # -- app container image to deploy
+  repository: ghcr.io/openziti/ziti-browzer-bootstrapper
+  # -- deployment image pull policy
+  #pullPolicy: Always
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  # tag: latest
+  # -- app run command args
+  # args: []
+  # -- app image registry credential
+  pullSecrets: []
+  # -- app run command
+  # command: []
+
+# -- release name override
+nameOverride: ""
+# -- release fullname override
+fullnameOverride: ""
+
+# -- annotations to apply to all pods
+podAnnotations: {}
+
+podSecurityContext:
+  # -- effective UID
+  runAsUser: 1000
+  # -- effective GID
+  runAsGroup: 2171
+  # -- volume mount filesystem group owner
+  fsGroup: 2171
+
+# -- deployment container security context
+securityContext:
+  # capabilities:
+  #   add:
+  #     - NET_ADMIN
+
+# -- extraVolumes Optionally specify extra list of additional volumes for the browzer-bootstrapper pods
+extraVolumes: []
+# -- extraVolumeMounts Optionally specify extra list of additional volumeMounts for the browzer-bootstrapper containers
+extraVolumeMounts: []
+# -- sidecars Add additional sidecar containers to the browzer-bootstrapper pods
+# e.g:
+# sidecars:
+#   - name: your-image-name
+#     image: your-image
+#     imagePullPolicy: Always
+#     ports:
+#       - name: portname
+#         containerPort: 1234
+#
+sidecars: []
+# -- initContainers Add additional init containers to the browzer-bootstrapper pods
+# ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+# e.g:
+# initContainers:
+#  - name: your-image-name
+#    image: your-image
+#    imagePullPolicy: Always
+#    command: ['sh', '-c', 'echo "hello world"']
+#
+initContainers: []
+
+# -- deployment container resources
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# -- deployment pod node selector
+nodeSelector: {}
+#  kubernetes.io/role: master
+
+# -- deployment pod tolerations
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+# -- deployment pod node affinity
+affinity: {}
+
+# -- deployment pod replicas
+replicas: 1
