@@ -21,7 +21,7 @@ zitiBrowzer:
     logLevel: info
     # -- hostname for bootstrapper - required
     host: ~
-    # -- scheme the container should start with. http is ususally okay for kubernetes, as we should have an ingress router
+    # -- scheme the container should start with. http is usually okay for kubernetes, as we should have an ingress router
     scheme: http
     # -- Ziti Edge Mgmt APIs to pre-configure
     targets: []

@@ -3,7 +3,7 @@
 
 ![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.61.1](https://img.shields.io/badge/AppVersion-0.61.1-informational?style=flat-square)
 
-Deploy OpenZiti browzer bootsrapper as kubernetes service
+Deploy OpenZiti browZer bootstrapper as kubernetes service
 
 ## Add the OpenZiti Charts Repo to Helm
 
@@ -28,7 +28,7 @@ A `browzer-values.yaml` file with some samples values:
 
 ```yaml
 zitiBrowzer:
-  bootstrapper:
+  botstrapper:
     logLevel: debug
     host: browzer.[mydomain.tld]
     targets:
