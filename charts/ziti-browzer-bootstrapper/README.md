@@ -28,7 +28,7 @@ A `browzer-values.yaml` file with some samples values:
 
 ```yaml
 zitiBrowzer:
-  botstrapper:
+  bootstrapper:
     logLevel: debug
     host: browzer.[mydomain.tld]
     targets:
@@ -48,7 +48,7 @@ zitiBrowzer:
     host: ziti-controller-client.openziti
     port: 443
   loadBalancer:
-    # TODO: validate this - maybe set to zitiBrowzer.botstrapper.host ?
+    # TODO: validate this - maybe set to zitiBrowzer.bootstrapper.host ?
     host: [mydomain.tld]
 
 ingress:
