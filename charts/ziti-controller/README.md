@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.0.9](https://img.shields.io/badge/Version-1.0.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
+![Version: 1.0.10](https://img.shields.io/badge/Version-1.0.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -73,6 +73,8 @@ kubectl get secret \
     -o go-template='{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}'
 ```
 <!-- {% endraw %} -->
+
+Visit the Ziti Administration Console (ZAC): https://ziti-controller-minimal.example.com/zac/
 
 You may log in the `ziti` CLI with one command or omit the `-p` part to prompt:
 
@@ -155,13 +157,14 @@ ctrlPlane:
 
 ## Extra Security for the Management API
 
-You can split the client and management APIs into separate cluster services by setting `managementApi.service.enabled=true`. With this configuration, you'll have an additional cluster service named `{controller release}-mgmt` that is the management API, and the client API will not have management features.
+You can split the client and management APIs into separate cluster services by setting `managementApi.service.enabled=true`. With this configuration, you'll have an additional cluster service named `{release}-mgmt` that is the management API, and the client API will not have management features.
 
-This Helm chart's values allow for both operational scenarios: combined and split. The default choice is to expose the combined client and management APIs as the cluster service named `{controller release}-client`, which is convenient because you can use the `ziti` CLI immediately. For additional security, you may shelter the management API by splitting these two sets of features, exposing them as separate API servers. After the split, you can access the management API in several ways:
+This Helm chart's values allow for both operational scenarios: combined and split. The default choice is to expose the combined client and management APIs as the cluster service named `{release}-client`, which is convenient because you can use the `ziti` CLI immediately. For additional security, you may shelter the management API by splitting these two sets of features, exposing them as separate API servers. After the split, you can access the management API in several ways:
 
-* running the web console inside the cluster,
-* hosting a Ziti service, or
-* `kubectl port-forward`.
+* deploy a tunneler to bind a Ziti service targeting {release}-mgmt.{namespace}.svc:{port}.
+* `kubectl -n {namespace} port-forward deployments/{release}-mgmt 8443:{port}`
+
+The web console (ZAC) is always bound to the same web listener as the management API, so you can access it at that `/zac/` path on the same URL.
 
 ## Advanced PKI
 
