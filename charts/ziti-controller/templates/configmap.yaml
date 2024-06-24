@@ -234,8 +234,11 @@ data:
             options: { }
           - binding: fabric
             options: { }
+          - binding: zac
+            options:
+              location: /ziti-console
+              indexFile: index.html
           {{- end }}
-      # name - required
 
     {{- if .Values.managementApi.service.enabled }}
       # Provides a name for this listener, used for logging output. Not required to be unique, but is highly suggested.
@@ -303,7 +306,12 @@ data:
             options: { }
           - binding: health-checks
             options: { }
+          - binding: zac
+            options:
+              location: /ziti-console
+              indexFile: index.html
     {{- end }}
+
     {{- if .Values.prometheus.service.enabled }}
       # Binding for prometheus https://openziti.github.io/docs/core-concepts/metrics/prometheus
       - name: prometheus-metrics
