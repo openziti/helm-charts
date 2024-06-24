@@ -6,7 +6,6 @@ on:
       - '.github/workflows/miniziti.yml'
       - 'charts/ziti-controller/**'
       - 'charts/ziti-router/**'
-      - 'charts/ziti-console/**'
       - 'charts/httpbin/**'
       - 'charts/zrok/**'
 
