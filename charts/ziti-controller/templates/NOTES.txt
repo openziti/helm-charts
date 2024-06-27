@@ -13,5 +13,6 @@ To learn more about the release, try:
   $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
   $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
 
-  This deployment provides an OpenZiti controller to manage an OpenZiti network.
+This deployment provides an OpenZiti controller to manage an OpenZiti network.
 
+Visit the console in a web browser: {{ include "ziti-controller.console" . }}

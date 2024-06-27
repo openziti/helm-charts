@@ -96,3 +96,11 @@ Filename of the ctrl plane trust bundle
 {{- define "ziti-controller.ctrlPlaneCasFile" -}}
 ctrl-plane-cas.crt
 {{- end }}
+
+{{- define "ziti-controller.console" -}}
+    {{- if .Values.managementApi.service.enabled -}}
+https://{{ .Values.managementApi.advertisedHost }}:{{ .Values.managementApi.advertisedPort }}/zac/
+    {{- else -}}
+https://{{ .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}/zac/
+    {{- end }}
+{{- end }}
