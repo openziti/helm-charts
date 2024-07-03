@@ -167,7 +167,7 @@ tunnel:
 
 # websocket related config
 websocket:
-  # -- enable the websocket transport. Also requires an appropiate edge.additionalListeners entry.
+  # -- enable the websocket transport. Also requires an appropriate edge.additionalListeners entry.
   enabled: false
   # -- websocket write timeout
   writeTimeout: 10

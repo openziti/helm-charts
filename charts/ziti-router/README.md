@@ -253,7 +253,7 @@ tunnel:
 | tunnel.proxyServices | list | `[]` | list of Ziti services for which K8s services are to be created by this deployment, default is one cluster service port per Ziti service |
 | tunnel.resolver | string | `nil` | Ziti nameserver listener where OS must be configured to send DNS queries (default: udp://127.0.0.1:53) |
 | websocket.enableCompression | bool | `true` | enable compression on websocket |
-| websocket.enabled | bool | `false` | enable the websocket transport. Also requires an appropiate edge.additionalListeners entry. |
+| websocket.enabled | bool | `false` | enable the websocket transport. Also requires an appropriate edge.additionalListeners entry. |
 | websocket.handshakeTimeout | int | `10` | websocket handshake timeout |
 | websocket.idleTimeout | int | `5` | websocket idle timeout |
 | websocket.pingInterval | int | `54` | websocket ping timeout |
