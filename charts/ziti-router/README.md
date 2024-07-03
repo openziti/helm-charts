@@ -212,6 +212,7 @@ tunnel:
 | forwarder.xgressDialQueueLength | int | `1000` |  |
 | forwarder.xgressDialWorkerCount | int | `128` |  |
 | hostNetwork | bool | `false` | Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace. i.e. egress gateway |
+| identity.altServerCerts | string | `nil` |  |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
 | image.additionalArgs | list | `[]` | additional arguments can be passed directly to the container to modify ziti runtime arguments |
 | image.args | list | `["run","{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
@@ -251,6 +252,16 @@ tunnel:
 | tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | if tunnel mode is "proxy", create the a cluster service named {{ release }}-proxy-default listening on each "advertisedPort" defined in "proxyServices" |
 | tunnel.proxyServices | list | `[]` | list of Ziti services for which K8s services are to be created by this deployment, default is one cluster service port per Ziti service |
 | tunnel.resolver | string | `nil` | Ziti nameserver listener where OS must be configured to send DNS queries (default: udp://127.0.0.1:53) |
+| websocket.enableCompression | bool | `true` | enable compression on websocket |
+| websocket.enabled | bool | `false` | enable the websocket transport. Also requires an appropiate edge.additionalListeners entry. |
+| websocket.handshakeTimeout | int | `10` | websocket handshake timeout |
+| websocket.idleTimeout | int | `5` | websocket idle timeout |
+| websocket.pingInterval | int | `54` | websocket ping timeout |
+| websocket.pongTimeout | int | `60` | websocket pong timeout |
+| websocket.readBufferSize | int | `4096` | websocket read buffer size |
+| websocket.readTimeout | int | `5` | websocket read timeout |
+| websocket.writeBufferSize | int | `4096` | websocket write buffer size |
+| websocket.writeTimeout | int | `10` | websocket write timeout |
 
 ## TODO's
 
