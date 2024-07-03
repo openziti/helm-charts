@@ -21,8 +21,8 @@ data:
       key:         {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.key
       # expected filename defined in SetZitiRouterIdentityCA()
       ca:          {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.cas
-      alt_server_certs:
     {{- if .Values.identity.altServerCerts }}
+      alt_server_certs:
       {{- range .Values.identity.altServerCerts }}
         {{- if eq .mode "localFile" }}
       - server_cert: {{ .serverCert }}
