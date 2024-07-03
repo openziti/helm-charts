@@ -21,6 +21,15 @@ data:
       key:         {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.key
       # expected filename defined in SetZitiRouterIdentityCA()
       ca:          {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.cas
+      alt_server_certs:
+    {{- if .Values.identity.altServerCerts }}
+      {{- range .Values.identity.altServerCerts }}
+        {{- if eq .mode "localFile" }}
+      - server_cert: {{ .serverCert }}
+        server_key:  {{ .serverKey }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
 
     ctrl:
       # router control plane API (:6262)
@@ -55,10 +64,10 @@ data:
           advertise: {{ required "You must set .Values.edge.advertisedHost to the domain name to advertise for this router's edge listener. Try adding --set edge.advertisedHost=router11.ziti.example.org to your Helm command" .Values.edge.advertisedHost }}:{{ .Values.edge.advertisedPort }}
           {{- if .Values.edge.options }}
             {{- toYaml .Values.edge.options | nindent 10 }}
-          {{- end }
+          {{- end }}
     {{- end }}
     {{- if .Values.edge.additionalListeners }}
-      {{- range .Values.edge.additionalListeners }}
+      {{- range $index, $element := .Values.edge.additionalListeners }}
       - binding: edge
         address: {{ $element.protocol }}:0.0.0.0:{{ $element.containerPort }}
         options:
@@ -66,6 +75,7 @@ data:
           {{- if $element.options }}
             {{- toYaml $element.options | nindent 10 }}
           {{- end }}
+      {{- end }}
     {{- end }}
     {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "none" ) }}
       - binding: tunnel
@@ -97,8 +107,9 @@ data:
       reportInterval: 5s
       intervalAgeThreshold: 5s
     {{- end }}
-    
-    csr:
+
+    edge: # TODO switch back to top level when https://github.com/openziti/ziti/issues/2193 is finished
+     csr:
       {{- if .Values.csr.country }}
       country: {{ .Values.csr.country }}
       {{- end }}
@@ -123,7 +134,9 @@ data:
             {{- end }}
             {{- if .Values.edge.additionalListeners }}
               {{- range .Values.edge.additionalListeners }}
+                {{- if .addHostToSan }}
           - {{ .advertisedHost }}
+                {{- end }}
               {{- end }}
             {{- end }}
             {{- if and .Values.linkListeners.transport.service.enabled .Values.linkListeners.transport.advertisedHost }}
@@ -165,19 +178,11 @@ data:
           - {{ . | quote }}
           {{- end }}
 
-    #transport:
-    #  ws:
-    #    writeTimeout: 10
-    #    readTimeout: 5
-    #    idleTimeout: 5
-    #    pongTimeout: 60
-    #    pingInterval: 54
-    #    handshakeTimeout: 10
-    #    readBufferSize: 4096
-    #    writeBufferSize: 4096
-    #    enableCompression: true
-    #    server_cert: ~/.ziti/config/certs/192.168.10.11.server.chain.cert
-    #    key: ~/.ziti/config/certs/192.168.10.11.key
+    {{- if eq .Values.websocket.enabled true }}
+    transport:
+      ws:
+      {{- omit .Values.websocket "enabled" | toYaml  | nindent 8 }}
+    {{- end }}
 
     {{- if .Values.forwarder }}
     forwarder:

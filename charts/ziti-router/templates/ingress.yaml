@@ -75,3 +75,46 @@ spec:
                 port:
                   number: {{ .Values.linkListeners.transport.advertisedPort }}
 {{- end }}
+
+{{- if .Values.edge.additionalListeners }}
+{{- $root := . }}
+{{- range .Values.edge.additionalListeners }}
+{{- if .ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-router.fullname" $root }}-listener-{{ .name }}
+  labels:
+  {{- include "ziti-router.labels" $root | nindent 4 }}
+  {{- with .ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .ingress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .ingress.ingressClassName }}
+  ingressClassName: {{ .ingress.ingressClassName }}
+  {{- end }}
+  {{- if .ingress.tls }}
+  tls:
+    {{- with .ingress.tls }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ .advertisedHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-router.fullname" $root }}-listener-{{ .name }}
+                port:
+                  number: {{ .advertisedPort }}
+{{- end }}
+{{- end }}
+{{- end }}

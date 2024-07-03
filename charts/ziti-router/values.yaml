@@ -43,7 +43,15 @@ csr:
 # -- set name to value in containers' environment
 env:
   # SOME_ENV: "true"
-  
+
+identity:
+  altServerCerts:
+    #  # -- mode: currently only 'localFile' supported. The idea is to provide additional options, i.e. direct access to kubernetes tls secrets
+    #- mode: localFile
+    #  # -- serverCert: in mode 'localFile': path to the alternative server certificate
+    #  serverCert:
+    #  # -- serverCert: in mode 'localFile': path to the alternative server key
+    #  serverKey:
 
 # listen for router links
 linkListeners:
@@ -106,6 +114,10 @@ edge:
     #  containerPort: 3023
     #  advertisedHost: # router11-edge-wss.ziti.example.com
     #  advertisedPort: 443
+    #  # -- Should this additional lister advertised Host be added to SAN of the identity? Depends on use-case. i.e. for a WSS server you won't do that and provide an additional cert for this endpoint.
+    #  addHostToSan: false
+    #  # -- additional edge listener options
+    #  options: {}
     #  # -- additional edge listeners can have their own cluster services
     #  service:
     #    enabled: true
@@ -116,6 +128,9 @@ edge:
     #  ingress:
     #    enabled: false
     #    annotations:
+    #    labels:
+    #    ingressClassName:
+    #    tls:
 
 tunnel:
   # -- run mode for the router's built-in tunnel component: host, tproxy, proxy, or none
@@ -149,6 +164,30 @@ tunnel:
   proxyAdditionalK8sServices: []
     #- name: myservice
     #  type: ClusterIP
+
+# websocket related config
+websocket:
+  # -- enable the websocket transport. Also requires an appropiate edge.additionalListeners entry.
+  enabled: false
+  # -- websocket write timeout
+  writeTimeout: 10
+  # -- websocket read timeout
+  readTimeout: 5
+  # -- websocket idle timeout
+  idleTimeout: 5
+  # -- websocket pong timeout
+  pongTimeout: 60
+  # -- websocket ping timeout
+  pingInterval: 54
+  # -- websocket handshake timeout
+  handshakeTimeout: 10
+  # -- websocket read buffer size
+  readBufferSize: 4096
+  # -- websocket write buffer size
+  writeBufferSize: 4096
+  # -- enable compression on websocket
+  enableCompression: true
+
 
 # -- read-only mountpoint for executables (must be in image's executable search PATH)
 execMountDir:     /usr/local/bin
