@@ -48,7 +48,10 @@ zitiBrowzer:
     hotKey: alt+F12
   # -- node environment mode - defaults to production
   nodeEnv: production
-  nodeTlsRejectUnauthorized: 0
+  # -- Set to 0 to don't validate certs - especially when communicating to openziti client API
+  nodeTlsRejectUnauthorized: ~
+  # -- File (i.e. mounted by extraVolumes/extraVolumesMounts) providing additional CA's to trust (i.e. for controller ca)
+  nodeExtraCACerts: ~
 
 service:
   # -- create a cluster service for the deployment

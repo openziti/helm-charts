@@ -41,9 +41,15 @@ spec:
           env:
             - name: NODE_ENV
               value: "{{ .Values.zitiBrowzer.nodeEnv | default "production" }}"
+           {{- /* It's a bit tricky to evaluate 'if .Values.zitiBrowzer.nodeTlsRejectUnauthorized' to 'true' when zitiBrowzer.nodeTlsRejectUnauthorized == 0 */}}
+           {{- if and (ne (printf "%v" .Values.zitiBrowzer.nodeTlsRejectUnauthorized) "") (ne (printf "%v" .Values.zitiBrowzer.nodeTlsRejectUnauthorized) "<nil>") }}
             - name: NODE_TLS_REJECT_UNAUTHORIZED
-              value: "{{ .Values.zitiBrowzer.nodeTlsRejectUnauthorized | default "0" }}"
-#      NODE_EXTRA_CA_CERTS: /persistent/pki/ziti-edge-controller-root-ca/certs/ziti-edge-controller-root-ca.cert
+              value: "{{ printf "%v" .Values.zitiBrowzer.nodeTlsRejectUnauthorized }}"
+           {{- end }}
+           {{- if .Values.zitiBrowzer.nodeExtraCACerts }}
+            - name: NODE_EXTRA_CA_CERTS
+              value: "{{ .Values.zitiBrowzer.nodeExtraCACerts  }}"
+           {{- end }}
             - name: ZITI_BROWZER_BOOTSTRAPPER_LOGLEVEL
               value: "{{ .Values.zitiBrowzer.bootstrapper.logLevel | default "info" }}"
             - name: ZITI_BROWZER_BOOTSTRAPPER_HOST
@@ -65,16 +71,14 @@ spec:
               value: "{{ .Values.zitiBrowzer.controller.host | required "zitiBrowzer.controller.host is required." }}"
             - name: ZITI_CONTROLLER_PORT
               value: "{{ .Values.zitiBrowzer.controller.port | default "1280" }}"
-
-            {{ if .Values.zitiBrowzer.loadBalancer.host }}
+            {{- if .Values.zitiBrowzer.loadBalancer.host }}
             - name: ZITI_BROWZER_LOAD_BALANCER_HOST
               value: "{{ .Values.zitiBrowzer.loadBalancer.host }}"
-            {{ end }}
-            {{ if .Values.zitiBrowzer.loadBalancer.port }}
+            {{- end }}
+            {{- if .Values.zitiBrowzer.loadBalancer.port }}
             - name: ZITI_BROWZER_LOAD_BALANCER_PORT
               value: "{{ .Values.zitiBrowzer.loadBalancer.port }}"
-            {{ end }}
-
+            {{- end }}
           ports:
             - containerPort: {{ .Values.service.containerPort }}
               name: {{ .Values.service.portName }}
@@ -93,27 +97,20 @@ spec:
               port: {{ .Values.service.containerPort }}
             initialDelaySeconds: 10
             periodSeconds: 10
-          {{ if .Values.image.command }}
+          {{- if .Values.image.command }}
           command:
           {{- range .Values.image.command }}
             - {{ . | quote }}
           {{- end }}
-          {{ end }}
-          {{ if .Values.image.args }}
+          {{- end }}
+          {{- if .Values.image.args }}
           args:
           {{- range .Values.image.args }}
             - {{ . | quote }}
           {{- end }}
-          {{ end }}
-          volumeMounts:
-            - name: session-store
-              mountPath: /usr/src/app/sessions
-            - name: ziti-store
-              mountPath: /usr/src/ziti
-            - name: ziti-browzer-bootstrapper-config-map
-              mountPath: /usr/src/ziti/settings.json
-              subPath: settings-template.json
+          {{- end }}
           {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
             {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
         {{- if .Values.sidecars }}
@@ -131,15 +128,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: session-store
-          emptyDir: {}
-        - name: ziti-store
-          emptyDir: {}
-        - name: ziti-browzer-bootstrapper-config-map
-          configMap:
-            name: {{ include "ziti-browzer-bootstrapper.fullname" . }}-config
-            defaultMode: 0444
       {{- if .Values.extraVolumes }}
+      volumes:
         {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- end }}
