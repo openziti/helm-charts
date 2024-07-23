@@ -235,6 +235,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
 | env | string | `nil` | set name to value in containers' environment |
+| envSecrets | string | `nil` | set secrets as environment variables in the container |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
@@ -314,7 +315,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | prometheus.serviceMonitor.tlsConfig | object | `{"insecureSkipVerify":true}` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
 | prometheus.serviceMonitor.tlsConfig.insecureSkipVerify | bool | `true` | set TLS skip verify, because the SAN will not match with the pod IP |
 | resources | object | `{}` | deployment container resources |
-| secrets | string | `nil` | set secrets as environment variables in the container |
 | securityContext | object | `{}` | deployment container security context |
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
 | spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
