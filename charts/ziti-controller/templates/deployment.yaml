@@ -138,7 +138,7 @@ spec:
               value: {{ $val | quote }}
             {{- end }}
             # Add additional secrets as environment variables
-            {{- range .Values.secrets }}
+            {{- range .Values.envSecrets }}
             - name: {{ .name | quote }}
               valueFrom:
                secretKeyRef:
