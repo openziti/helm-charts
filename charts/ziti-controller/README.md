@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.0.11](https://img.shields.io/badge/Version-1.0.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
+![Version: 1.0.12](https://img.shields.io/badge/Version-1.0.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -235,6 +235,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
 | env | string | `nil` | set name to value in containers' environment |
+| envSecrets | string | `nil` | set secrets as environment variables in the container |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
