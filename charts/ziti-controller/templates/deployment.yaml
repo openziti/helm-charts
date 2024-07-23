@@ -132,9 +132,18 @@ spec:
                 secretKeyRef:
                   name:  {{ include "ziti-controller.fullname" . }}-admin-secret
                   key: admin-password
+            # Add additional environment variables
             {{- range $key, $val := .Values.env }}
             - name: {{ $key | quote }}
               value: {{ $val | quote }}
+            {{- end }}
+            # Add additional secrets as environment variables
+            {{- range .Values.secrets }}
+            - name: {{ .name | quote }}
+              valueFrom:
+               secretKeyRef:
+                 name: {{ .valueFrom.secretKeyRef.name | quote }}
+                 key: {{ .valueFrom.secretKeyRef.key | quote }}
             {{- end }}
           volumeMounts:
             - mountPath: {{ include "dataMountDir" . }}

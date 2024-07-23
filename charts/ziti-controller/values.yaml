@@ -74,6 +74,14 @@ managementApi:
 env:
 # SOME_ENV: "true"
 
+# -- set secrets as environment variables in the container
+secrets:
+#  - name: SOME_SECRET_ENV
+#    valueFrom:
+#      secretKeyRef:
+#        name: some-secret
+#        key: some_secret_key
+
 prometheus:
   # -- cluster service target port on the container
   containerPort: 9090
