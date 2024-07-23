@@ -314,6 +314,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | prometheus.serviceMonitor.tlsConfig | object | `{"insecureSkipVerify":true}` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
 | prometheus.serviceMonitor.tlsConfig.insecureSkipVerify | bool | `true` | set TLS skip verify, because the SAN will not match with the pod IP |
 | resources | object | `{}` | deployment container resources |
+| secrets | string | `nil` | set secrets as environment variables in the container |
 | securityContext | object | `{}` | deployment container security context |
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
 | spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
