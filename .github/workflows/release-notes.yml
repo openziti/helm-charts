@@ -1,0 +1,24 @@
+name: Update Release Notes
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Changelog
+        id: changelog_builder
+        uses: mikepenz/release-changelog-builder-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Release with Changelog
+        uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: ${{ steps.changelog_builder.outputs.changelog }}
