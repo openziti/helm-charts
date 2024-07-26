@@ -1,0 +1,25 @@
+# .github/release.yml
+
+changelog:
+  exclude:
+    labels:
+      - notes-ignore
+  categories:
+    - title: Controller Changes
+      labels:
+        - notes:ziti-controller
+    - title: Router Changes
+      labels:
+        - notes:ziti-router
+    - title: Tunneler Daemonset Changes
+      labels:
+        - notes:ziti-edge-tunnel
+    - title: Hosting Pod Changes
+      labels:
+        - notes:ziti-host
+    - title: zrok Changes
+      labels:
+        - notes:zrok
+    - title: Other Changes
+      labels:
+        - "*"
