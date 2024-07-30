@@ -20,6 +20,9 @@ changelog:
     - title: zrok Changes
       labels:
         - notes:zrok
+    - title: BrowZer Bootstrapper Changes
+      labels:
+        - notes:ziti-browzer-bootstrapper
     - title: Other Changes
       labels:
         - "*"
