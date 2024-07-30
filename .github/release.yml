@@ -3,7 +3,7 @@
 changelog:
   exclude:
     labels:
-      - notes-ignore
+      - notes:ignore
   categories:
     - title: Controller Changes
       labels:
