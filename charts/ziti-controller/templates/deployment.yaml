@@ -50,6 +50,10 @@ spec:
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: HOME
               value: {{ .Values.image.homeDir }}
+            # must be false or container image will run boostrap(), which is not currently used in this chart, only by
+            # Linux and Docker deployments
+            - name: ZITI_BOOTSTRAP
+              value: "false"
           volumeMounts:
             - mountPath: {{ include "execMountDir" . }}/ziti-controller-init.bash
               name: ziti-controller-configmap
