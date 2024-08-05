@@ -50,6 +50,7 @@ jobs:
           version: quickstartrelease
 
       - name: Run miniziti with latest release charts
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
         run: miniziti start --no-hosts --verbose
 
       - name: Upgrade miniziti with charts from this branch
