@@ -2,6 +2,9 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release)
+trustDomain:
+
 ctrlPlane:
   # -- cluster service target port on the container
   containerPort: 6262

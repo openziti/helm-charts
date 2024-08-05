@@ -53,6 +53,8 @@ data:
       key:                  {{ include "configMountDir" . }}/ctrl-plane-identity/tls.key
       ca:                   ${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
 
+    trustDomain: ${ZITI_TRUST_DOMAIN}
+
     {{- if and .Values.fabric.events.enabled (not .Values.additionalConfigs.events) }}
     events:
       jsonLogger:
