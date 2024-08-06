@@ -168,21 +168,33 @@ tunnel:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-router container |
-| advertisedHost | string | `nil` | common advertise-host for transport and edge listeners can also be specified separately via `edge.advertisedHost` and `linkListeners.transport.advertisedHost` |
+| advertisedHost | string | `nil` | decommissioned value must be specified separately as edge.advertisedHost, edge.additionalListeners[].advertisedHost, and linkListeners.transport.advertisedHost |
 | affinity | object | `{}` | deployment template spec affinity |
 | configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
 | configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints statefile in same dir |
+| csr | object | `{"country":null,"locality":null,"organization":null,"organizationalUnit":null,"province":null,"sans":{"dns":[],"email":[],"ip":[],"noDefaults":false,"uri":[]}}` | Certificate signing request distinguished name and subject alternative names |
+| csr.country | string | `nil` | country |
+| csr.locality | string | `nil` | city |
+| csr.organization | string | `nil` | organization |
+| csr.organizationalUnit | string | `nil` | organizational unit |
+| csr.province | string | `nil` | state |
 | csr.sans.dns | list | `[]` | additional DNS SANs |
+| csr.sans.email | list | `[]` | additional email SANs |
 | csr.sans.ip | list | `[]` | additional IP SANs |
+| csr.sans.noDefaults | bool | `false` | disable computing the SANs from the advertisedHost, etc. |
+| csr.sans.uri | list | `[]` | additional URI SANs |
 | ctrl.endpoint | string | `nil` | required control plane endpoint |
 | dnsConfig | object | `{}` | it allows to override dns options when dnsPolicy is set to None. |
 | dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
-| edge.advertisedHost | string | `nil` | DNS name that edge clients will use to reach this router's edge listener |
+| edge.additionalListeners | string | `nil` | additional edge listeners have the same shape as the default edge listener, except there is no "enabled" (they're enabled if defined), and you must specify a unique name for each additional edge listener. The name distinguishes their respective cluster services. |
+| edge.advertisedHost | string | `nil` | Domain name that edge clients will use to reach this router's edge listener |
 | edge.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | edge.containerPort | int | `3022` | cluster service target port on the container |
 | edge.enabled | bool | `true` | enable the edge listener in the router config |
 | edge.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
 | edge.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| edge.options | string | `nil` | additional common xgress options |
+| edge.protocol | string | `"tls"` | edge listener protocol: tls, wss |
 | edge.service.annotations | string | `nil` | service annotations |
 | edge.service.enabled | bool | `true` | create a cluster service for the edge listener |
 | edge.service.labels | string | `nil` | service labels |
@@ -200,6 +212,7 @@ tunnel:
 | forwarder.xgressDialQueueLength | int | `1000` |  |
 | forwarder.xgressDialWorkerCount | int | `128` |  |
 | hostNetwork | bool | `false` | Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace. i.e. egress gateway |
+| identity.altServerCerts | string | `nil` |  |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
 | image.additionalArgs | list | `[]` | additional arguments can be passed directly to the container to modify ziti runtime arguments |
 | image.args | list | `["run","{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
@@ -226,7 +239,7 @@ tunnel:
 | persistence.volumeName | string | `nil` | PVC volume name |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
-| podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the endpoints state file |
+| podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the list of ctrl endpoints |
 | proxy | object | `{}` | Explicit proxy setting in the router configuration. Router can be deployed in a site  where all egress traffic is forwarded through an explicit proxy. The enrollment will also be forwarded through the proxy. |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
@@ -239,6 +252,16 @@ tunnel:
 | tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | if tunnel mode is "proxy", create the a cluster service named {{ release }}-proxy-default listening on each "advertisedPort" defined in "proxyServices" |
 | tunnel.proxyServices | list | `[]` | list of Ziti services for which K8s services are to be created by this deployment, default is one cluster service port per Ziti service |
 | tunnel.resolver | string | `nil` | Ziti nameserver listener where OS must be configured to send DNS queries (default: udp://127.0.0.1:53) |
+| websocket.enableCompression | bool | `true` | enable compression on websocket |
+| websocket.enabled | bool | `false` | enable the websocket transport. Also requires an appropriate edge.additionalListeners entry. |
+| websocket.handshakeTimeout | int | `10` | websocket handshake timeout |
+| websocket.idleTimeout | int | `5` | websocket idle timeout |
+| websocket.pingInterval | int | `54` | websocket ping timeout |
+| websocket.pongTimeout | int | `60` | websocket pong timeout |
+| websocket.readBufferSize | int | `4096` | websocket read buffer size |
+| websocket.readTimeout | int | `5` | websocket read timeout |
+| websocket.writeBufferSize | int | `4096` | websocket write buffer size |
+| websocket.writeTimeout | int | `10` | websocket write timeout |
 
 ## TODO's
 
