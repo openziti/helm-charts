@@ -46,11 +46,16 @@ spec:
                 secretKeyRef:
                   name:  {{ include "ziti-controller.fullname" . }}-admin-secret
                   key: admin-password
+            - name: ZITI_TRUST_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-trust-domain
+                  key: trustDomain
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: HOME
               value: {{ .Values.image.homeDir }}
-            # must be false or container image will run boostrap(), which is not currently used in this chart, only by
+            # must be false or container image will run bootstrap(), which is not currently used in this chart, only by
             # Linux and Docker deployments
             - name: ZITI_BOOTSTRAP
               value: "false"
@@ -136,6 +141,11 @@ spec:
                 secretKeyRef:
                   name:  {{ include "ziti-controller.fullname" . }}-admin-secret
                   key: admin-password
+            - name: ZITI_TRUST_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-trust-domain
+                  key: trustDomain
             # Add additional environment variables
             {{- range $key, $val := .Values.env }}
             - name: {{ $key | quote }}
@@ -145,9 +155,9 @@ spec:
             {{- range .Values.envSecrets }}
             - name: {{ .name | quote }}
               valueFrom:
-               secretKeyRef:
-                 name: {{ .valueFrom.secretKeyRef.name | quote }}
-                 key: {{ .valueFrom.secretKeyRef.key | quote }}
+                secretKeyRef:
+                  name: {{ .valueFrom.secretKeyRef.name | quote }}
+                  key: {{ .valueFrom.secretKeyRef.key | quote }}
             {{- end }}
           volumeMounts:
             - mountPath: {{ include "dataMountDir" . }}
