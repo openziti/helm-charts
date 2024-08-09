@@ -129,5 +129,5 @@ jobs:
           miniziti kubectl get ingresses -A
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=-1
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=-1
-          cat /tmp/miniziti-client.log
+          cat /tmp/miniziti-client.log ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt
           miniziti kubectl -n zrok logs job/zrok-test-job
