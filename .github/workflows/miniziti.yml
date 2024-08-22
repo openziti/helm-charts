@@ -56,6 +56,13 @@ jobs:
       - name: Upgrade miniziti with charts from this branch
         run: miniziti start --no-hosts --verbose --charts ./charts
 
+      - name: Verify the Console is Available
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -skSfw '%{http_code}\t%{url}\n' -o/dev/null \
+          https://miniziti-controller.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/zac/
+
       - name: Find the ziti admin password
         id: get_ziti_pwd
         run: |
@@ -84,6 +91,7 @@ jobs:
           timeout: 10000
 
       - name: Send a POST request to the httpbin service and verify the response data
+        shell: bash
         run: |
           set -euo pipefail
           curl -sSf -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
