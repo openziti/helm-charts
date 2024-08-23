@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start minikube
-        uses: medyagh/setup-minikube@v0.0.16
+        uses: medyagh/setup-minikube@v0.0.18
         with:
           start-args: --profile ${{ env.ZITI_NAMESPACE }}
 
@@ -139,3 +139,4 @@ jobs:
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=-1
           cat /tmp/miniziti-client.log ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt
           miniziti kubectl -n zrok logs job/zrok-test-job
+          exit 0
