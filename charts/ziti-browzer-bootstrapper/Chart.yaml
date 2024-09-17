@@ -1,6 +1,6 @@
 apiVersion: v2
-appVersion: 0.63.3
-description: Deploy OpenZiti browZer bootstrapper as kubernetes service
+appVersion: 0.72.0
+description: Deploy OpenZiti BrowZer Bootstrapper as Kubernetes Service
 name: ziti-browzer-bootstrapper
 type: application
-version: 0.0.2
+version: 0.1.0

@@ -21,7 +21,7 @@ spec:
   {{- end }}
   tls:
     - hosts:
-      - {{ .Values.zitiBrowzer.bootstrapper.host | quote }}
+      - {{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host | quote }}
   {{- if .Values.ingress.tlsSecret }}
       secretName: {{ .Values.ingress.tlsSecret }}
   {{- end }}
@@ -33,7 +33,7 @@ spec:
   {{- end }}
   {{- end }}
   rules:
-    - host: {{ .Values.zitiBrowzer.bootstrapper.host | quote }}
+    - host: {{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host | quote }}
       {{ $ingressHttpDef }}
     {{- range .Values.zitiBrowzer.bootstrapper.targets }}
     - host: {{ .vhost | quote }}

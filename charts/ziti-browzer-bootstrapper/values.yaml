@@ -23,22 +23,27 @@ zitiBrowzer:
     host: ~
     # -- scheme the container should start with. http is usually okay for kubernetes, as we should have an ingress router
     scheme: http
-    # -- Ziti Edge Mgmt APIs to pre-configure
+    # -- Ziti Services with OIDC auth policy allowing BrowZer users by email claim
     targets: []
-      # - vhost: external-name.browsser.ziti
-      #   # Service name to connect to
-      #   service: ziti-service
+      # - vhost: my-ziti-service-browzer-ingress.cluster1.example.com
+      #   service: my-ziti-service-name
       #   path: /
       #   scheme: http
       #   idp_issuer_base_url:
       #   idp_client_id:
 
-  controller:
-    host: ~
-    port: 1280
   loadBalancer:
+    # -- (optional) hostname of bootstrapper ingress load balancer
     host: ~
+    # -- (optional) port of bootstrapper ingress load balancer
     port: 443
+
+  controller:
+    # -- Ziti Controller client API host (required)
+    host: ~
+    # -- Ziti Controller client API port
+    port: 1280
+
   runtime:
     # -- origin trail token. See https://openziti.discourse.group/t/browzer-setup-error-1014-origintrial-subdomain-mismatch/2481
     originTrailToken: ~
@@ -46,9 +51,10 @@ zitiBrowzer:
     logLevel: info
     # -- the hotkey to activate the BrowZer settings dialog modal. default: alt+F12
     hotKey: alt+F12
+
   # -- node environment mode - defaults to production
   nodeEnv: production
-  # -- Set to 0 to don't validate certs - especially when communicating to openziti client API
+  # -- Set to 0 to skip verifying the client API's server cert during startup (ZBR client must still encounter a verifiable client API server cert)
   nodeTlsRejectUnauthorized: ~
   # -- File (i.e. mounted by extraVolumes/extraVolumesMounts) providing additional CA's to trust (i.e. for controller ca)
   nodeExtraCACerts: ~
@@ -94,11 +100,11 @@ podAnnotations: {}
 
 podSecurityContext:
   # -- effective UID
-  runAsUser: 1000
+  runAsUser: 1000  # default user "node" in container image has UID 1000
   # -- effective GID
-  runAsGroup: 2171
+  runAsGroup: 1000  # default group "node" in container image has GID 1000
   # -- volume mount filesystem group owner
-  fsGroup: 2171
+  fsGroup: 1000
 
 # -- deployment container security context
 securityContext:

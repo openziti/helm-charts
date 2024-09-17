@@ -56,6 +56,14 @@ spec:
               value: "{{ .Values.zitiBrowzer.bootstrapper.host | required "zitiBrowzer.bootstrapper.host is required." }}"
             - name: ZITI_BROWZER_BOOTSTRAPPER_LISTEN_PORT
               value: "{{ .Values.service.containerPort }}"
+            {{- if .Values.zitiBrowzer.bootstrapper.loadBalancer.host }}
+            - name: ZITI_BROWZER_LOAD_BALANCER_HOST
+              value: "{{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host }}"
+            {{- end }}
+            {{- if .Values.zitiBrowzer.bootstrapper.loadBalancer.port }}
+            - name: ZITI_BROWZER_LOAD_BALANCER_PORT
+              value: "{{ .Values.zitiBrowzer.bootstrapper.loadBalancer.port }}"
+            {{- end }}
             - name: ZITI_BROWZER_BOOTSTRAPPER_SCHEME
               value: "{{ .Values.zitiBrowzer.bootstrapper.scheme | default "http" }}"
             - name: ZITI_BROWZER_BOOTSTRAPPER_TARGETS
@@ -71,14 +79,6 @@ spec:
               value: "{{ .Values.zitiBrowzer.controller.host | required "zitiBrowzer.controller.host is required." }}"
             - name: ZITI_CONTROLLER_PORT
               value: "{{ .Values.zitiBrowzer.controller.port | default "1280" }}"
-            {{- if .Values.zitiBrowzer.loadBalancer.host }}
-            - name: ZITI_BROWZER_LOAD_BALANCER_HOST
-              value: "{{ .Values.zitiBrowzer.loadBalancer.host }}"
-            {{- end }}
-            {{- if .Values.zitiBrowzer.loadBalancer.port }}
-            - name: ZITI_BROWZER_LOAD_BALANCER_PORT
-              value: "{{ .Values.zitiBrowzer.loadBalancer.port }}"
-            {{- end }}
           ports:
             - containerPort: {{ .Values.service.containerPort }}
               name: {{ .Values.service.portName }}
