@@ -103,7 +103,25 @@ jobs:
             exit 1
           fi
 
-      - name: Upgrade the zrok chart from the latest release with the current branch and run the test job
+      - name: Install the zrok chart from the latest release
+        shell: bash
+        env:
+          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+        run: |
+          helm upgrade \
+            --install \
+            --namespace zrok --create-namespace \
+            --values ./charts/zrok/values-ingress-nginx.yaml \
+            --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
+            --set "ziti.password=${ZITI_PWD}" \
+            --set "dnsZone=${ZROK_DNS_ZONE}" \
+            --set "controller.ingress.hosts[0]=zrok.${ZROK_DNS_ZONE}" \
+            --set "test.enabled=false" \
+            zrok openziti/zrok
+
+      - name: Upgrade the zrok chart from the current branch and run the test job
         shell: bash
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
