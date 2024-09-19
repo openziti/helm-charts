@@ -138,5 +138,9 @@ jobs:
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=-1
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=-1
           cat /tmp/miniziti-client.log ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok-bootstrap --tail=-1
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok --tail=-1
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-bootstrap-frontend --tail=-1
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-frontend --tail=-1
           miniziti kubectl -n zrok logs job/zrok-test-job
           exit 0
