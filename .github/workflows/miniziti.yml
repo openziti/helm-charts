@@ -103,7 +103,25 @@ jobs:
             exit 1
           fi
 
-      - name: Upgrade the zrok chart from the latest release with the current branch and run the test job
+      - name: Install the zrok chart from the latest release
+        shell: bash
+        env:
+          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+        run: |
+          helm upgrade \
+            --install \
+            --namespace zrok --create-namespace \
+            --values ./charts/zrok/values-ingress-nginx.yaml \
+            --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
+            --set "ziti.password=${ZITI_PWD}" \
+            --set "dnsZone=${ZROK_DNS_ZONE}" \
+            --set "controller.ingress.hosts[0]=zrok.${ZROK_DNS_ZONE}" \
+            --set "test.enabled=false" \
+            zrok openziti/zrok
+
+      - name: Upgrade the zrok chart from the current branch and run the test job
         shell: bash
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
@@ -138,5 +156,9 @@ jobs:
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=-1
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=-1
           cat /tmp/miniziti-client.log ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok-bootstrap --tail=-1
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok --tail=-1
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-bootstrap-frontend --tail=-1
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-frontend --tail=-1
           miniziti kubectl -n zrok logs job/zrok-test-job
           exit 0

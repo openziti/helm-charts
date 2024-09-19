@@ -20,7 +20,7 @@ spec:
         - name: ZROK_ENABLE_TOKEN
           valueFrom:
             secretKeyRef:
-              name: zrok-ziggy-account-token
+              name: {{ include "zrok.fullname" . }}-ziggy-account-token
               key: token
         volumeMounts:
         - name: test-script
