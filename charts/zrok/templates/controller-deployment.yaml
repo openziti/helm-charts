@@ -28,21 +28,6 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
-        {{- if .Values.controller.persistence.enabled }}
-        - name: {{ .Chart.Name }}-chown
-          image: busybox
-          command: ["/bin/chown","-R","65534:65534", "{{ .Values.controller.persistence.mount_dir }}"]
-        {{- end }}
-          volumeMounts:
-            {{- if .Values.controller.persistence.enabled }}
-            - name: persistence
-              mountPath: {{ .Values.controller.persistence.mount_dir }}
-            {{- end }}
-            # not yet used, but here for when it's possible to configure explicit trust of the Ziti Mgmt API's server cert
-            - name: ziti-ctrl-plane-cas
-              mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
-              subPath: {{ .Values.ziti.ca_cert_file }}
-              readOnly: true
         - name: {{ .Chart.Name }}-bootstrap
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}

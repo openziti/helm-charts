@@ -23,9 +23,16 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+# -- default pod security context for all containers
+podSecurityContext:
+  # -- effective UID
+  runAsUser: 2171  # default user "ziggy" in container image has UID 2171
+  # -- effective GID
+  runAsGroup: 2171  # default group "ziggy" in container image has GID 2171
+  # -- volume mount filesystem group owner
+  fsGroup: 2171
 
+# -- override the default pod security context for init and app containers
 securityContext: {}
   # capabilities:
   #   drop:
