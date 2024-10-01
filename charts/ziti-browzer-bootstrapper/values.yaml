@@ -7,22 +7,27 @@ ingress:
   enabled: true
   # -- "nginx" if using ingress-nginx
   ingressClassName: ""
-  # -- ingress annotations for the ingress controller
+  # -- ingress annotations for the ingress controller, e.g., cert-manager issuer and nginx backend protocol
   annotations: {}
+    # cert-manager.io/cluster-issuer: "cloudflare-dns01-issuer"
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
   # -- ingress labels
   labels: {}
-  # -- enable TLS ingress by specifying the name of the secret with the tls.crt, tls.key, etc. for the server cert
-  tlsSecret:
+  # -- enable TLS ingress by specifying the name of the secret with the tls.crt, tls.key, etc. for the bootstrapper
+  tlsSecret: ""
 
 
 zitiBrowzer:
   bootstrapper:
     # -- bootstrapper loglevel
     logLevel: info
-    # -- hostname for bootstrapper - required
-    host: ~
     # -- scheme the container should start with. http is usually okay for kubernetes, as we should have an ingress router
     scheme: http
+    loadBalancer:
+      # -- (required) hostname of bootstrapper ingress load balancer
+      host: ""
+      # -- (required) port of bootstrapper ingress load balancer
+      port: 443
     # -- Ziti Services with OIDC auth policy allowing BrowZer users by email claim
     targets: []
       # - vhost: my-ziti-service-browzer-ingress.cluster1.example.com
@@ -31,12 +36,6 @@ zitiBrowzer:
       #   scheme: http
       #   idp_issuer_base_url:
       #   idp_client_id:
-
-  loadBalancer:
-    # -- (optional) hostname of bootstrapper ingress load balancer
-    host: ~
-    # -- (optional) port of bootstrapper ingress load balancer
-    port: 443
 
   controller:
     # -- Ziti Controller client API host (required)

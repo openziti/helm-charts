@@ -53,7 +53,7 @@ spec:
             - name: ZITI_BROWZER_BOOTSTRAPPER_LOGLEVEL
               value: "{{ .Values.zitiBrowzer.bootstrapper.logLevel | default "info" }}"
             - name: ZITI_BROWZER_BOOTSTRAPPER_HOST
-              value: "{{ .Values.zitiBrowzer.bootstrapper.host | required "zitiBrowzer.bootstrapper.host is required." }}"
+              value: "{{ .Values.zitiBrowzer.bootstrapper.host | default (printf "%s.%s.svc" (include "ziti-browzer-bootstrapper.fullname" .) .Release.Namespace) }}"
             - name: ZITI_BROWZER_BOOTSTRAPPER_LISTEN_PORT
               value: "{{ .Values.service.containerPort }}"
             {{- if .Values.zitiBrowzer.bootstrapper.loadBalancer.host }}

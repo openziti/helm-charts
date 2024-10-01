@@ -19,18 +19,16 @@ spec:
   {{- if .Values.ingress.ingressClassName }}
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   {{- end }}
+  {{- if .Values.ingress.tlsSecret }}
   tls:
     - hosts:
       - {{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host | quote }}
-  {{- if .Values.ingress.tlsSecret }}
       secretName: {{ .Values.ingress.tlsSecret }}
-  {{- end }}
-  {{- range .Values.zitiBrowzer.bootstrapper.targets }}
+    {{- range .Values.zitiBrowzer.bootstrapper.targets }}
     - hosts:
       - {{ .vhost | quote }}
-  {{- if $.Values.ingress.tlsSecret }}
-      secretName: {{ $.Values.ingress.tlsSecret }}
-  {{- end }}
+      secretName: {{ $.Values.ingress.tlsSecret }}-{{ .vhost }}
+    {{- end }}
   {{- end }}
   rules:
     - host: {{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host | quote }}

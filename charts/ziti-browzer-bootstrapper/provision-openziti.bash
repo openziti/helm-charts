@@ -19,8 +19,8 @@ function cleanup() {
 
 typeset -a EMAILS=(${BROWZER_EMAILS})
 
-issuer=$(curl -s ${ZITI_BROWZER_OIDC_URL}/.well-known/openid-configuration | jq -r .issuer)
-jwks=$(curl -s ${ZITI_BROWZER_OIDC_URL}/.well-known/openid-configuration | jq -r .jwks_uri)
+issuer=$(curl -s ${ZITI_BROWZER_OIDC_URL%/}/.well-known/openid-configuration | jq -r .issuer)
+jwks=$(curl -s ${ZITI_BROWZER_OIDC_URL%/}/.well-known/openid-configuration | jq -r .jwks_uri)
 
 echo "OIDC issuer   : $issuer"
 echo "OIDC jwks url : $jwks"
@@ -42,6 +42,6 @@ for EMAIL in "${EMAILS[@]}"; do
     if ziti edge list identities "name=\"${EMAIL}\"" | grep -q "${EMAIL}"; then
         ziti edge update identity "${EMAIL}" --auth-policy ${auth_policy} --external-id "${EMAIL}" -a browzer.enabled.identities
     else
-        ziti edge create identity user "${EMAIL}" --auth-policy ${auth_policy} --external-id "${EMAIL}" -a browzer.enabled.identities
+        ziti edge create identity "${EMAIL}" --auth-policy ${auth_policy} --external-id "${EMAIL}" -a browzer.enabled.identities
     fi
 done
