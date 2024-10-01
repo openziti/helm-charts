@@ -1,0 +1,41 @@
+{{- if .Values.ingress.enabled }}
+{{- $ingressHttpDef := include "ingress-http-def" . -}}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-browzer-bootstrapper.fullname" . }}
+  labels:
+  {{- include "ziti-browzer-bootstrapper.labels" . | nindent 4 }}
+  {{- with .Values.ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  {{- end }}
+  {{- if .Values.ingress.tlsSecret }}
+  tls:
+    - hosts:
+      - {{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host | quote }}
+      secretName: {{ .Values.ingress.tlsSecret }}
+    {{- range .Values.zitiBrowzer.bootstrapper.targets }}
+    - hosts:
+      - {{ .vhost | quote }}
+      secretName: {{ $.Values.ingress.tlsSecret }}-{{ .vhost }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host | quote }}
+      {{ $ingressHttpDef }}
+    {{- range .Values.zitiBrowzer.bootstrapper.targets }}
+    - host: {{ .vhost | quote }}
+      {{ $ingressHttpDef }}
+    {{- end }}
+
+{{- end }}
