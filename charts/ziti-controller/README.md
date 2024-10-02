@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.0.16](https://img.shields.io/badge/Version-1.0.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.9](https://img.shields.io/badge/AppVersion-1.1.9-informational?style=flat-square)
+![Version: 1.0.18](https://img.shields.io/badge/Version-1.0.18-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.13](https://img.shields.io/badge/AppVersion-1.1.13-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -10,9 +10,9 @@ Host an OpenZiti controller in Kubernetes
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.jetstack.io | cert-manager | ~1.11.0 |
+| https://charts.jetstack.io | cert-manager | ~1.14.0 |
 | https://charts.jetstack.io | trust-manager | ~0.7.0 |
-| https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.5.2 |
+| https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.10.1 |
 
 ## Overview
 
@@ -214,18 +214,23 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
 | clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | clientApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
+| clientApi.altIngress.advertisedHost | string | `nil` | alternative ingress host, e.g., ziti.example.com |
+| clientApi.altIngress.annotations | object | `{}` | ingress annotations, e.g., to request a certificate from cert-manager and configure the backend protocol |
+| clientApi.altIngress.enabled | bool | `false` | create an ingress for the client API's ClusterIP service with a trusted certificate for clients that require a trusted certificate, e.g., BrowZer, ZAC |
+| clientApi.altIngress.ingressClassName | string | `nil` | ingress class name, e.g., "nginx" |
 | clientApi.containerPort | int | `1280` | cluster service target port on the container |
 | clientApi.dnsNames | list | `[]` | additional DNS SANs |
-| clientApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
-| clientApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| clientApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
+| clientApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
+| clientApi.ingress.ingressClassName | string | `nil` | ingress class name, e.g., "nginx" |
 | clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
-| ctrlPlane.alternativeIssuer | string | `nil` | kind and name of alternative issuer for the controller's identity |
+| ctrlPlane.alternativeIssuer | object | `{}` | kind and name of alternative issuer for the controller's identity |
 | ctrlPlane.containerPort | int | `6262` | cluster service target port on the container |
 | ctrlPlane.dnsNames | list | `[]` | additional DNS SANs |
-| ctrlPlane.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | ctrlPlane.service.enabled | bool | `true` | create a cluster service for the deployment |
 | ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
@@ -234,8 +239,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
-| env | string | `nil` | set name to value in containers' environment |
-| envSecrets | string | `nil` | set secrets as environment variables in the container |
+| env | object | `{}` | set name to value in containers' environment |
+| envSecrets | object | `{}` | set secrets as environment variables in the container |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
@@ -263,7 +268,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
-| image.tag | string | `""` | override the container image tag specified in the chart |
+| image.tag | string | `nil` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
 | managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
@@ -288,13 +293,13 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |
 | persistence.enabled | bool | `true` | required: place a storage claim for the BoltDB persistent volume |
-| persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled=true. If defined, PVC must be created manually before volume will be bound. |
+| persistence.existingClaim | string | `nil` | A manually managed Persistent Volume and Claim Requires persistence.enabled=true. If defined, PVC must be created manually before volume will be bound. |
 | persistence.size | string | `"2Gi"` | 2GiB is enough for tens of thousands of entities, but feel free to make it larger |
 | persistence.storageClass | string | `nil` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `2171` | the GID of the group that should own any files created by the container, especially the BoltDB file |
-| prometheus.advertisedHost | string | `""` | DNS name to advertise in place of the default internal cluster name built from the Helm release name |
+| prometheus.advertisedHost | string | `nil` | DNS name to advertise in place of the default internal cluster name built from the Helm release name |
 | prometheus.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
 | prometheus.service.annotations | object | `{}` |  |
@@ -323,6 +328,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | trust-manager.enabled | bool | `false` | install the trust-manager subchart |
 | trustDomain | string | `nil` | permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release) |
+| webBindingPki.altServerCerts.enabled | bool | `true` |  |
+| webBindingPki.altServerCerts.serverCerts | list | `[]` |  |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 
 ## TODO's
