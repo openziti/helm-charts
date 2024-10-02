@@ -48,9 +48,10 @@ data:
 
     identity:
       #ClientCertKeyReuseIssue
-      cert:                 {{ include "configMountDir" . }}/ctrl-plane-identity/tls.crt
+      cert:                 {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.crt
+      key:                  {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.key
       server_cert:          {{ include "configMountDir" . }}/ctrl-plane-identity/tls.crt
-      key:                  {{ include "configMountDir" . }}/ctrl-plane-identity/tls.key
+      server_key:           {{ include "configMountDir" . }}/ctrl-plane-identity/tls.key
       ca:                   ${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
 
     trustDomain: ${ZITI_TRUST_DOMAIN}
@@ -333,6 +334,15 @@ data:
           server_cert: {{ include "configMountDir" . }}/web-identity/tls.crt
           key:         {{ include "configMountDir" . }}/web-identity/tls.key
           ca:          {{ include "configMountDir" . }}/web-identity/ca.crt
+          {{- if .Values.webBindingPki.altServerCerts.enabled }}
+          alt_server_certs:
+          {{ with .Values.webBindingPki.altServerCerts.serverCerts }}
+            {{- range . }}
+            - cert: {{ .cert }}
+              key: {{ .key }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
         {{- end }}
         options: { }
         apis:

@@ -102,7 +102,6 @@ spec:
     algorithm: RSA
     size: 4096
   usages:
-    - client auth # remove when we fix #ClientCertKeyReuseIssue
     - server auth
     - digital signature
     - content commitment
@@ -151,6 +150,27 @@ spec:
   #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
   ipAddresses:
     - 127.0.0.1
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
+
+---
+# the controller's client certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  isCA: false
+  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity
+  secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  usages:
+    - client auth
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
