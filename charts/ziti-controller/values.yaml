@@ -193,8 +193,8 @@ webBindingPki:
   altServerCerts:
     enabled: true
     serverCerts: []
-      - dnsName: ""
-        issuer: ""
+      # - dnsName: ""
+      #   issuer: ""
 
 spireAgent:
   # -- if you are running a container with the spire-agent binary installed

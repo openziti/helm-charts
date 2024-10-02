@@ -336,7 +336,7 @@ data:
           ca:          {{ include "configMountDir" . }}/web-identity/ca.crt
           {{- if .Values.webBindingPki.altServerCerts.enabled }}
           alt_server_certs:
-          {{ with .Values.webBindingPki.altServerCerts. }}
+          {{ with .Values.webBindingPki.altServerCerts.serverCerts }}
             {{- range . }}
             - cert: {{ .cert }}
               key: {{ .key }}
