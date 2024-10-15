@@ -17,14 +17,8 @@ spec:
   {{- if .Values.edge.ingress.ingressClassName }}
   ingressClassName: {{ .Values.edge.ingress.ingressClassName }}
   {{- end }}
-  {{- if .Values.edge.ingress.tls }}
-  tls:
-    {{- with .Values.edge.ingress.tls }}
-      {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- end }}
   rules:
-    - host: {{ (coalesce .Values.edge.advertisedHost .Values.advertisedHost) }}
+    - host: {{ .Values.edge.advertisedHost }}
       http:
         paths:
           # This rule gives internal access to the pingaccess admin services.
@@ -56,17 +50,10 @@ spec:
   {{- if .Values.linkListeners.transport.ingress.ingressClassName }}
   ingressClassName: {{ .Values.linkListeners.transport.ingress.ingressClassName }}
   {{- end }}
-  {{- if .Values.linkListeners.transport.ingress.tls }}
-  tls:
-    {{- with .Values.linkListeners.transport.ingress.tls }}
-      {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- end }}
   rules:
-    - host: {{ (coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost) }}
+    - host: {{ .Values.linkListeners.transport.advertisedHost }}
       http:
         paths:
-          # This rule gives internal access to the pingaccess admin services.
           - path: /
             pathType: Prefix
             backend:
@@ -74,4 +61,45 @@ spec:
                 name: {{ include "ziti-router.fullname" . }}-transport
                 port:
                   number: {{ .Values.linkListeners.transport.advertisedPort }}
+{{- end }}
+
+{{- if .Values.edge.additionalListeners }}
+{{- $root := . }}
+{{- range .Values.edge.additionalListeners }}
+{{- if .ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-router.fullname" $root }}-listener-{{ .name }}
+  labels:
+  {{- include "ziti-router.labels" $root | nindent 4 }}
+  {{- with .ingress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .ingress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .ingress.ingressClassName }}
+  ingressClassName: {{ .ingress.ingressClassName }}
+  {{- end }}
+  tls:
+    - secretName: {{ include "ziti-router.fullname" $root }}-listener-{{ .name }}-tls
+      hosts:
+        - {{ .advertisedHost }}
+  rules:
+    - host: {{ .advertisedHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-router.fullname" $root }}-listener-{{ .name }}
+                port:
+                  number: {{ .advertisedPort }}
+{{- end }}
+{{- end }}
 {{- end }}

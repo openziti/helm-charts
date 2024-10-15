@@ -1,3 +1,5 @@
+{{- $root := . }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,7 +8,7 @@ metadata:
     {{- include "ziti-router.labels" . | nindent 4 }}
     app.kubernetes.io/component: "ziti-router"
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -90,6 +92,14 @@ spec:
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
             {{- end }}
+            {{- if gt (len .Values.identity.altServerCerts) 0 }}
+              {{- range .Values.identity.altServerCerts }}
+                {{- if eq .mode "certManager" }}
+            - name: {{ printf "%v-%v" (include "ziti-router.fullname" $root) .secretName }}
+              mountPath: {{ .mountPath }}
+                {{- end }}
+              {{- end }}
+            {{- end }}
           # deployment condition ready and receive traffic when this passes
           readinessProbe:
             exec:
@@ -152,5 +162,14 @@ spec:
             type: {{ .behavior }}
           {{- else if eq .volumeType "emptyDir" }}
           emptyDir: {}
+          {{- end }}
+        {{- end }}
+        {{- if gt (len .Values.identity.altServerCerts) 0 }}
+          {{- range .Values.identity.altServerCerts }}
+            {{- if eq .mode "certManager" }}
+        - name: {{ printf "%v-%v" (include "ziti-router.fullname" $root) .secretName }}
+          secret:
+            secretName: {{ .secretName }}
+            {{- end }}
           {{- end }}
         {{- end }}

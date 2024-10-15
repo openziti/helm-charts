@@ -1,7 +1,7 @@
 
 ctrl:
-  # -- required control plane endpoint
-  endpoint: # ctrl.example.com:6262
+  # -- required control plane endpoint, e.g., ctrl.ziti.example.com:443
+  endpoint: ""
 
 # -- Explicit proxy setting in the router configuration. Router can be deployed in a site 
 # where all egress traffic is forwarded through an explicit proxy.
@@ -11,82 +11,147 @@ proxy: {}
 #  address: 192.168.0.142
 #  port: 3128
 
-# -- common advertise-host for transport and edge listeners can also be
-# specified separately via `edge.advertisedHost` and
-# `linkListeners.transport.advertisedHost`
-advertisedHost:
-
-# Certificate signing request basic data
-csr:
-  # country: US
-  # province: NC
-  # locality: Charlotte
-  # organization: NetFoundry
-  # organizationalUnit: Ziti
-  sans:
-  # # you could specify additional SANS here - configurations from advertise hosts and
-  # # service's will be collected automatically
-  # -- additional DNS SANs
-    dns: []
-  #     - my.additional.host
-  # -- additional IP SANs
-    ip: []
-  #     - "192.168.10.0"
-
-
-# -- set name to value in containers' environment
-env:
+# -- assign key=value in pod environment
+env: {}
   # SOME_ENV: "true"
-  
+
+identity:
+  altServerCerts: []
+    #  # -- request an alternative server certificate from a cert-manager
+    #  #    issuer; this mode does not require a matching additionalVolumes member
+    #- mode: certManager
+    #  # -- name of the secret in which to store the certificate and key
+    #  secretName: ziti-router-alt-server-cert-1
+    #  # -- name of the additional listener which advertised host will be the DNS SAN in the requested certificate
+    #  additionalListenerName:
+    #  # -- issuer ref to use when requesting the alternative server certificate
+    #  issuerRef:
+    #    group: cert-manager.io
+    #    kind: ClusterIssuer
+    #    name: cloudflare-dns01-issuer
+    #  # -- where to mount the tls secret on the pod
+    #  mountPath: /etc/ziti/alt-server-cert
+
+    #  # -- use an alternative certificate and key from a tls secret declared in
+    #  #    additionalVolumes using the mountPath specified there
+    #- mode: secret
+    #  # -- name of existing secret mounted by additionalVolumes
+    #  secretName: ziti-router-alt-server-cert
+
+    #  # -- manually configure a path where you will separately mount the
+    #  #    alternative server certificate and key; localFile certs are skipped
+    #  #    by the deployment template because they lack a secretName, so these
+    #  #    paths must match a member of additionalVolumes
+    #- mode: localFile
+    #  # -- 'localFile': path to the alternative server certificate
+    #  serverCert:
+    #  # -- 'localFile': path to the alternative server key
+    #  serverKey:
 
 # listen for router links
 linkListeners:
-  transport:  # https://docs.openziti.io/docs/reference/configuration/router/#transport
-    # -- cluster service target port on the container
-    containerPort: 10080
-    # -- DNS name that other routers will use to form mesh transport links with this router. Default is cluster-internal service DNS name:port.
-    advertisedHost: #router11-transport.router-namespace.svc:443
-    # -- cluster service, node port, load balancer, and ingress port
-    advertisedPort: 443
+  transport:
+    # -- enable the transport listener in the router config; set false for a
+    # private router that only connects to other routers and does not accept
+    # incoming links
+    enabled: true
+    # -- cluster service target port on the container; default is to share a listener with the edge, providing ziti-link ALPN
+    containerPort: '{{ .Values.edge.containerPort }}'
+    # -- DNS name that other routers will use to form mesh transport links to this listener
+    advertisedHost: '{{ .Values.edge.advertisedHost }}'
+    # -- cluster service, node port, load balancer, and ingress port for this listener; default is edge.advertisedPort
+    advertisedPort: '{{ .Values.edge.advertisedPort }}'
+    # -- link listener options
+    options: {}
     service:
-      # -- create a cluster service for the router transport link listener
-      enabled: true
+      # -- create a cluster service for the router transport link listener;
+      # unnecessary if advertisedHost is shared with edge listener (the default)
+      enabled: false
       # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
       type: ClusterIP
       # -- service labels
-      labels:
+      labels: {}
       # -- service annotations
-      annotations:
+      annotations: {}
     ingress:
       # -- create an ingress for the cluster service
       enabled: false
       # -- ingress annotations, e.g., to configure ingress-nginx
-      annotations:
+      annotations: {}
 
 # listen for edge clients
 edge:
-  # -- enable the edge listener in the router config
+  # -- enable the edge listener in the router config; usually true because
+  # tunnel bindings require the edge which must have at least on listener
   enabled: true
+  # -- edge listener protocol: tls, wss; usually tls because additionalListeners
+  # can be used to provide a wss listener
+  protocol: tls
   # -- cluster service target port on the container
   containerPort: 3022
-  # -- DNS name that edge clients will use to reach this router's edge listener
-  advertisedHost: #router11-edge.ziti.example.com
+  # -- Domain name that edge clients will use to reach this router's edge
+  # listener. Default is cluster-internal service DNS name:port.
+  advertisedHost: ""
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: 443
+  # -- additional common xgress options
+  options: {}
   service:
-    # -- create a cluster service for the edge listener
+    # -- create a cluster service for the edge listener; usually true, but you
+    # can disable this to effectively un-publish the edge listener
     enabled: true
-    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer; default
+    # is ClusterIP, but you could use NodePort or LoadBalancer instead of an
+    # ingress controller
     type: ClusterIP
     # -- service labels
-    labels:
+    labels: {}
     # -- service annotations
-    annotations:
+    annotations: {}
   ingress:
-    # -- create an ingress for the cluster service
+    # -- create an ingress for the cluster service; typically paired with a
+    # ClusterIP service type when enabled
     enabled: false
-    # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations:
+    # -- ingress annotations, e.g., to configure ingress-nginx for passthrough TLS
+    annotations: {}
+  # -- additional edge listeners have the same shape as the default edge
+  # listener, except they're enabled if defined, and you must specify a unique
+  # name for each additional edge listener. The name distinguishes their
+  # respective cluster services. This is useful for BrowZer clients that require
+  # a trusted certificate for the edge WebSocket and advertisedHost must resolve
+  # to a public IP that presents a trusted certificate, e.g., an Ingress with
+  # TLS termination.
+  additionalListeners: []
+    #- name: router11-edge-wss
+    #  protocol: wss
+    #  # -- wss cluster service target port on the container must be distinct
+    #  from the default edge listener so that both can have a default protocol
+    #  handler, i.e., h2,http/1.1 is ambiguous if REST healthchecks share the
+    #  containerPort with default edge listener
+    #  containerPort: 3023
+    #  # -- host where clients connect, e.g., ingress external IP or DNS name
+    #  advertisedHost:
+    #  # -- advertised port must be 443 if ingress is enabled
+    #  advertisedPort: 443
+    #  # -- Should this additional lister advertised Host be added to SAN of the
+    #  identity? Depends on use-case. i.e. for a WSS server you won't do that
+    #  and provide an additional cert for this endpoint.
+    #  addHostToSan: false
+    #  # -- additional edge listener options
+    #  options: {}
+    #  # -- additional edge listeners can have their own cluster services
+    #  service:
+    #    enabled: true
+    #    type: ClusterIP
+    #    labels: {}
+    #    annotations: {}
+    #  # -- additional edge listeners can have their own ingresses
+    #  ingress:
+    #    enabled: false
+    #    # -- ingress must passthrough tls to to wss listener
+    #    annotations: {}
+    #    labels: {}
+    #    ingressClassName: ""
 
 tunnel:
   # -- run mode for the router's built-in tunnel component: host, tproxy, proxy, or none
@@ -120,6 +185,53 @@ tunnel:
   proxyAdditionalK8sServices: []
     #- name: myservice
     #  type: ClusterIP
+
+# websocket related config
+websocket:
+  # -- enable the websocket transport. Also requires an appropriate edge.additionalListeners entry.
+  enabled: false
+  # -- websocket write timeout
+  writeTimeout: 10
+  # -- websocket read timeout
+  readTimeout: 5
+  # -- websocket idle timeout
+  idleTimeout: 5
+  # -- websocket pong timeout
+  pongTimeout: 60
+  # -- websocket ping timeout
+  pingInterval: 54
+  # -- websocket handshake timeout
+  handshakeTimeout: 10
+  # -- websocket read buffer size
+  readBufferSize: 4096
+  # -- websocket write buffer size
+  writeBufferSize: 4096
+  # -- enable compression on websocket
+  enableCompression: true
+
+# -- Certificate signing request distinguished name and subject alternative names
+csr:
+  # -- country
+  country: ""
+  # -- state
+  province: ""
+  # -- city
+  locality: ""
+  # -- organization
+  organization: ""
+  # -- organizational unit
+  organizationalUnit: ""
+  sans:
+    # -- if true, disable computing default SANs from the advertisedHost, etc.
+    noDefaults: false
+    # -- additional DNS SANs
+    dns: []
+    # -- additional IP SANs
+    ip: []
+    # -- additional email SANs
+    email: []
+    # -- additional URI SANs
+    uri: []
 
 # -- read-only mountpoint for executables (must be in image's executable search PATH)
 execMountDir:     /usr/local/bin
@@ -169,7 +281,7 @@ dnsConfig: {}
 # -- additional volumes to mount to ziti-router container
 additionalVolumes: []
 #  - name: additional-volume-1
-#    volumeType: emptyDir
+#    volumeType: secret
 #    mountPath: /path/to/mount/1
 #    secretName: name-of-secret
 #  - name: additional-volume-2
@@ -183,10 +295,10 @@ additionalVolumes: []
 #    attributes: volumeAttributes
 #    mountPath: /path/to/mount/3
 #  - name: additional-volume-4
-#    volumeType: emptyDir 
+#    volumeType: emptyDir
 #    mountPath: /path/to/mount/4
 #  - name: additional-volume-5
-#    volumeType: hostPath 
+#    volumeType: hostPath
 #    behavior: DirectoryOrCreate
 #    mountPath: /path/to/mount/4
 #
@@ -198,7 +310,7 @@ podAnnotations: {}
 podSecurityContext:
   # -- this is the GID of "ziggy" run-as user in the container that has access
   # to any files created by the router process in the emptyDir volume used to
-  # persist the endpoints state file
+  # persist the list of ctrl endpoints
   fsGroup: 2171
 
 # -- Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace.

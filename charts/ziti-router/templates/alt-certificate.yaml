@@ -1,0 +1,27 @@
+# openziti-helm-charts/charts/ziti-router/templates/alt-certificate.yaml
+{{- if gt (len $.Values.identity.altServerCerts) 0 -}}
+{{- $root := . }}
+{{- $values := $.Values }}
+{{- $certs := ((include "ziti-router.getCertManagerAltServerCerts" $values.identity.altServerCerts) | fromJson).certManagerCerts -}}
+
+{{- if gt (len $certs) 0 }}
+  {{- range $index, $cert := $certs }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ printf "%s-alt-cert-%d" (include "ziti-router.fullname" $root) $index }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  secretName: {{ $cert.secretName | quote }}
+  issuerRef:
+    {{- toYaml $cert.issuerRef | nindent 4 }}
+  dnsNames:
+    - {{ (include "ziti-router.lookupAltServerCertHost" (dict "additionalListenerName" $cert.additionalListenerName "additionalListeners" $values.edge.additionalListeners)) | quote }}
+  usage:
+    - digital signature
+    - key encipherment
+    - server auth
+  {{- end }}
+{{- end }}
+{{- end }}
