@@ -1,4 +1,5 @@
-ctrlPlane:
+
+clientApi:
   service:
     enabled: true
     type: ClusterIP
@@ -9,7 +10,9 @@ ctrlPlane:
       kubernetes.io/ingress.allow-http: "false"
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 
-clientApi:
+# shares a TLS listener with the client API by default; these values override the defaults and configure a separate
+# ingress for the ctrl plane for reverse compatibility with existing router deployments
+ctrlPlane:
   service:
     enabled: true
     type: ClusterIP

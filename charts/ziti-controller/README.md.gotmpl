@@ -17,14 +17,9 @@
 
 ## Overview
 
-This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. Delete the controller pod after an upgrade for the new controller configuration to take effect.
+This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle.
 
-Here's a checklist that must be satisfied for each of the controller's TLS servers: router control plane (`ctrlPlane`), each web listener(s) (`clientApi`, at least).
-
-1. Each of the controller's TLS servers must have an advertised host (FQDN) and TCP port. The chart ensures the DNS SAN is added for this address. The port is always 443 if ingress is enabled for `ClusterIP` service.
-1. A K8s Service must be configured and reachable by all clients. (i.e., type `ClusterIP`+`Ingress`, `NodePort`, or `LoadBalancer`)
-1. Each K8s Service must be configured for TLS passthrough (i.e., server TLS must not be terminated by an intermediary LB).
-1. All clients must access the controller through the advertised address(es).
+The client API must be published with a TLS passthrough Ingress, NodePort, or LoadBalancer. The ctrl plane and management API share the client API's TLS listener, so they're reached through the same address by default.
 
 ## Requirements
 
@@ -207,6 +202,69 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 * replicas - Each controller replica needs to be it's own HA member. We have to wait until HA https://github.com/openziti/ziti/blob/release-next/doc/ha/overview.md is officially released.
 * lower CA / Cert lifetime; how to refresh stuff when Certs are updated?
 * Deploy Prometheus scraper configuration when `prometheus.enabled = true`
-* cert-manager allows issuing only one cert per key, i.e., ClientCertKeyReuseIssue prevents us from issuing a user cert and server cert backed by same private key, hence the controller config.yaml re-uses server certs in place of user certs to allow startup and testing to continue
+
+## Alternative Web Server Certificates
+
+The purpose of the alt_server_certs feature is to bind a publicly trusted server certificate to the controller's web listener. This is useful for publishing the controller's client API with a different DNS name for BrowZer and console clients that must verify the controller's identity with their OS trusted root store.
+
+### Request an alternative server certificate from a cert-manager issuer
+
+The most automatic way to bind an alt cert is the certManager mode provided by this chart. This example implies you have separately created a cert-manager ClusterIssuer named "cloudflare-dns01-issuer" that is able to obtain a certificate for the specified DNS name. If publishing the client API's alternative DNS name as a separate Ingress, you may reference that advertised host when requesting the alternative server certificate as shown here with an inline template to ensure they match. 
+
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
+```yaml
+clientApi:
+    advertisedHost: edge.ziti.example.com
+    ingress:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+            kubernetes.io/ingress.allow-http: "false"
+            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    service:
+        enabled: true
+        type: ClusterIP
+    altIngress:
+        enabled: true
+        ingressClassName: nginx
+        advertisedHost: alt-edge.ziti.example.com  # this must be different from clientApi.advertisedHost and must match one of the dnsNames in the altServerCert
+        annotations:
+            kubernetes.io/ingress.allow-http: "false"
+            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+
+webBindingPki:
+    enabled: true
+    altServerCerts:
+        - mode: certManager
+            secretName: my-alt-server-cert
+            dnsNames:
+                - "{{`{{ .Values.clientApi.altIngress.advertisedHost }}`}}"
+            issuerRef:
+                group: cert-manager.io
+                kind: ClusterIssuer
+                name: cloudflare-dns01-issuer
+            mountPath: /etc/ziti/alt-server-cert
+```
+<!-- {% endraw %} -->
+
+### Use an alternative certificate and key from a tls secret
+
+The alternative server certificate and key may also be provided from a Kubernetes TLS secret. Declare the tls secret in the additionalVolumes section and reference it in the altServerCerts section.
+
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
+```yaml
+additionalVolumes:
+    - name: my-alt-server-cert
+      volumeType: secret
+      mountPath: /etc/ziti/my-alt-server-cert
+      secretName: my-alt-server-cert
+
+webBindingPki:
+    altServerCerts:
+        - mode: secret
+          secretName: my-alt-server-cert
+```
+<!-- {% endraw %} -->
+
 
 <!-- README.md generated by helm-docs from README.md.gotmpl -->
