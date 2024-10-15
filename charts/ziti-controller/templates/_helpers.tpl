@@ -99,8 +99,60 @@ ctrl-plane-cas.crt
 
 {{- define "ziti-controller.console" -}}
     {{- if .Values.managementApi.service.enabled -}}
-https://{{ .Values.managementApi.advertisedHost }}:{{ .Values.managementApi.advertisedPort }}/zac/
+https://{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}/zac/
     {{- else -}}
 https://{{ .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}/zac/
     {{- end }}
 {{- end }}
+
+{{/*
+help the alt-certificate template find the members of webBindingPki.altServerCerts
+that are managed by cert-manager
+*/}}
+{{- define "ziti-controller.getCertManagerAltServerCerts" -}}
+{{- $filteredCerts := list -}}
+{{- range . -}}
+  {{- if eq .mode "certManager" -}}
+    {{- $filteredCerts = append $filteredCerts . -}}
+  {{- end -}}
+{{- end -}}
+{{- dict "certManagerCerts" $filteredCerts | toJson -}}
+{{- end -}}
+
+{{/*
+help the configmap template find the mount path of an alternative server
+certificate by looking up the secret name in the list of additional volumes
+*/}}
+{{- define "ziti-controller.lookupVolumeMountPath" -}}
+{{- $secretName := .secretName -}}
+{{- $matchingVolumeMountPath := "" -}}
+{{- range .additionalVolumes }}
+  {{- if and (eq .volumeType "secret") (eq .secretName $secretName) }}
+    {{- $matchingVolumeMountPath = .mountPath }}
+  {{- end }}
+{{- end }}
+{{- if $matchingVolumeMountPath }}
+  {{- $matchingVolumeMountPath }}
+{{- else }}
+  {{- fail (printf "No matching additionalVolume found for secretName: %s" $secretName) }}
+{{- end }}
+{{- end -}}
+
+{{/*
+render as an inline template if the value is a string containing a go template,
+else return the literal value
+*/}}
+{{- define "ziti-controller.tplOrLiteral" -}}
+{{- $value := .value -}}
+{{- $context := .context -}}
+{{- if typeIs "string" $value -}}
+  {{- $trimmed := trim $value -}}
+  {{- if and (hasPrefix "{{" $trimmed) (hasSuffix "}}" $trimmed) -}}
+    {{- tpl $value $context -}}
+  {{- else -}}
+    {{- $value -}}
+  {{- end -}}
+{{- else -}}
+  {{- $value -}}
+{{- end -}}
+{{- end -}}
