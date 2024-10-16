@@ -114,15 +114,18 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
-    - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) | default  (printf "%s-ctrl.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain)}}
+    {{/* add the ctrl plane's advertised host if it is different from the client API's advertised host */}}
+    {{- $ctrlPlaneAdvertisedHost := include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) | default  (printf "%s-ctrl.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}
+    {{- if ne $ctrlPlaneAdvertisedHost .Values.clientApi.advertisedHost }}
+    - {{ $ctrlPlaneAdvertisedHost }}
+    {{- end }}
     {{- if .Values.ctrlPlane.dnsNames }}
       {{- range .Values.ctrlPlane.dnsNames }}
     - {{ . | quote }}
       {{- end }}
     {{- end }}
-    {{/* add client API DNS SANs if client API does not have a separate PKI or
-    if ctrl plane shares a TLS listener with the client API */}}
-    {{- if and .Values.clientApi.service.enabled (or (not .Values.webBindingPki.enabled) (not .Values.ctrlPlane.service.enabled)) }}
+    {{/* add the client API's DNS SANs if client API does not have a separate PKI for web listeners, i.e., the enrollment signer is from the ctrl plane PKI  */}}
+    {{- if not .Values.webBindingPki.enabled }}
     - {{ include "ziti-controller.fullname" . }}-client
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
@@ -134,9 +137,8 @@ spec:
         {{- end }}
       {{- end }}
     {{- end }}
-    {{/* add management API DNS SANs if management API does not have a separate
-    PKI or it shares a TLS listener with the ctrl plane */}}
-    {{- if and .Values.managementApi.service.enabled (or (not .Values.webBindingPki.enabled) (not .Values.ctrlPlane.service.enabled)) }}
+    {{/* add management API DNS SANs if management API does not have a separate PKI for web listeners */}}
+    {{- if and .Values.managementApi.service.enabled (not .Values.webBindingPki.enabled) }}
     - {{ include "ziti-controller.fullname" . }}-mgmt
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
