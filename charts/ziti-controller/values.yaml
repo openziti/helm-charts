@@ -269,7 +269,7 @@ image:
   # -- container image repository for app deployment
   repository: docker.io/openziti/ziti-controller
   # -- override the container image tag specified in the chart
-  tag: ~
+  tag: ""
   # -- deployment image pull policy
   pullPolicy: IfNotPresent
   # -- container entrypoint command
@@ -494,8 +494,8 @@ additionalConfigs:
   ctrl: {}
   network: {}
   healthChecks: {}
-  events: {}
   web: {}
+  events: {}
   #    ampqLogger:
   #      subscriptions:
   #        - type: fabric.usage
