@@ -271,7 +271,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
-| image.tag | string | `nil` | override the container image tag specified in the chart |
+| image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
 | managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","containerPort":"{{ .Values.clientApi.containerPort }}","dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
