@@ -108,8 +108,8 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.linkListeners.transport.advertisedPort }}
-      targetPort: {{ .Values.linkListeners.transport.containerPort }}
+    - port: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedPort "context" .) }}
+      targetPort: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.containerPort "context" .) }}
       protocol: TCP
       name: transport
       {{- if (eq $type "NodePort") }}
