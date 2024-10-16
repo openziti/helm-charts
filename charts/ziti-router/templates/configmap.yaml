@@ -126,75 +126,75 @@ data:
       intervalAgeThreshold: 5s
     {{- end }}
 
-    edge: # TODO switch back to top level when https://github.com/openziti/ziti/issues/2193 is finished
-     csr:
-      {{- if .Values.csr.country }}
-      country: {{ .Values.csr.country }}
-      {{- end }}
-      {{- if .Values.csr.province }}
-      province: {{ .Values.csr.province }}
-      {{- end }}
-      {{- if .Values.csr.locality }}
-      locality: {{ .Values.csr.locality }}
-      {{- end }}
-      {{- if .Values.csr.organization }}
-      organization: {{ .Values.csr.organization }}
-      {{- end }}
-      {{- if .Values.csr.organizationalUnit }}
-      organizationalUnit: {{ .Values.csr.organizationalUnit }}
-      {{- end }}
-      sans:
-        dns:
-          {{- if eq (default false .Values.csr.sans.noDefaults) false }}
-          - localhost
-            {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
-          - {{ .Values.edge.advertisedHost }}
-            {{- end }}
-            {{- if .Values.edge.additionalListeners }}
-              {{- range .Values.edge.additionalListeners }}
-                {{- if .addHostToSan }}
-          - {{ .advertisedHost }}
+    edge:
+      csr:
+        {{- if .Values.csr.country }}
+        country: {{ .Values.csr.country }}
+        {{- end }}
+        {{- if .Values.csr.province }}
+        province: {{ .Values.csr.province }}
+        {{- end }}
+        {{- if .Values.csr.locality }}
+        locality: {{ .Values.csr.locality }}
+        {{- end }}
+        {{- if .Values.csr.organization }}
+        organization: {{ .Values.csr.organization }}
+        {{- end }}
+        {{- if .Values.csr.organizationalUnit }}
+        organizationalUnit: {{ .Values.csr.organizationalUnit }}
+        {{- end }}
+        sans:
+          dns:
+            {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+            - localhost
+              {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
+            - {{ .Values.edge.advertisedHost }}
+              {{- end }}
+              {{- if .Values.edge.additionalListeners }}
+                {{- range .Values.edge.additionalListeners }}
+                  {{- if .addHostToSan }}
+            - {{ .advertisedHost }}
+                  {{- end }}
                 {{- end }}
               {{- end }}
-            {{- end }}
-            {{- if and .Values.linkListeners.transport.service.enabled .Values.linkListeners.transport.advertisedHost }}
-          - {{ .Values.linkListeners.transport.advertisedHost }}
-            {{- end }}
-          {{- end }}  # end if .Values.csr.sans.noDefaults
-          {{- range .Values.csr.sans.dns }}
-          - {{ . | quote }}
-          {{- end }}
-        ip:
-          {{- if eq (default false .Values.csr.sans.noDefaults) false }}
-          - 127.0.0.1
-            {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
-              {{- with .Values.edge.service.loadBalancerIP }}
-          - {{ . }}
+              {{- if and .Values.linkListeners.transport.service.enabled }}
+            - {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedHost "context" $root) }}
               {{- end }}
-              {{- with .Values.edge.service.externalIPs }}
-                {{- toYaml . | nindent 4 }}
-              {{- end }}
+            {{- end }}  # end if .Values.csr.sans.noDefaults
+            {{- range .Values.csr.sans.dns }}
+            - {{ . | quote }}
             {{- end }}
-            {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
-              {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
-          - {{ . }}
+          ip:
+            {{- if eq (default false .Values.csr.sans.noDefaults) false }}
+            - 127.0.0.1
+              {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
+                {{- with .Values.edge.service.loadBalancerIP }}
+            - {{ . }}
+                {{- end }}
+                {{- with .Values.edge.service.externalIPs }}
+                  {{- toYaml . | nindent 4 }}
+                {{- end }}
               {{- end }}
-              {{- with .Values.linkListeners.transport.service.externalIPs }}
-                {{- toYaml . | nindent 4 }}
+              {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
+                {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
+            - {{ . }}
+                {{- end }}
+                {{- with .Values.linkListeners.transport.service.externalIPs }}
+                  {{- toYaml . | nindent 4 }}
+                {{- end }}
               {{- end }}
+            {{- end }} # end if .Values.csr.sans.noDefaults
+            {{- range .Values.csr.sans.ip }}
+            - {{ . | quote }}
             {{- end }}
-          {{- end }} # end if .Values.csr.sans.noDefaults
-          {{- range .Values.csr.sans.ip }}
-          - {{ . | quote }}
-          {{- end }}
-        email:
-          {{- range .Values.csr.sans.email }}
-          - {{ . | quote }}
-          {{- end }}
-        uri:
-          {{- range .Values.csr.sans.uri }}
-          - {{ . | quote }}
-          {{- end }}
+          email:
+            {{- range .Values.csr.sans.email }}
+            - {{ . | quote }}
+            {{- end }}
+          uri:
+            {{- range .Values.csr.sans.uri }}
+            - {{ . | quote }}
+            {{- end }}
 
     {{- if eq .Values.websocket.enabled true }}
     transport:

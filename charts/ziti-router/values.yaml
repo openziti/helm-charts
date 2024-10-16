@@ -66,7 +66,7 @@ linkListeners:
     service:
       # -- create a cluster service for the router transport link listener;
       # unnecessary if advertisedHost is shared with edge listener (the default)
-      enabled: false
+      enabled: true  # default enabled for backward compatibility
       # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
       type: ClusterIP
       # -- service labels
@@ -76,6 +76,10 @@ linkListeners:
     ingress:
       # -- create an ingress for the cluster service
       enabled: false
+      # -- ingress class name
+      ingressClassName: ""
+      # -- ingress labels
+      labels: {}
       # -- ingress annotations, e.g., to configure ingress-nginx
       annotations: {}
 
@@ -112,6 +116,10 @@ edge:
     # -- create an ingress for the cluster service; typically paired with a
     # ClusterIP service type when enabled
     enabled: false
+    # -- ingress class name
+    ingressClassName: ""
+    # -- ingress labels
+    labels: {}
     # -- ingress annotations, e.g., to configure ingress-nginx for passthrough TLS
     annotations: {}
   # -- additional edge listeners have the same shape as the default edge

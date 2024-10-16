@@ -1,3 +1,4 @@
+{{- $root := . }}
 {{- if .Values.edge.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -51,7 +52,7 @@ spec:
   ingressClassName: {{ .Values.linkListeners.transport.ingress.ingressClassName }}
   {{- end }}
   rules:
-    - host: {{ .Values.linkListeners.transport.advertisedHost }}
+    - host: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedHost "context" $root) }}
       http:
         paths:
           - path: /
@@ -60,11 +61,10 @@ spec:
               service:
                 name: {{ include "ziti-router.fullname" . }}-transport
                 port:
-                  number: {{ .Values.linkListeners.transport.advertisedPort }}
+                  number: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedPort "context" $root) }}
 {{- end }}
 
 {{- if .Values.edge.additionalListeners }}
-{{- $root := . }}
 {{- range .Values.edge.additionalListeners }}
 {{- if .ingress.enabled }}
 ---
