@@ -195,21 +195,38 @@ identity:
         name: cloudflare-dns01-issuer-staging
 ```
 
-You don't have to use cert-manager. If you have a tls secret named `ziti-router1-alt-server-certs1` from some other issuer in the same namespace as the router containing the certificate and key, you can use it by setting values like these.
+You don't have to use cert-manager. If you have a TLS secret named `ziti-router1-alt-server-certs1` from some other issuer in the same namespace as the router containing the certificate and key, you can use it by setting values like these. You must also configure the additional listener as in the prior example with an advertisedHost that matches a DNS SAN of the alternative certificate.
 
 ```yaml
 # this is an generic approach for mounting configmaps, secrets, csi volumes, etc.
 additionalVolumes:
-  - name: ziti-router1-alt-server-certs1
+  - name: alt-server-cert-2
     volumeType: secret
-    mountPath: /etc/ziti/alt-server-cert-1
-    secretName: ziti-router1-alt-server-certs1
+    mountPath: /etc/ziti/alt-server-cert-2
+    secretName: ziti-router1-alt-server-cert-2
 
-# this looks up a tls secret's mountpoint to configure the router's identity
+# this looks up a TLS secret's mountpoint to configure the router's identity
 identity:
   altServerCerts:
     - mode: secret
-      secretName: ziti-router1-alt-server-certs1
+      secretName: ziti-router1-alt-server-cert-2
+```
+
+You may also specify matching file paths for an additional volume and alternative certificate if the volume is not a TLS secret.
+
+```yaml
+additionalVolumes:
+  - name: alt-server-cert-3
+    volumeType: csi
+    driverName: csi.bpfd.dev
+    attributes: volumeAttributes
+    mountPath: /etc/ziti/alt-server-cert-3
+
+identity:
+  altServerCerts:
+    - mode: localFile
+      serverCert: /etc/ziti/alt-server-cert-3/server3.crt
+      serverKey: /etc/ziti/alt-server-cert-3/server3.key
 ```
 
 ## Values Reference
