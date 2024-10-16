@@ -258,6 +258,8 @@ identity:
 | edge.enabled | bool | `true` | enable the edge listener in the router config; usually true because tunnel bindings require the edge which must have at least on listener |
 | edge.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx for passthrough TLS |
 | edge.ingress.enabled | bool | `false` | create an ingress for the cluster service; typically paired with a ClusterIP service type when enabled |
+| edge.ingress.ingressClassName | string | `""` | ingress class name |
+| edge.ingress.labels | object | `{}` | ingress labels |
 | edge.options | object | `{}` | additional common xgress options |
 | edge.protocol | string | `"tls"` | edge listener protocol: tls, wss; usually tls because additionalListeners can be used to provide a wss listener |
 | edge.service.annotations | object | `{}` | service annotations |
@@ -291,9 +293,11 @@ identity:
 | linkListeners.transport.enabled | bool | `true` | enable the transport listener in the router config; set false for a private router that only connects to other routers and does not accept incoming links |
 | linkListeners.transport.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | linkListeners.transport.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| linkListeners.transport.ingress.ingressClassName | string | `""` | ingress class name |
+| linkListeners.transport.ingress.labels | object | `{}` | ingress labels |
 | linkListeners.transport.options | object | `{}` | link listener options |
 | linkListeners.transport.service.annotations | object | `{}` | service annotations |
-| linkListeners.transport.service.enabled | bool | `false` | create a cluster service for the router transport link listener; unnecessary if advertisedHost is shared with edge listener (the default) |
+| linkListeners.transport.service.enabled | bool | `true` | create a cluster service for the router transport link listener; unnecessary if advertisedHost is shared with edge listener (the default) |
 | linkListeners.transport.service.labels | object | `{}` | service labels |
 | linkListeners.transport.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | nodeSelector | object | `{}` | deployment template spec node selector |
