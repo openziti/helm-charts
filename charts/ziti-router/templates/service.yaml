@@ -108,8 +108,8 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.linkListeners.transport.advertisedPort }}
-      targetPort: {{ .Values.linkListeners.transport.containerPort }}
+    - port: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedPort "context" .) }}
+      targetPort: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.containerPort "context" .) }}
       protocol: TCP
       name: transport
       {{- if (eq $type "NodePort") }}
@@ -250,5 +250,71 @@ spec:
   selector:
     {{- include "ziti-router.selectorLabels" $root | nindent 4 }}
     app.kubernetes.io/component: "ziti-router"
+{{- end }}
+{{- end }}
+
+{{- if .Values.edge.additionalListeners }}
+{{- $root := . }}
+{{- range .Values.edge.additionalListeners }}
+{{- if .service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ziti-router.fullname" $root }}-listener-{{ .name }}
+  labels:
+  {{- include "ziti-router.labels" $root | nindent 4 }}
+  {{- with .service.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .service.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $type := default "ClusterIP" .service.type }}
+  type: {{ $type }}
+  {{- if eq $type "ClusterIP" }}
+  {{- with .service.clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  {{- else if eq $type "LoadBalancer" }}
+  {{- with .service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with .service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
+  {{- with .service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if .service.sessionAffinity }}
+  sessionAffinity: {{ .service.sessionAffinity }}
+  {{- with .service.sessionAffinityConfig }}
+  sessionAffinityConfig:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- with .service.externalIPs }}
+  externalIPs:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ . }}
+  {{- end }}
+  ports:
+    - port: {{ .advertisedPort }}
+      targetPort: {{ .containerPort }}
+      protocol: {{ .service.protocol | default "TCP" }}
+      name: {{ .name }}
+      {{- if eq $type "NodePort" }}
+      nodePort: {{ .advertisedPort }}
+      {{- end }}
+  selector:
+    {{- include "ziti-router.selectorLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: "ziti-router"
+{{- end }}
 {{- end }}
 {{- end }}

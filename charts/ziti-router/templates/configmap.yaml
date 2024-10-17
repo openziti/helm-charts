@@ -1,6 +1,6 @@
+{{- $root := . -}}
 ---
 # Chart name: {{- .Chart.Name }} {{- .Values.nameOverride }}
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -21,6 +21,26 @@ data:
       key:         {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.key
       # expected filename defined in SetZitiRouterIdentityCA()
       ca:          {{ .Values.configMountDir }}/{{ include "ziti-router.fullname" . }}.cas
+    {{- if gt (len .Values.identity.altServerCerts) 0 }}
+      alt_server_certs:
+      {{- range .Values.identity.altServerCerts }}
+        {{- if eq .mode "localFile" }}
+      - server_cert: {{ .serverCert | quote }}
+        server_key:  {{ .serverKey | quote }}
+        {{- else if eq .mode "secret" }}
+        {{- $matchingVolumeMountPath := include "ziti-router.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $root.Values.additionalVolumes) }}
+        - server_cert: {{ printf "%s/tls.crt" $matchingVolumeMountPath | quote }}
+          server_key:  {{ printf "%s/tls.key" $matchingVolumeMountPath | quote }}
+        {{- else if eq .mode "certManager" }}
+        {{- if .mountPath }}
+      - server_cert: {{ printf "%s/tls.crt" .mountPath | quote }}
+        server_key:  {{ printf "%s/tls.key" .mountPath | quote }}
+        {{- else }}
+        {{- fail (printf "Missing mountPath for certManager alt-server-cert: %v" .name) }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
 
     ctrl:
       # router control plane API (:6262)
@@ -37,24 +57,43 @@ data:
       # When 'transport' is disabled this means we are a 'private' router, i.e.,
       # not providing incoming links to other routers. Private routers still
       # join the mesh, but only form outgoing links.
-      {{- if .Values.linkListeners.transport.service.enabled }}
+      {{- if .Values.linkListeners.transport.enabled }}
       listeners:
         - binding:          transport
-          bind:             tls:0.0.0.0:{{ .Values.linkListeners.transport.containerPort }}
-          advertise:        tls:{{ coalesce .Values.linkListeners.transport.advertisedHost .Values.advertisedHost (printf "%s-transport.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ .Values.linkListeners.transport.advertisedPort }}
+          bind:             tls:0.0.0.0:{{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.containerPort "context" $root) }}
+          advertise:        tls:{{ coalesce (include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedHost "context" $root) ) (printf "%s-edge.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedPort "context" $root) }}
+          {{- if .Values.linkListeners.transport.options }}
           options:
-            outQueueSize:   4
+            {{- toYaml .Values.linkListeners.transport.options | nindent 10 }}
+          {{- else }}
+          options: {}
+          {{- end }}
       {{- end }}
     {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "none" )) (eq .Values.edge.enabled true) }}
     listeners:
     # bindings of edge and tunnel requires an "edge" section below
     {{- if (eq .Values.edge.enabled true) }}
       - binding: edge
-        address: tls:0.0.0.0:{{ .Values.edge.containerPort }}
+        address: {{ .Values.edge.protocol }}:0.0.0.0:{{ .Values.edge.containerPort }}
         options:
-            advertise: {{ required "You must set either .Values.advertisedHost or .Values.edge.advertisedHost to the <host/ip> to advertise for this router. Try adding --set edge.advertisedHost=router.zitinetwork.example.org to your Helm command" (coalesce .Values.edge.advertisedHost .Values.advertisedHost) }}:{{ .Values.edge.advertisedPort }}
-            connectTimeoutMs: 1000
-            getSessionTimeout: 60
+          advertise: {{ coalesce .Values.edge.advertisedHost (printf "%s-edge.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ .Values.edge.advertisedPort }}
+          {{- if .Values.edge.options }}
+            {{- toYaml .Values.edge.options | nindent 10 }}
+          {{- end }}
+    {{- end }}
+    {{- if .Values.edge.additionalListeners }}
+      {{- range $index, $element := .Values.edge.additionalListeners }}
+      - binding: edge
+        address: {{ $element.protocol }}:0.0.0.0:{{ $element.containerPort }}
+        options:
+          advertise: {{ required (printf "You must set .Values.edge.additionalListeners[%d].advertisedHost to the domain name to advertise for this router's additional edge listener. Try adding --set edge.additionalListeners[%d].advertisedHost=router11-wss.ziti.example.org to your Helm command" $index $index) $element.advertisedHost }}:{{ $element.advertisedPort }}
+          {{- if eq $element.advertisedHost $root.Values.edge.advertisedHost -}}
+          {{- fail (printf ".Values.edge.additionalListeners[%d].advertisedHost must be distinct from .Values.edge.advertisedHost or SNI request routing will be ambiguous" $index) }}
+          {{- end }}
+          {{- if $element.options }}
+            {{- toYaml $element.options | nindent 10 }}
+          {{- end }}
+      {{- end }}
     {{- end }}
     {{- if and .Values.tunnel.mode (ne .Values.tunnel.mode "none" ) }}
       - binding: tunnel
@@ -86,7 +125,7 @@ data:
       reportInterval: 5s
       intervalAgeThreshold: 5s
     {{- end }}
-    
+
     edge:
       csr:
         {{- if .Values.csr.country }}
@@ -108,56 +147,60 @@ data:
           dns:
             {{- if eq (default false .Values.csr.sans.noDefaults) false }}
             - localhost
-            {{- if .Values.advertisedHost }}
-            - {{ .Values.advertisedHost }}
-            {{- end }}
-            {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
+              {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
             - {{ .Values.edge.advertisedHost }}
-            {{- end }}
-            {{- if and .Values.linkListeners.transport.service.enabled .Values.linkListeners.transport.advertisedHost }}
-            - {{ .Values.linkListeners.transport.advertisedHost }}
-            {{- end }}
-            {{- end }}
+              {{- end }}
+              {{- if .Values.edge.additionalListeners }}
+                {{- range .Values.edge.additionalListeners }}
+                  {{- if .addHostToSan }}
+            - {{ .advertisedHost }}
+                  {{- end }}
+                {{- end }}
+              {{- end }}
+              {{- if and .Values.linkListeners.transport.service.enabled }}
+            - {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedHost "context" $root) }}
+              {{- end }}
+            {{- end }}  # end if .Values.csr.sans.noDefaults
             {{- range .Values.csr.sans.dns }}
             - {{ . | quote }}
             {{- end }}
           ip:
             {{- if eq (default false .Values.csr.sans.noDefaults) false }}
             - 127.0.0.1
-            {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
-            {{- with .Values.edge.service.loadBalancerIP }}
+              {{- if and .Values.edge.enabled  .Values.edge.service.enabled }}
+                {{- with .Values.edge.service.loadBalancerIP }}
             - {{ . }}
-            {{- end }}
-            {{- with .Values.edge.service.externalIPs }}
-            {{- toYaml . | nindent 4 }}
-            {{- end }}
-            {{- end }}
-            {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
-            {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
+                {{- end }}
+                {{- with .Values.edge.service.externalIPs }}
+                  {{- toYaml . | nindent 4 }}
+                {{- end }}
+              {{- end }}
+              {{- if and .Values.linkListeners.transport.service.enabled  .Values.linkListeners.transport.service.enabled }}
+                {{- with .Values.linkListeners.transport.service.loadBalancerIP }}
             - {{ . }}
-            {{- end }}
-            {{- with .Values.linkListeners.transport.service.externalIPs }}
-            {{- toYaml . | nindent 4 }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
+                {{- end }}
+                {{- with .Values.linkListeners.transport.service.externalIPs }}
+                  {{- toYaml . | nindent 4 }}
+                {{- end }}
+              {{- end }}
+            {{- end }} # end if .Values.csr.sans.noDefaults
             {{- range .Values.csr.sans.ip }}
             - {{ . | quote }}
             {{- end }}
+          email:
+            {{- range .Values.csr.sans.email }}
+            - {{ . | quote }}
+            {{- end }}
+          uri:
+            {{- range .Values.csr.sans.uri }}
+            - {{ . | quote }}
+            {{- end }}
 
-    #transport:
-    #  ws:
-    #    writeTimeout: 10
-    #    readTimeout: 5
-    #    idleTimeout: 5
-    #    pongTimeout: 60
-    #    pingInterval: 54
-    #    handshakeTimeout: 10
-    #    readBufferSize: 4096
-    #    writeBufferSize: 4096
-    #    enableCompression: true
-    #    server_cert: ~/.ziti/config/certs/192.168.10.11.server.chain.cert
-    #    key: ~/.ziti/config/certs/192.168.10.11.key
+    {{- if eq .Values.websocket.enabled true }}
+    transport:
+      ws:
+      {{- omit .Values.websocket "enabled" | toYaml  | nindent 8 }}
+    {{- end }}
 
     {{- if .Values.forwarder }}
     forwarder:
