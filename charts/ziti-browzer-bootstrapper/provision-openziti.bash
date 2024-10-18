@@ -3,7 +3,7 @@
 # inputs:
 #   ZITI_BROWZER_OIDC_URL   OIDC issuer url
 #   ZITI_BROWZER_CLIENT_ID  OIDC client id
-#   BROWZER_EMAILS          space or comma separated list of emails to create with role browzer.enabled.identities
+#   BROWZER_EMAILS          space or comma separated list of emails to create with a role
 #
 
 set -o errexit
@@ -25,6 +25,7 @@ function cleanup() {
 : "${ZITI_BROWZER_FIELD:=email}"
 : "${EXT_JWT_SIGNER_NAME:="browzer-auth0-ext-jwt-signer"}"
 : "${AUTH_POLICY_NAME:="browzer-auth0-auth-policy"}"
+: "${IDENTITY_ROLES:="browzer.enabled.identities"}"
 
 BROWZER_EMAILS="${BROWZER_EMAILS//,/ }"
 typeset -a EMAILS=(${BROWZER_EMAILS})
@@ -33,7 +34,8 @@ oidc_config="$(curl -sSf ${ZITI_BROWZER_OIDC_URL%/}/.well-known/openid-configura
 issuer="$(jq -r .issuer <<< "${oidc_config}")"
 jwks="$(jq -r .jwks_uri <<< "${oidc_config}")"
 
-if ziti edge list ext-jwt-signers "name=\"$EXT_JWT_SIGNER_NAME\"" | grep -q $EXT_JWT_SIGNER_NAME
+if ziti edge list ext-jwt-signers "name=\"$EXT_JWT_SIGNER_NAME\"" --csv \
+| awk -F, "\$2==\"$EXT_JWT_SIGNER_NAME\"" | grep -q $EXT_JWT_SIGNER_NAME
 then
     cleanup
 fi
@@ -50,9 +52,9 @@ for EMAIL in "${EMAILS[@]}"
 do
     if ziti edge list identities "name=\"${EMAIL}\"" | grep -q "${EMAIL}"
     then
-        ziti edge update identity "${EMAIL}" --auth-policy ${auth_policy} --external-id "${EMAIL}" -a browzer.enabled.identities
+        ziti edge update identity "${EMAIL}" --auth-policy ${auth_policy} --external-id "${EMAIL}" -a "${IDENTITY_ROLES}"
     else
-        ziti edge create identity "${EMAIL}" --auth-policy ${auth_policy} --external-id "${EMAIL}" -a browzer.enabled.identities
+        ziti edge create identity "${EMAIL}" --auth-policy ${auth_policy} --external-id "${EMAIL}" -a "${IDENTITY_ROLES}"
     fi
 done
 
