@@ -18,7 +18,7 @@ spec:
     {{- toYaml $cert.issuerRef | nindent 4 }}
   dnsNames:
     - {{ (include "ziti-router.lookupAltServerCertHost" (dict "additionalListenerName" $cert.additionalListenerName "additionalListeners" $values.edge.additionalListeners)) | quote }}
-  usage:
+  usages:
     - digital signature
     - key encipherment
     - server auth
