@@ -49,12 +49,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.ctrlPlane.advertisedPort }}
-      targetPort: {{ .Values.ctrlPlane.containerPort }}
+    - port: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedPort "context" .) }}
+      targetPort: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.containerPort "context" .) }}
       protocol: TCP
       name: ctrl
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.ctrlPlane.advertisedPort }}
+      nodePort: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedPort "context" .) }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
@@ -174,12 +174,12 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-    - port: {{ .Values.managementApi.advertisedPort }}
-      targetPort: {{ .Values.managementApi.containerPort }}
+    - port: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
+      targetPort: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.containerPort "context" .) }}
       protocol: TCP
       name: mgmt
       {{- if (eq $type "NodePort") }}
-      nodePort: {{ .Values.managementApi.advertisedPort }}
+      nodePort: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
