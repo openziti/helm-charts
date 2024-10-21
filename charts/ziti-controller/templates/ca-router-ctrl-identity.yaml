@@ -102,7 +102,6 @@ spec:
     algorithm: RSA
     size: 4096
   usages:
-    - client auth # remove when we fix #ClientCertKeyReuseIssue
     - server auth
     - digital signature
     - content commitment
@@ -115,13 +114,15 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
-    - {{ .Values.ctrlPlane.advertisedHost | default  (printf "%s-ctrl.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain)}}
+    {{/*   */}}
+    - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) }}
     {{- if .Values.ctrlPlane.dnsNames }}
       {{- range .Values.ctrlPlane.dnsNames }}
     - {{ . | quote }}
       {{- end }}
     {{- end }}
-    {{- if and .Values.clientApi.service.enabled (not .Values.webBindingPki.enabled) }}
+    {{/* add the client API's DNS SANs if client API does not have a separate PKI for web listeners, i.e., the enrollment signer is from the ctrl plane PKI  */}}
+    {{- if not .Values.webBindingPki.enabled }}
     - {{ include "ziti-controller.fullname" . }}-client
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc
@@ -133,15 +134,14 @@ spec:
         {{- end }}
       {{- end }}
     {{- end }}
+    {{/* add management API DNS SANs if management API does not have a separate PKI for web listeners */}}
     {{- if and .Values.managementApi.service.enabled (not .Values.webBindingPki.enabled) }}
     - {{ include "ziti-controller.fullname" . }}-mgmt
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
-      {{- if .Values.managementApi.advertisedHost }}
-    - {{ .Values.managementApi.advertisedHost }}
-      {{- end }}
-      {{- if .Values.managementApi.dnsNames }}
+    - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}
+      {{- if gt (len .Values.managementApi.dnsNames) 0 }}
         {{- range .Values.managementApi.dnsNames }}
     - {{ . | quote }}
         {{- end }}
@@ -151,6 +151,28 @@ spec:
   #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
   ipAddresses:
     - 127.0.0.1
+    - "::1"
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
+
+---
+# the controller's client certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  isCA: false
+  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity
+  secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  usages:
+    - client auth
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
