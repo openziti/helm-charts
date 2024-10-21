@@ -1,0 +1,21 @@
+clientApi:
+  altIngress:
+    advertisedHost: ""  # client.ziti.example.com
+    annotations: {}  # annotate as per ingress controller to enable ssl passthrough
+    enabled: true
+    ingressClassName: ""
+
+webBindingPki:
+  altServerCerts:
+    - mode: certManager
+      secretName: ziti-controller-alt-server-cert1
+      dnsNames:
+        # preserve this template to ensure the DNS SAN matches altIngress.advertisedHost
+        - "{{ .Values.clientApi.altIngress.advertisedHost }}"
+      issuerRef:
+        group: cert-manager.io
+        # ClusterIssuer or Issuer
+        kind: ClusterIssuer
+        # some cert-manager issuer that can solve ACME challenges for the requested DNS SAN
+        name: cloudflare-dns01-issuer-prod
+      mountPath: /etc/ziti/ziti-controller-alt-server-cert1

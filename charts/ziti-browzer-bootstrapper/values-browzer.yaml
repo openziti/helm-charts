@@ -1,0 +1,27 @@
+zitiBrowzer:
+  bootstrapper:
+    loadBalancer:
+      host: ""  # browzer.ziti.example.com
+      port: 443
+    scheme: http
+    targets:
+      - vhost: ""  # httpbin.ziti.example.com
+        service: ""  # httpbin-service
+        path: /
+        scheme: http
+        idp_issuer_base_url: ""  # https://dev-3doprsvtymjqimsq.us.auth0.com
+        idp_client_id: ""  # pbBJJAamodtkhAAfsBI0fsTzEn4w0raE
+  controller:
+    host: ""  # client.ziti.example.com
+    port: 443
+  runtime:
+    originTrailToken: ""  # 
+
+ingress:
+  tlsSecret: ""  # ziti-browzer-tls
+  ingressClassName: ""  # nginx
+  # annotate to bind a publicly trusted ingress cert and use plain HTTP for upstream requests
+  # to the target service
+  annotations: {}
+    # cert-manager.io/cluster-issuer: ""  # cloudflare-dns01-issuer-prod
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
