@@ -20,7 +20,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
-          version: v3.15.1
+          version: v4.2.0
 
       - name: Add dependency repositories
         run: |
@@ -36,7 +36,7 @@ jobs:
       - name: Run chart-releaser
         uses: netfoundry/chart-releaser-action@v0
         with:
-          version: v0.1.6107
+          version: v0.1.6108
           charts_dir: charts
           skip_existing: true
           mark_as_latest: true

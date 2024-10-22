@@ -1,0 +1,134 @@
+# This is the Graphical UI Console - https://github.com/openziti/ziti-browzer-bootstrapper
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ziti-browzer-bootstrapper.fullname" . }}
+  labels:
+    {{- include "ziti-browzer-bootstrapper.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "ziti-browzer-bootstrapper.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: "ziti-browzer-bootstrapper"
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ziti-browzer-bootstrapper.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: "ziti-browzer-bootstrapper"
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.initContainers }}
+      initContainers:
+        {{- toYaml .Values.initContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NODE_ENV
+              value: "{{ .Values.zitiBrowzer.nodeEnv | default "production" }}"
+           {{- /* It's a bit tricky to evaluate 'if .Values.zitiBrowzer.nodeTlsRejectUnauthorized' to 'true' when zitiBrowzer.nodeTlsRejectUnauthorized == 0 */}}
+           {{- if and (ne (printf "%v" .Values.zitiBrowzer.nodeTlsRejectUnauthorized) "") (ne (printf "%v" .Values.zitiBrowzer.nodeTlsRejectUnauthorized) "<nil>") }}
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "{{ printf "%v" .Values.zitiBrowzer.nodeTlsRejectUnauthorized }}"
+           {{- end }}
+           {{- if .Values.zitiBrowzer.nodeExtraCACerts }}
+            - name: NODE_EXTRA_CA_CERTS
+              value: "{{ .Values.zitiBrowzer.nodeExtraCACerts  }}"
+           {{- end }}
+            - name: ZITI_BROWZER_BOOTSTRAPPER_LOGLEVEL
+              value: "{{ .Values.zitiBrowzer.bootstrapper.logLevel | default "info" }}"
+            - name: ZITI_BROWZER_BOOTSTRAPPER_HOST
+              value: "{{ .Values.zitiBrowzer.bootstrapper.host | default (printf "%s.%s.svc" (include "ziti-browzer-bootstrapper.fullname" .) .Release.Namespace) }}"
+            - name: ZITI_BROWZER_BOOTSTRAPPER_LISTEN_PORT
+              value: "{{ .Values.service.containerPort }}"
+            {{- if .Values.zitiBrowzer.bootstrapper.loadBalancer.host }}
+            - name: ZITI_BROWZER_LOAD_BALANCER_HOST
+              value: "{{ .Values.zitiBrowzer.bootstrapper.loadBalancer.host }}"
+            {{- end }}
+            {{- if .Values.zitiBrowzer.bootstrapper.loadBalancer.port }}
+            - name: ZITI_BROWZER_LOAD_BALANCER_PORT
+              value: "{{ .Values.zitiBrowzer.bootstrapper.loadBalancer.port }}"
+            {{- end }}
+            - name: ZITI_BROWZER_BOOTSTRAPPER_SCHEME
+              value: "{{ .Values.zitiBrowzer.bootstrapper.scheme | default "http" }}"
+            - name: ZITI_BROWZER_BOOTSTRAPPER_TARGETS
+              value: |-
+                { "targetArray": {{- toJson .Values.zitiBrowzer.bootstrapper.targets }} }
+            - name: ZITI_BROWZER_RUNTIME_ORIGIN_TRIAL_TOKEN
+              value: "{{ .Values.zitiBrowzer.runtime.originTrailToken | required "zitiBrowzer.runtime.originTrailToken is required." }}"
+            - name: ZITI_BROWZER_RUNTIME_LOGLEVEL
+              value: "{{ .Values.zitiBrowzer.runtime.logLevel | default "info" }}"
+            - name: ZITI_BROWZER_RUNTIME_HOTKEY
+              value: "{{ .Values.zitiBrowzer.runtime.hotKey | default "alt+F12" }}"
+            - name: ZITI_CONTROLLER_HOST
+              value: "{{ .Values.zitiBrowzer.controller.host | required "zitiBrowzer.controller.host is required." }}"
+            - name: ZITI_CONTROLLER_PORT
+              value: "{{ .Values.zitiBrowzer.controller.port | default "1280" }}"
+          ports:
+            - containerPort: {{ .Values.service.containerPort }}
+              name: {{ .Values.service.portName }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: {{ .Values.service.containerPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: {{ .Values.service.containerPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          {{- if .Values.image.command }}
+          command:
+          {{- range .Values.image.command }}
+            - {{ . | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.image.args }}
+          args:
+          {{- range .Values.image.args }}
+            - {{ . | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+        {{- if .Values.sidecars }}
+          {{- toYaml .Values.sidecars | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}

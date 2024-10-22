@@ -1,0 +1,167 @@
+# Default values for ziti-browzer-bootstrapper.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+ingress:
+  # -- create an ingress for the cluster service
+  enabled: true
+  # -- "nginx" if using ingress-nginx
+  ingressClassName: ""
+  # -- ingress annotations for the ingress controller, e.g., cert-manager issuer and nginx backend protocol
+  annotations: {}
+    # cert-manager.io/cluster-issuer: "cloudflare-dns01-issuer"
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+  # -- ingress labels
+  labels: {}
+  # -- enable TLS ingress by specifying the name of the secret with the tls.crt, tls.key, etc. for the bootstrapper
+  tlsSecret: ""
+
+
+zitiBrowzer:
+  bootstrapper:
+    # -- bootstrapper loglevel
+    logLevel: info
+    # -- scheme the container should start with. http is usually okay for kubernetes, as we should have an ingress router
+    scheme: http
+    loadBalancer:
+      # -- (required) hostname of bootstrapper ingress load balancer
+      host: ""
+      # -- (required) port of bootstrapper ingress load balancer
+      port: 443
+    # -- Ziti Services with OIDC auth policy allowing BrowZer users by email claim
+    targets: []
+      # - vhost: my-ziti-service-browzer-ingress.cluster1.example.com
+      #   service: my-ziti-service-name
+      #   path: /
+      #   scheme: http
+      #   idp_issuer_base_url:
+      #   idp_client_id:
+
+  controller:
+    # -- Ziti Controller client API host (required)
+    host: ~
+    # -- Ziti Controller client API port
+    port: 1280
+
+  runtime:
+    # -- origin trail token. See https://openziti.discourse.group/t/browzer-setup-error-1014-origintrial-subdomain-mismatch/2481
+    originTrailToken: ~
+    # -- runtime loglevel
+    logLevel: info
+    # -- the hotkey to activate the BrowZer settings dialog modal. default: alt+F12
+    hotKey: alt+F12
+
+  # -- node environment mode - defaults to production
+  nodeEnv: production
+  # -- Set to 0 to skip verifying the client API's server cert during startup (ZBR client must still encounter a verifiable client API server cert)
+  nodeTlsRejectUnauthorized: ~
+  # -- File (i.e. mounted by extraVolumes/extraVolumesMounts) providing additional CA's to trust (i.e. for controller ca)
+  nodeExtraCACerts: ~
+
+service:
+  # -- create a cluster service for the deployment
+  enabled: true
+  # -- port for the server to bind and cluster service to target
+  containerPort: 1408
+  # -- port for the cluster service, load balancer, nodeport, and ingress to advertise
+  advertisedPort: 80
+  # -- symbolic name of the cluster service port
+  portName: http
+  # -- choose ClusterIP, NodePort, or LoadBalancer
+  type: ClusterIP
+  # -- cluster service labels
+  labels: {}
+  # -- cluster service annotations
+  annotations: {}
+
+image:
+  # -- app container image to deploy
+  repository: ghcr.io/openziti/ziti-browzer-bootstrapper
+  # -- deployment image pull policy
+  #pullPolicy: Always
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  # tag: latest
+  # -- app run command args
+  # args: []
+  # -- app image registry credential
+  pullSecrets: []
+  # -- app run command
+  # command: []
+
+# -- release name override
+nameOverride: ""
+# -- release fullname override
+fullnameOverride: ""
+
+# -- annotations to apply to all pods
+podAnnotations: {}
+
+podSecurityContext:
+  # -- effective UID
+  runAsUser: 1000  # default user "node" in container image has UID 1000
+  # -- effective GID
+  runAsGroup: 1000  # default group "node" in container image has GID 1000
+  # -- volume mount filesystem group owner
+  fsGroup: 1000
+
+# -- deployment container security context
+securityContext:
+  # capabilities:
+  #   add:
+  #     - NET_ADMIN
+
+# -- extraVolumes Optionally specify extra list of additional volumes for the browzer-bootstrapper pods
+extraVolumes: []
+# -- extraVolumeMounts Optionally specify extra list of additional volumeMounts for the browzer-bootstrapper containers
+extraVolumeMounts: []
+# -- sidecars Add additional sidecar containers to the browzer-bootstrapper pods
+# e.g:
+# sidecars:
+#   - name: your-image-name
+#     image: your-image
+#     imagePullPolicy: Always
+#     ports:
+#       - name: portname
+#         containerPort: 1234
+#
+sidecars: []
+# -- initContainers Add additional init containers to the browzer-bootstrapper pods
+# ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+# e.g:
+# initContainers:
+#  - name: your-image-name
+#    image: your-image
+#    imagePullPolicy: Always
+#    command: ['sh', '-c', 'echo "hello world"']
+#
+initContainers: []
+
+# -- deployment container resources
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# -- deployment pod node selector
+nodeSelector: {}
+#  kubernetes.io/role: master
+
+# -- deployment pod tolerations
+tolerations: []
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+
+# -- deployment pod node affinity
+affinity: {}
+
+# -- deployment pod replicas
+replicas: 1
