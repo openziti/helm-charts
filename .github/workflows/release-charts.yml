@@ -36,7 +36,7 @@ jobs:
       - name: Run chart-releaser
         uses: netfoundry/chart-releaser-action@v0
         with:
-          version: v0.1.6108
+          version: v0.1.6110
           charts_dir: charts
           skip_existing: true
           mark_as_latest: true
