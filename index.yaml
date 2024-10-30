@@ -300,6 +300,16 @@ entries:
     version: 0.3.3
   ziti-browzer-bootstrapper:
   - apiVersion: v2
+    appVersion: 0.76.0
+    created: "2024-10-30T16:36:24.36533797Z"
+    description: Deploy OpenZiti BrowZer Bootstrapper as Kubernetes Service
+    digest: b8c71e3f2e45a6755a08e6e7d890cdbcef167ff1483e1379b0719e79adcb09db
+    name: ziti-browzer-bootstrapper
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-browzer-bootstrapper-0.1.1/ziti-browzer-bootstrapper-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
     appVersion: 0.74.0
     created: "2024-10-23T14:03:56.562048097Z"
     description: Deploy OpenZiti BrowZer Bootstrapper as Kubernetes Service
@@ -2667,4 +2677,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2024-10-23T14:03:56.782815372Z"
+generated: "2024-10-30T16:36:24.365742288Z"
