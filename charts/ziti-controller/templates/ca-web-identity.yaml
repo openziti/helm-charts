@@ -93,7 +93,6 @@ spec:
     algorithm: RSA
     size: 4096
   usages:
-    - client auth # remove when we fix #ClientCertKeyReuseIssue
     - server auth
     - digital signature
     - content commitment
@@ -156,6 +155,9 @@ spec:
     size: 256
   usages:
     - client auth
+    - digital signature
+    - content commitment
+    - key encipherment
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
