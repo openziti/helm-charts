@@ -474,6 +474,29 @@ entries:
   ziti-controller:
   - apiVersion: v2
     appVersion: 1.1.15
+    created: "2024-11-07T17:50:51.801990339Z"
+    dependencies:
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.14.0
+    - condition: trust-manager.enabled
+      name: trust-manager
+      repository: https://charts.jetstack.io
+      version: ~0.7.0
+    - condition: ingress-nginx.enabled
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx/
+      version: ~4.10.1
+    description: Host an OpenZiti controller in Kubernetes
+    digest: 46e2297bec87506337b53fa6eac2cf8d460a54aa2a1b4e7f5bfdd3100a99f1e2
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-1.1.2/ziti-controller-1.1.2.tgz
+    version: 1.1.2
+  - apiVersion: v2
+    appVersion: 1.1.15
     created: "2024-10-23T14:03:56.695306374Z"
     dependencies:
     - condition: cert-manager.enabled
@@ -2696,4 +2719,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2024-11-05T15:43:47.940815785Z"
+generated: "2024-11-07T17:50:51.802275014Z"
