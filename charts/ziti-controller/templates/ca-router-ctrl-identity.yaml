@@ -173,6 +173,9 @@ spec:
     size: 256
   usages:
     - client auth
+    - digital signature
+    - content commitment
+    - key encipherment
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
