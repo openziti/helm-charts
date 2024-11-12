@@ -243,7 +243,6 @@ csr:
 
 # -- read-only mountpoint for executables (must be in image's executable search PATH)
 execMountDir:     /usr/local/bin
-enrollJwtFile: enrollment.jwt
 # -- enrollment one time token from the controller's management API
 enrollmentJwt:
 # -- read-only mountpoint for router identity secret specified in deployment for use by router run container
