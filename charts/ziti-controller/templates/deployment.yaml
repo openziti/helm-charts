@@ -39,12 +39,20 @@ spec:
             - name: ZITI_ADMIN_USER
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-user
             - name: ZITI_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-password
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
@@ -125,12 +133,20 @@ spec:
             - name: ZITI_ADMIN_USER
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-user
             - name: ZITI_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-password
             # Add additional environment variables
             {{- range $key, $val := .Values.env }}
