@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 0.2.4](https://img.shields.io/badge/Version-0.2.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.30](https://img.shields.io/badge/AppVersion-0.4.30-informational?style=flat-square)
+![Version: 0.2.6](https://img.shields.io/badge/Version-0.2.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.40](https://img.shields.io/badge/AppVersion-0.4.40-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -189,10 +189,13 @@ zrok   nginx   ctrl.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
+| podSecurityContext | object | `{"fsGroup":2171,"runAsGroup":2171,"runAsUser":2171}` | default pod security context for all containers |
+| podSecurityContext.fsGroup | int | `2171` | volume mount filesystem group owner |
+| podSecurityContext.runAsGroup | int | `2171` | effective GID |
+| podSecurityContext.runAsUser | int | `2171` | effective UID |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
-| securityContext | object | `{}` |  |
+| securityContext | object | `{}` | override the default pod security context for init and app containers |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | test.backoffLimit | int | `3` | retry until first success unless backoffLimit is reached |

@@ -24,17 +24,16 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ .Values.ctrlPlane.advertisedHost | default (printf "%s-ctrl.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}
+    - host: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) | default (printf "%s-ctrl.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}
       http:
         paths:
-          # This rule gives internal access to the pingaccess admin services.
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: {{ include "ziti-controller.fullname" . }}-ctrl
                 port:
-                  number: {{ .Values.ctrlPlane.advertisedPort }}
+                  number: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedPort "context" .) }}
 {{- end }}
 
 {{- if .Values.clientApi.ingress.enabled }}
@@ -66,7 +65,42 @@ spec:
     - host: {{ .Values.clientApi.advertisedHost }}
       http:
         paths:
-          # This rule gives internal access to the pingaccess admin services.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-controller.fullname" . }}-client
+                port:
+                  number: {{ .Values.clientApi.advertisedPort }}
+{{- end }}
+
+{{- if .Values.clientApi.altIngress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-alt-client
+  labels:
+  {{- include "ziti-controller.labels" . | nindent 4 }}
+  {{- with .Values.clientApi.altIngress.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.clientApi.altIngress.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.clientApi.altIngress.ingressClassName }}
+  ingressClassName: {{ .Values.clientApi.altIngress.ingressClassName }}
+  {{- end }}
+  {{- if .Values.clientApi.altIngress.tls }}
+  tls:
+    {{- toYaml .Values.clientApi.altIngress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.clientApi.altIngress.advertisedHost }}
+      http:
+        paths:
           - path: /
             pathType: Prefix
             backend:
@@ -102,15 +136,14 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ .Values.managementApi.advertisedHost }}
+    - host: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}
       http:
         paths:
-          # This rule gives internal access to the pingaccess admin services.
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: {{ include "ziti-controller.fullname" . }}-mgmt
                 port:
-                  number: {{ .Values.managementApi.advertisedPort }}
+                  number: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
 {{- end }}

@@ -93,7 +93,6 @@ spec:
     algorithm: RSA
     size: 4096
   usages:
-    - client auth # remove when we fix #ClientCertKeyReuseIssue
     - server auth
     - digital signature
     - content commitment
@@ -121,10 +120,8 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
-      {{- if .Values.managementApi.advertisedHost }}
-    - {{ .Values.managementApi.advertisedHost }}
-      {{- end }}
-      {{- if .Values.managementApi.dnsNames }}
+    - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}
+      {{- if gt (len .Values.managementApi.dnsNames) 0 }}
         {{- range .Values.managementApi.dnsNames }}
     - {{ . | quote }}
         {{- end }}
@@ -134,28 +131,33 @@ spec:
   #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
   ipAddresses:
     - 127.0.0.1
+    - "::1"
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
 
-# #ClientCertKeyReuseIssue: Currently we don't use separate client/server certs as they require to be issued
-# via the same private key - I currently have no Idea how to solve this with CertManager
-# ---
-# # the controller's client certificate
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
-# metadata:
-#   name: ziti-ctrl-client
-# spec:
-#   isCA: false
-#   commonName: ziti-ctrl-client
-#   secretName: ziti-controller-client-cert-secret
-#   privateKey:
-#     algorithm: ECDSA
-#     size: 256
-#   usages:
-#     - client auth
-#   issuerRef:
-#     kind: Issuer
-#     name: ziti-controller-intermediate-ca-issuer
 {{- end }}
+
+---
+# the controller's web client identity
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-client-identity
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  isCA: false
+  commonName: {{ include "ziti-controller.fullname" . }}-web-client-identity
+  secretName: {{ include "ziti-controller.fullname" . }}-web-client-identity-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  usages:
+    - client auth
+    - digital signature
+    - content commitment
+    - key encipherment
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer

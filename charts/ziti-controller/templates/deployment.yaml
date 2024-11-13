@@ -1,3 +1,5 @@
+{{- $root := . }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -54,10 +56,19 @@ spec:
                   name: {{ include "ziti-controller.fullname" . }}-admin-secret
                 {{- end }}
                   key: admin-password
+            - name: ZITI_TRUST_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-trust-domain
+                  key: trustDomain
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: HOME
               value: {{ .Values.image.homeDir }}
+            # must be false or container image will run bootstrap(), which is not currently used in this chart, only by
+            # Linux and Docker deployments
+            - name: ZITI_BOOTSTRAP
+              value: "false"
           volumeMounts:
             - mountPath: {{ include "execMountDir" . }}/ziti-controller-init.bash
               name: ziti-controller-configmap
@@ -73,6 +84,9 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-client-identity/
+              name: cert-ctrl-plane-client-identity
+              readOnly: true
             {{- if (eq .Values.edgeSignerPki.enabled true) }}
             - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
@@ -86,6 +100,9 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/web-identity/
               name: cert-web-identity
               readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/web-client-identity/
+              name: cert-web-client-identity
+              readOnly: true
             {{- end }}
       shareProcessNamespace: true  # this allows the admin container to observe the controller process namespace
       containers:
@@ -95,12 +112,16 @@ spec:
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-          - name: client
+          - name: client-api
             containerPort: {{ .Values.clientApi.containerPort }}
-          - name: controller
-            containerPort: {{ .Values.ctrlPlane.containerPort }}
+          {{- if .Values.ctrlPlane.service.enabled }}
+          - name: ctrl-plane
+            containerPort: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.containerPort "context" .) }}
+          {{- end }}
+          {{- if .Values.managementApi.service.enabled }}
           - name: mgmt-api
-            containerPort: {{ .Values.managementApi.containerPort }}
+            containerPort: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.containerPort "context" .) }}
+          {{- end }}
           {{- if .Values.prometheus.enabled }}
           - name: prometheus
             containerPort: {{ .Values.prometheus.containerPort }}
@@ -126,7 +147,7 @@ spec:
               value: {{ .Values.image.homeDir }}
             - name: ZITI_MGMT_API
               {{- if .Values.managementApi.service.enabled }}
-              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.managementApi.advertisedPort }}
+              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
               {{- else }}
               value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.clientApi.advertisedPort }}
               {{- end }}
@@ -148,6 +169,11 @@ spec:
                   name: {{ include "ziti-controller.fullname" . }}-admin-secret
                 {{- end }}
                   key: admin-password
+            - name: ZITI_TRUST_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "ziti-controller.fullname" . }}-trust-domain
+                  key: trustDomain
             # Add additional environment variables
             {{- range $key, $val := .Values.env }}
             - name: {{ $key | quote }}
@@ -157,9 +183,9 @@ spec:
             {{- range .Values.envSecrets }}
             - name: {{ .name | quote }}
               valueFrom:
-               secretKeyRef:
-                 name: {{ .valueFrom.secretKeyRef.name | quote }}
-                 key: {{ .valueFrom.secretKeyRef.key | quote }}
+                secretKeyRef:
+                  name: {{ .valueFrom.secretKeyRef.name | quote }}
+                  key: {{ .valueFrom.secretKeyRef.key | quote }}
             {{- end }}
           volumeMounts:
             - mountPath: {{ include "dataMountDir" . }}
@@ -179,6 +205,9 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-client-identity/
+              name: cert-ctrl-plane-client-identity
+              readOnly: true
             {{- if (eq .Values.edgeSignerPki.enabled true) }}
             - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
@@ -191,6 +220,9 @@ spec:
             {{- if (eq .Values.webBindingPki.enabled true) }}
             - mountPath: {{ include "configMountDir" . }}/web-identity/
               name: cert-web-identity
+              readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/web-client-identity/
+              name: cert-web-client-identity
               readOnly: true
             {{- end }}
             {{- if .Values.fabric.events.enabled }}
@@ -205,6 +237,15 @@ spec:
             {{- range .Values.additionalVolumes }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
+            {{- end }}
+            {{- if gt (len .Values.webBindingPki.altServerCerts) 0 }}
+              {{- range .Values.webBindingPki.altServerCerts }}
+                {{- if eq .mode "certManager" }}
+            - mountPath: {{ .mountPath }}
+              name: {{ printf "%v-%v" (include "ziti-controller.fullname" $root) .secretName }}
+              readOnly: true
+                {{- end }}
+              {{- end }}
             {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -242,6 +283,9 @@ spec:
         - name: cert-ctrl-plane-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
+        - name: cert-ctrl-plane-client-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
         {{- if (eq .Values.edgeSignerPki.enabled true) }}
         - name: cert-edge-signer
           secret:
@@ -255,6 +299,9 @@ spec:
         - name: cert-web-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
+        - name: cert-web-client-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-client-identity-secret
         {{- end }}
         - name: data
         {{- if .Values.persistence.enabled }}
@@ -283,5 +330,14 @@ spec:
             name: {{ .configMapName }}
           {{- else if eq .volumeType "emptyDir" }}
           emptyDir: {}
+          {{- end }}
+        {{- end }}
+        {{- if gt (len .Values.webBindingPki.altServerCerts) 0 }}
+          {{- range .Values.webBindingPki.altServerCerts }}
+            {{- if eq .mode "certManager" }}
+        - name: {{ printf "%v-%v" (include "ziti-controller.fullname" $root) .secretName }}
+          secret:
+            secretName: {{ .secretName }}
+            {{- end }}
           {{- end }}
         {{- end }}

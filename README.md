@@ -39,6 +39,7 @@ This repo uses GitHub Actions to automate the following tasks:
 
 1. Generate Helm docs for each chart in the repo.
 1. Package and index the charts and publish the new Helm repo index and READMEs to GitHub Pages.
+1. Label pull requests for generating release notes (label `notes-ignore` excludes a PR from notes)
 
 ### Troubleshooting a Missing Chart
 

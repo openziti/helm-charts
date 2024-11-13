@@ -9,6 +9,8 @@ jobs:
   release:
     name: Release Helm Charts
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,7 +20,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
-          version: v3.15.1
+          version: v3.16.2
 
       - name: Add dependency repositories
         run: |
@@ -32,11 +34,13 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1
+        uses: netfoundry/chart-releaser-action@v0
         with:
+          version: v0.1.6110
           charts_dir: charts
           skip_existing: true
           mark_as_latest: true
           pages_branch: gh-pages
+          generate_release_notes: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

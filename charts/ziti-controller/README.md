@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.0.12](https://img.shields.io/badge/Version-1.0.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.3](https://img.shields.io/badge/AppVersion-1.1.3-informational?style=flat-square)
+![Version: 1.1.2](https://img.shields.io/badge/Version-1.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.15](https://img.shields.io/badge/AppVersion-1.1.15-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -10,20 +10,15 @@ Host an OpenZiti controller in Kubernetes
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.jetstack.io | cert-manager | ~1.11.0 |
+| https://charts.jetstack.io | cert-manager | ~1.14.0 |
 | https://charts.jetstack.io | trust-manager | ~0.7.0 |
-| https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.5.2 |
+| https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.10.1 |
 
 ## Overview
 
-This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. Delete the controller pod after an upgrade for the new controller configuration to take effect.
+This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle.
 
-Here's a checklist that must be satisfied for each of the controller's TLS servers: router control plane (`ctrlPlane`), each web listener(s) (`clientApi`, at least).
-
-1. Each of the controller's TLS servers must have an advertised host (FQDN) and TCP port. The chart ensures the DNS SAN is added for this address. The port is always 443 if ingress is enabled for `ClusterIP` service.
-1. A K8s Service must be configured and reachable by all clients. (i.e., type `ClusterIP`+`Ingress`, `NodePort`, or `LoadBalancer`)
-1. Each K8s Service must be configured for TLS passthrough (i.e., server TLS must not be terminated by an intermediary LB).
-1. All clients must access the controller through the advertised address(es).
+The client API must be published with a TLS passthrough Ingress, NodePort, or LoadBalancer. The ctrl plane and management API share the client API's TLS listener, so they're reached through the same address by default.
 
 ## Requirements
 
@@ -201,7 +196,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| additionalConfigs | object | `{}` | allow the insertion of raw/unmodified config blocks Additional configs will be appended to the top-level keys of the ziti controller config ( events, edge, web, network, ctrl) These configs allow for OVERRIDING behavior in any top level config block |
+| additionalConfigs | object | `{"ctrl":{},"events":{},"healthChecks":{},"network":{},"web":{}}` | Append additional config blocks in specific top-level keys: edge, web, network, ctrl. If events are defined here, they replace the default events section entirely. |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
@@ -214,28 +209,40 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
 | clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
 | clientApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
+| clientApi.altIngress.advertisedHost | string | `""` | alternative ingress host, e.g., ziti.example.com |
+| clientApi.altIngress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
+| clientApi.altIngress.enabled | bool | `false` | create an ingress for the client API's ClusterIP service with a trusted certificate for clients that require a trusted certificate, e.g., BrowZer, ZAC |
+| clientApi.altIngress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| clientApi.altIngress.labels | object | `{}` | ingress labels |
+| clientApi.altIngress.tls | object | `{}` | deprecated: tls passthrough is required; configure an alternative certificate to project into the container in webBindingPki.altServerCerts |
 | clientApi.containerPort | int | `1280` | cluster service target port on the container |
 | clientApi.dnsNames | list | `[]` | additional DNS SANs |
-| clientApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
-| clientApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| clientApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
+| clientApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
+| clientApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| clientApi.ingress.labels | object | `{}` | ingress labels |
+| clientApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| ctrlPlane.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
-| ctrlPlane.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
-| ctrlPlane.alternativeIssuer | string | `nil` | kind and name of alternative issuer for the controller's identity |
-| ctrlPlane.containerPort | int | `6262` | cluster service target port on the container |
-| ctrlPlane.dnsNames | list | `[]` | additional DNS SANs |
-| ctrlPlane.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
+| ctrlPlane.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
+| ctrlPlane.alternativeIssuer | object | `{}` | kind and name of alternative issuer for the controller's identity |
+| ctrlPlane.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
+| ctrlPlane.dnsNames | list | `[]` | additional DNS SANs for the ctrl plane identity |
+| ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
-| ctrlPlane.service.enabled | bool | `true` | create a cluster service for the deployment |
+| ctrlPlane.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| ctrlPlane.ingress.labels | object | `{}` | ingress labels |
+| ctrlPlane.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
+| ctrlPlane.service.enabled | bool | `true` | create a separate cluster service for the ctrl plane; enabling this requires you to also set the host and port for a separate ctrl plane TLS listener |
 | ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | ctrlPlaneCasBundle.namespaceSelector | object | `{}` | namespaces where trust-manager will create the Bundle resource containing Ziti's trusted CA certs (default: empty means all namespaces) |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
-| env | string | `nil` | set name to value in containers' environment |
-| envSecrets | string | `nil` | set secrets as environment variables in the container |
+| env | object | `{}` | set name to value in containers' environment |
+| envSecrets | object | `{}` | set secrets as environment variables in the container |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
 | fabric.events.fileName | string | `"fabric-events.json"` |  |
 | fabric.events.mountDir | string | `"/var/run/ziti"` |  |
@@ -266,12 +273,16 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
-| managementApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
-| managementApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
-| managementApi.containerPort | int | `1281` | cluster service target port on the container |
+| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","containerPort":"{{ .Values.clientApi.containerPort }}","dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
+| managementApi.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service |
+| managementApi.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
+| managementApi.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | managementApi.dnsNames | list | `[]` | additional DNS SANs |
-| managementApi.ingress.annotations | string | `nil` | ingress annotations, e.g., to configure ingress-nginx |
+| managementApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | managementApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| managementApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| managementApi.ingress.labels | object | `{}` | ingress labels |
+| managementApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | managementApi.service.enabled | bool | `false` | create a cluster service for the deployment |
 | managementApi.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | network.createCircuitRetries | int | `2` | createCircuitRetries controls the number of retries that will be attempted to create a path (and terminate it) for new circuits. |
@@ -284,13 +295,13 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | network.smart.rerouteCap | int | `4` | Defines the hard upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteCap` is set to `1`, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 1. |
 | network.smart.rerouteFraction | float | `0.02` | Defines the fractional upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 2 (2% of 100). |
 | nodeSelector | object | `{}` | deployment template spec node selector |
-| persistence.VolumeName | string | `nil` | PVC volume name |
+| persistence.VolumeName | string | `""` | PVC volume name |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |
 | persistence.enabled | bool | `true` | required: place a storage claim for the BoltDB persistent volume |
 | persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled=true. If defined, PVC must be created manually before volume will be bound. |
 | persistence.size | string | `"2Gi"` | 2GiB is enough for tens of thousands of entities, but feel free to make it larger |
-| persistence.storageClass | string | `nil` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
+| persistence.storageClass | string | `""` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `2171` | the GID of the group that should own any files created by the container, especially the BoltDB file |
@@ -322,6 +333,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | trust-manager.app.trust.namespace | string | `"{{ .Release.Namespace }}"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | trust-manager.enabled | bool | `false` | install the trust-manager subchart |
+| trustDomain | string | `""` | permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release) |
+| webBindingPki.altServerCerts | list | `[]` |  |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
 
 ## TODO's
@@ -329,6 +342,68 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 * replicas - Each controller replica needs to be it's own HA member. We have to wait until HA https://github.com/openziti/ziti/blob/release-next/doc/ha/overview.md is officially released.
 * lower CA / Cert lifetime; how to refresh stuff when Certs are updated?
 * Deploy Prometheus scraper configuration when `prometheus.enabled = true`
-* cert-manager allows issuing only one cert per key, i.e., ClientCertKeyReuseIssue prevents us from issuing a user cert and server cert backed by same private key, hence the controller config.yaml re-uses server certs in place of user certs to allow startup and testing to continue
+
+## Alternative Web Server Certificates
+
+The purpose of the alt_server_certs feature is to bind a publicly trusted server certificate to the controller's web listener. This is useful for publishing the controller's client API with a different DNS name for BrowZer and console clients that must verify the controller's identity with their OS trusted root store.
+
+### Request an alternative server certificate from a cert-manager issuer
+
+The most automatic way to bind an alt cert is the certManager mode provided by this chart. This example implies you have separately created a cert-manager ClusterIssuer named "cloudflare-dns01-issuer" that is able to obtain a certificate for the specified DNS name. If publishing the client API's alternative DNS name as a separate Ingress, you may reference that advertised host when requesting the alternative server certificate as shown here with an inline template to ensure they match.
+
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
+```yaml
+clientApi:
+    advertisedHost: edge.ziti.example.com
+    ingress:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+            kubernetes.io/ingress.allow-http: "false"
+            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    service:
+        enabled: true
+        type: ClusterIP
+    altIngress:
+        enabled: true
+        ingressClassName: nginx
+        advertisedHost: alt-edge.ziti.example.com  # this must be different from clientApi.advertisedHost and must match one of the dnsNames in the altServerCert
+        annotations:
+            kubernetes.io/ingress.allow-http: "false"
+            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+
+webBindingPki:
+    enabled: true
+    altServerCerts:
+        - mode: certManager
+            secretName: my-alt-server-cert
+            dnsNames:
+                - "{{ .Values.clientApi.altIngress.advertisedHost }}"
+            issuerRef:
+                group: cert-manager.io
+                kind: ClusterIssuer
+                name: cloudflare-dns01-issuer
+            mountPath: /etc/ziti/alt-server-cert
+```
+<!-- {% endraw %} -->
+
+### Use an alternative certificate and key from a tls secret
+
+The alternative server certificate and key may also be provided from a Kubernetes TLS secret. Declare the tls secret in the additionalVolumes section and reference it in the altServerCerts section.
+
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
+```yaml
+additionalVolumes:
+    - name: my-alt-server-cert
+      volumeType: secret
+      mountPath: /etc/ziti/my-alt-server-cert
+      secretName: my-alt-server-cert
+
+webBindingPki:
+    altServerCerts:
+        - mode: secret
+          secretName: my-alt-server-cert
+```
+<!-- {% endraw %} -->
 
 <!-- README.md generated by helm-docs from README.md.gotmpl -->

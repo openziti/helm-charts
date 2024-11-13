@@ -17,6 +17,7 @@ jobs:
           - ziti-host
           - ziti-router
           - zrok
+          - ziti-browzer-bootstrapper
     runs-on: ubuntu-latest
     steps:
       - name: Bump Chart Versions if Changed

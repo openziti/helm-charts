@@ -83,11 +83,6 @@ spec:
           # needs to read the frontend ziti identity secret which is mounted in $HOME/.zrok/identities
           args: ["access", "public", "/etc/zrok/frontend.yaml"]
           env:
-            - name: ZROK_ADMIN_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "zrok.fullname" . }}-admin-secret
-                  key: admin-token
             - name: ZROK_API_ENDPOINT
               value: http://{{ include "zrok.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.controller.service.advertisedPort }}
             - name: HOME

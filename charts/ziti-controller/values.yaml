@@ -2,33 +2,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-ctrlPlane:
-  # -- cluster service target port on the container
-  containerPort: 6262
-  # -- global DNS name by which routers can resolve a reachable IP for this
-  # service: default is cluster service DNS name which assumes all routers are
-  # inside the same cluster
-  advertisedHost:
-  # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: 443
-  service:
-    # -- create a cluster service for the deployment
-    enabled: true
-    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
-    type: ClusterIP  # this can be cluster-internal unless there are routers outside the cluster
-  ingress:
-    # -- create an ingress for the cluster service
-    enabled: false
-    # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations:
-  # -- kind and name of alternative issuer for the controller's identity
-  alternativeIssuer:
-    # -- type of alternative issuer for the controller's identity: Issuer, ClusterIssuer
-    # kind:
-    # -- metadata name of the alternative issuer
-    # name:
-  # -- additional DNS SANs
-  dnsNames: []
+# -- permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release)
+trustDomain: ""
 
 clientApi:
   # -- cluster service target port on the container
@@ -43,20 +18,45 @@ clientApi:
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: LoadBalancer  # this is the only service that really needs to be exposed
   ingress:
-    # -- create an ingress for the cluster service
+    # -- create a TLS-passthrough ingress for the client API's ClusterIP service
     enabled: false
+    # -- ingress class name, e.g., "nginx"
+    ingressClassName: ""
+    # -- ingress labels
+    labels: {}
     # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations:
+    annotations: {}
+    # -- deprecated: tls passthrough is required
+    tls: {}
+  altIngress:
+    # -- create an ingress for the client API's ClusterIP service with a trusted certificate for clients that require a trusted certificate, e.g., BrowZer, ZAC
+    enabled: false
+    # -- alternative ingress host, e.g., ziti.example.com
+    advertisedHost: ""
+    # -- ingress class name, e.g., "nginx"
+    ingressClassName: ""
+    # -- ingress labels
+    labels: {}
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations: {}
+    # -- deprecated: tls passthrough is required; configure an alternative
+    # certificate to project into the container in webBindingPki.altServerCerts
+    tls: {}
   # -- additional DNS SANs
   dnsNames: []
 
+# -- by default, there's no need for a separate cluster service, ingress, or
+# load balancer for the management API because it shares a TLS listener with the
+# client API, and is reachable at the same address and presents the same web
+# identity cert; you may configure a separate service, ingress, load balancer,
+# etc.  for the management API by setting managementApi.service.enabled=true
 managementApi:
   # -- cluster service target port on the container
-  containerPort: 1281
+  containerPort: "{{ .Values.clientApi.containerPort }}"
   # -- global DNS name by which routers can resolve a reachable IP for this service
-  advertisedHost:
+  advertisedHost: "{{ .Values.clientApi.advertisedHost }}"
   # -- cluster service, node port, load balancer, and ingress port
-  advertisedPort: 443
+  advertisedPort: "{{ .Values.clientApi.advertisedPort }}"
   service:
     # -- create a cluster service for the deployment
     enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
@@ -65,17 +65,65 @@ managementApi:
   ingress:
     # -- create an ingress for the cluster service
     enabled: false
+    # -- ingress class name, e.g., "nginx"
+    ingressClassName: ""
+    # -- ingress labels
+    labels: {}
     # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations:
+    annotations: {}
+    # -- deprecated: tls passthrough is required
+    tls: {}
   # -- additional DNS SANs
   dnsNames: []
 
+# by default, there's no need for a separate cluster service, ingress, or
+# load balancer for the ctrl plane because it shares a TLS listener with the
+# client API, advertising the same host and port but presenting the separate
+# ctrl plane identity to TLS clients via ALPN; you may override these templates
+# with literal host and port values and configure a separate service, ingress,
+# load balancer, etc. for the ctrl plane
+ctrlPlane:
+  # -- cluster service target port on the container
+  containerPort: "{{ .Values.clientApi.containerPort }}"
+  # -- global DNS name by which routers can resolve a reachable IP for this
+  # service: default is cluster service DNS name which assumes all routers are
+  # inside the same cluster
+  advertisedHost: "{{ .Values.clientApi.advertisedHost }}"
+  # -- cluster service, node port, load balancer, and ingress port
+  advertisedPort: "{{ .Values.clientApi.advertisedPort }}"
+  service:
+    # -- create a separate cluster service for the ctrl plane; enabling this
+    # requires you to also set the host and port for a separate ctrl plane TLS
+    # listener
+    enabled: true
+    # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
+    type: ClusterIP
+  ingress:
+    # -- create an ingress for the cluster service
+    enabled: false
+    # -- ingress class name, e.g., "nginx"
+    ingressClassName: ""
+    # -- ingress labels
+    labels: {}
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations: {}
+    # -- deprecated: tls passthrough is required
+    tls: {}
+  # -- kind and name of alternative issuer for the controller's identity
+  alternativeIssuer: {}
+    # -- type of alternative issuer for the controller's identity: Issuer, ClusterIssuer
+    # kind:
+    # -- metadata name of the alternative issuer
+    # name:
+  # -- additional DNS SANs for the ctrl plane identity
+  dnsNames: []
+
 # -- set name to value in containers' environment
-env:
+env: {}
 # SOME_ENV: "true"
 
 # -- set secrets as environment variables in the container
-envSecrets:
+envSecrets: {}
 #  - name: SOME_SECRET_ENV
 #    valueFrom:
 #      secretKeyRef:
@@ -158,7 +206,7 @@ ca:
   # duration: 2160h # 90d
   # renewBefore: 360h # 15d
   # -- Go time.Duration string format
-  duration: 87840h # 3660d / 10 y
+  duration: 87840h # 3660d / 10y
   # -- Go time.Duration string format
   renewBefore: 720h # 30d
   # -- Set a custom cluster domain if other than cluster.local
@@ -191,6 +239,38 @@ webBindingPki:
   # -- generate a separate PKI root of trust for web bindings, i.e., client,
   # management, and prometheus APIs
   enabled: true
+  altServerCerts: []
+    #  # -- request an alternative server certificate from a cert-manager issuer
+    #  mode: certManager
+    #  # -- name of the tls secret for cert-manager to create and manage the server
+    #  #    certificate and private key
+    #  secretName: ziti-controller-alt-server-cert
+    #  # -- DNS SANs to request; HA-style OIDC requires a DNS SAN that matches
+    #  the advertisedHost of the client API; the inline template example is
+    #  correct for requesting a certificate from cert-manager for the client
+    #  API's alternative ingress
+    #  dnsNames:
+    #  - "{{ .Values.clientApi.altIngress.advertisedHost }}"
+    #  # -- issuer ref to use when requesting the alternative server certificate
+    #  issuerRef:
+    #    group: cert-manager.io
+    #    kind: ClusterIssuer
+    #    name: cloudflare-dns01-issuer
+    #  # -- where to mount the tls secret on the pod
+    #  mountPath: /etc/ziti/alt-server-cert
+
+    #  # -- use an alternative certificate and key from a tls secret declared in additionalVolumes
+    #- mode: secret
+    #  # -- name of the tls secret from additionalVolumes with the alternative
+    #  #    server certificate and private key
+    #  secretName: ziti-controller-alt-server-cert
+
+    #  # -- use an explicit file path to the alternative server certificate and key
+    #- mode: localFile
+    #  # -- 'localFile': path to the alternative server certificate
+    #  serverCert:
+    #  # -- 'localFile': path to the alternative server key
+    #  serverKey:
 
 spireAgent:
   # -- if you are running a container with the spire-agent binary installed
@@ -235,14 +315,14 @@ ctrlPlaneCasBundle:
 # -- additional volumes to mount to ziti-controller container
 additionalVolumes: []
 #  - name: additional-volume-1
-#    volumeType: emptyDir
+#    volumeType: secret
 #    mountPath: /path/to/mount/1
 #    secretName: name-of-secret
 #  - name: additional-volume-2
 #    volumeType: configMap
 #    mountPath: /path/to/configmap/mount
 #    configMapName: your-configmap-name
-#  - name: additional-volume-2
+#  - name: additional-volume-3
 #    volumeType: emptyDir
 #    mountPath: /path/to/mount/2
 
@@ -315,9 +395,9 @@ persistence:
   ##
   # -- Storage class of PV to bind. By default it looks for the default storage class.
   # If the PV uses a different storage class, specify that here.
-  storageClass:
+  storageClass: ""
   # -- PVC volume name
-  VolumeName:
+  VolumeName: ""
   # -- PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed)
   accessMode: ReadWriteOnce
   # -- 2GiB is enough for tens of thousands of entities, but feel free to make it larger
@@ -424,11 +504,15 @@ ingress-nginx:
       # -- configure subchart ingress-nginx to enable the pass-through TLS feature
       enable-ssl-passthrough: "true"
 
-# -- allow the insertion of raw/unmodified config blocks
-# Additional configs will be appended to the top-level keys of the ziti controller config ( events, edge, web, network, ctrl)
-# These configs allow for OVERRIDING behavior in any top level config block
-additionalConfigs: {}
-  #  events:
+# -- Append additional config blocks in specific top-level keys: edge,
+# web, network, ctrl. If events are defined here, they replace the default
+# events section entirely.
+additionalConfigs:
+  ctrl: {}
+  network: {}
+  healthChecks: {}
+  web: {}
+  events: {}
   #    ampqLogger:
   #      subscriptions:
   #        - type: fabric.usage
