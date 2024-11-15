@@ -257,6 +257,8 @@ data:
             options: { }
           - binding: fabric
             options: { }
+          - binding: edge-oidc
+            options: { }
           - binding: zac
             options:
               location: /ziti-console
@@ -346,6 +348,8 @@ data:
           - binding: edge-management
             options: { }
           - binding: fabric
+            options: { }
+          - binding: edge-oidc
             options: { }
           - binding: health-checks
             options: { }
