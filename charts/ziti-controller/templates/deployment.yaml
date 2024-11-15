@@ -41,12 +41,20 @@ spec:
             - name: ZITI_ADMIN_USER
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-user
             - name: ZITI_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-password
             - name: ZITI_TRUST_DOMAIN
               valueFrom:
@@ -146,12 +154,20 @@ spec:
             - name: ZITI_ADMIN_USER
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-user
             - name: ZITI_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
                   key: admin-password
             - name: ZITI_TRUST_DOMAIN
               valueFrom:
