@@ -3,11 +3,11 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - '.github/workflows/miniziti.yml'
-      - 'charts/ziti-controller/**'
-      - 'charts/ziti-router/**'
-      - 'charts/httpbin/**'
-      - 'charts/zrok/**'
+      - .github/workflows/miniziti.yml
+      - charts/ziti-controller/**
+      - charts/ziti-router/**
+      - charts/httpbin/**
+      - charts/zrok/**
 
 # cancel older, redundant runs of same workflow on same branch
 concurrency:
