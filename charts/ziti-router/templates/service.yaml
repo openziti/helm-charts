@@ -236,7 +236,7 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-  {{- $service_name := .name }}
+  {{- $ziti_service := .zitiService }}
   {{- range $root.Values.tunnel.proxyServices }}
     {{- if and .zitiService (eq .zitiService $service_name) }}
     - port: {{ .advertisedPort }}
