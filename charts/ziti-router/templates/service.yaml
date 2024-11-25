@@ -238,7 +238,7 @@ spec:
   ports:
   {{- $ziti_service := .zitiService }}
   {{- range $root.Values.tunnel.proxyServices }}
-    {{- if and .zitiService (eq .zitiService $service_name) }}
+    {{- if and .zitiService (eq .zitiService $ziti_service) }}
     - port: {{ .advertisedPort }}
       targetPort: {{ .containerPort }}
       protocol: {{ .serviceProtocol | default "TCP" }}
