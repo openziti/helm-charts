@@ -29,16 +29,30 @@ The client API must be published with a TLS passthrough Ingress, NodePort, or Lo
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-This chart requires Certificate, Issuer, and Bundle resources to be applied before installing the chart. Sub-charts `cert-manager`, and `trust-manager` will be installed automatically. You may disable the sub-charts if you wish to provide these resources separately, but if you do so then please use the sub-chart values at the foot of Values.yaml to ensure those charts are correctly configured.
-
 ### Install Required Custom Resource Definitions
 
-This step satisfies Helm's requirement that the CRDs used in the umbrella chart
-already exist in Kubernetes before installing the controller chart.
+This chart requires declaring the Certificate, Issuer, and Bundle custom resource APIs before installation.
 
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
 kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.9.0/deploy/crds/trust.cert-manager.io_bundles.yaml
+```
+
+## Optional Sub-Charts
+
+Ziti Controller requires Cert Manager and Trust Manager operators running in the cluster. You may use existing deployments of either or install either or both as sub-charts by setting additional input values on the command line.
+
+```bash
+--set cert-manager.enabled="true" --set trust-manager.enabled="true"
+```
+
+Or, as YAML:
+
+```yaml
+cert-manager:
+  enabled: true
+trust-manager:
+  enabled: true
 ```
 
 ## Minimal Installation
