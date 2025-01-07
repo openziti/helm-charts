@@ -73,6 +73,21 @@ managementApi:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
+  altIngress:
+    # -- create an ingress for the client API's ClusterIP service with a trusted certificate, e.g., for BrowZer, ZAC
+    enabled: false
+    # -- alternative ingress host, e.g., ziti.example.com; must be distinct from managementApi.advertisedHost and all
+    # other advertised names
+    advertisedHost: ""
+    # -- ingress class name, e.g., "nginx"
+    ingressClassName: ""
+    # -- ingress labels
+    labels: {}
+    # -- ingress annotations, e.g., to configure ingress-nginx
+    annotations: {}
+    # -- deprecated: tls passthrough is required; configure an alternative
+    # certificate to project into the container in webBindingPki.altServerCerts
+    tls: {}
   # -- additional DNS SANs
   dnsNames: []
 
