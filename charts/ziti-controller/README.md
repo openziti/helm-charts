@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.1.4](https://img.shields.io/badge/Version-1.1.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.15](https://img.shields.io/badge/AppVersion-1.1.15-informational?style=flat-square)
+![Version: 1.1.5](https://img.shields.io/badge/Version-1.1.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.15](https://img.shields.io/badge/AppVersion-1.1.15-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -274,9 +274,15 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
-| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","containerPort":"{{ .Values.clientApi.containerPort }}","dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
+| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altIngress":{"advertisedHost":"","annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"containerPort":"{{ .Values.clientApi.containerPort }}","dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
 | managementApi.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
+| managementApi.altIngress.advertisedHost | string | `""` | alternative ingress host, e.g., ziti.example.com; must be distinct from managementApi.advertisedHost and all other advertised names |
+| managementApi.altIngress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
+| managementApi.altIngress.enabled | bool | `false` | create an ingress for the client API's ClusterIP service with a trusted certificate, e.g., for BrowZer, ZAC |
+| managementApi.altIngress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| managementApi.altIngress.labels | object | `{}` | ingress labels |
+| managementApi.altIngress.tls | object | `{}` | deprecated: tls passthrough is required; configure an alternative certificate to project into the container in webBindingPki.altServerCerts |
 | managementApi.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | managementApi.dnsNames | list | `[]` | additional DNS SANs |
 | managementApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
