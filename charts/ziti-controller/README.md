@@ -166,12 +166,12 @@ ctrlPlane:
 
 ## Extra Security for the Management API
 
-You can split the client and management APIs into separate cluster services by setting `managementApi.service.enabled=true`. With this configuration, you'll have an additional cluster service named `&lbrace;release}-mgmt` that is the management API, and the client API will not have management features.
+You can split the client and management APIs into separate cluster services by setting `managementApi.service.enabled=true`. With this configuration, you'll have an additional cluster service named `{release}-mgmt` that is the management API, and the client API will not have management features.
 
-This Helm chart's values allow for both operational scenarios: combined and split. The default choice is to expose the combined client and management APIs as the cluster service named `&lbrace;release}-client`, which is convenient because you can use the `ziti` CLI immediately. For additional security, you may shelter the management API by splitting these two sets of features, exposing them as separate API servers. After the split, you can access the management API in several ways:
+This Helm chart's values allow for both operational scenarios: combined and split. The default choice is to expose the combined client and management APIs as the cluster service named `{release}-client`, which is convenient because you can use the `ziti` CLI immediately. For additional security, you may shelter the management API by splitting these two sets of features, exposing them as separate API servers. After the split, you can access the management API in several ways:
 
-* deploy a tunneler to bind a Ziti service targeting &lbrace;release}-mgmt.&lbrace;namespace}.svc:&lbrace;port}.
-* `kubectl -n &lbrace;namespace} port-forward deployments/&lbrace;release}-mgmt 8443:&lbrace;port}`
+* deploy a tunneler to bind a Ziti service targeting {release}-mgmt.{namespace}.svc:{port}.
+* `kubectl -n {namespace} port-forward deployments/{release}-mgmt 8443:{port}`
 
 The web console (ZAC) is always bound to the same web listener as the management API, so you can access it at that `/zac/` path on the same URL.
 
