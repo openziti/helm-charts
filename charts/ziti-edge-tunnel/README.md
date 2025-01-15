@@ -5,11 +5,11 @@
 
 Dial OpenZiti services with a tunneler daemonset
 
-**Homepage:** &lt;https://openziti.io>
+**Homepage:** <https://openziti.io>
 
 ## Source Code
 
-* &lt;https://github.com/openziti/ziti-tunnel-sdk-c>
+* <https://github.com/openziti/ziti-tunnel-sdk-c>
 
 ## Requirements
 
@@ -182,7 +182,7 @@ Once the image is present on every node, you can proceed to upgrade the tunneler
 | imagePullSecrets | list | `[]` |  |
 | livenessProbe.exec.command[0] | string | `"/bin/bash"` |  |
 | livenessProbe.exec.command[1] | string | `"-c"` |  |
-| livenessProbe.exec.command[2] | string | `"if (ziti-edge-tunnel tunnel_status | sed -E 's/(^received\\sresponse\\s&lt;|>$)//g' | jq '.Success'); then true; else false; fi"` |  |
+| livenessProbe.exec.command[2] | string | `"if (ziti-edge-tunnel tunnel_status | sed -E 's/(^received\\sresponse\\s<|>$)//g' | jq '.Success'); then true; else false; fi"` |  |
 | livenessProbe.failureThreshold | int | `3` |  |
 | livenessProbe.initialDelaySeconds | int | `180` |  |
 | livenessProbe.periodSeconds | int | `60` |  |
