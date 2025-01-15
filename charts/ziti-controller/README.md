@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.1.5](https://img.shields.io/badge/Version-1.1.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.15](https://img.shields.io/badge/AppVersion-1.1.15-informational?style=flat-square)
+![Version: 1.1.16](https://img.shields.io/badge/Version-1.1.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.16](https://img.shields.io/badge/AppVersion-1.1.16-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -20,7 +20,7 @@ This chart runs a Ziti controller in Kubernetes. It uses the custom resources pr
 
 The client API must be published with a TLS passthrough Ingress, NodePort, or LoadBalancer. The ctrl plane and management API share the client API's TLS listener, so they're reached through the same address by default.
 
-## Requirements
+## Setup
 
 ### Add the OpenZiti Charts Repo to Helm
 
@@ -34,7 +34,7 @@ This chart requires declaring the Certificate, Issuer, and Bundle custom resourc
 
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
-kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.9.0/deploy/crds/trust.cert-manager.io_bundles.yaml
+kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.7.0/deploy/crds/trust.cert-manager.io_bundles.yaml
 ```
 
 ## Optional Sub-Charts
@@ -49,9 +49,9 @@ Or, as YAML:
 
 ```yaml
 cert-manager:
-  enabled: true
+    enabled: true
 trust-manager:
-  enabled: true
+    enabled: true
 ```
 
 ## Minimal Installation
@@ -221,7 +221,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | cert-manager.installCRDs | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | cert.duration | string | `"87840h"` | server certificate duration as Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
-| clientApi.advertisedHost | string | `nil` | global DNS name by which routers can resolve a reachable IP for this service |
+| clientApi.advertisedHost | string | `""` | global DNS name by which routers can resolve a reachable IP for this service |
 | clientApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | clientApi.altIngress.advertisedHost | string | `""` | alternative ingress host, e.g., ziti.example.com |
 | clientApi.altIngress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
@@ -300,7 +300,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | managementApi.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | managementApi.dnsNames | list | `[]` | additional DNS SANs |
 | managementApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
-| managementApi.ingress.enabled | bool | `false` | create an ingress for the cluster service |
+| managementApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
 | managementApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
 | managementApi.ingress.labels | object | `{}` | ingress labels |
 | managementApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
