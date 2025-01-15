@@ -21,7 +21,7 @@ This chart runs a Ziti controller in Kubernetes. It uses the custom resources pr
 
 The client API must be published with a TLS passthrough Ingress, NodePort, or LoadBalancer. The ctrl plane and management API share the client API's TLS listener, so they're reached through the same address by default.
 
-## Requirements
+## Setup
 
 ### Add the OpenZiti Charts Repo to Helm
 
@@ -35,7 +35,7 @@ This chart requires declaring the Certificate, Issuer, and Bundle custom resourc
 
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
-kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.9.0/deploy/crds/trust.cert-manager.io_bundles.yaml
+kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.7.0/deploy/crds/trust.cert-manager.io_bundles.yaml
 ```
 
 ## Optional Sub-Charts
@@ -50,9 +50,9 @@ Or, as YAML:
 
 ```yaml
 cert-manager:
-  enabled: true
+    enabled: true
 trust-manager:
-  enabled: true
+    enabled: true
 ```
 
 ## Minimal Installation

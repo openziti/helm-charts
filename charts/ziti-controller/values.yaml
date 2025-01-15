@@ -9,7 +9,7 @@ clientApi:
   # -- cluster service target port on the container
   containerPort: 1280
   # -- global DNS name by which routers can resolve a reachable IP for this service
-  advertisedHost:
+  advertisedHost: ""
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: 443
   service:
@@ -63,7 +63,7 @@ managementApi:
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
   ingress:
-    # -- create an ingress for the cluster service
+    # -- create a TLS-passthrough ingress for the client API's ClusterIP service
     enabled: false
     # -- ingress class name, e.g., "nginx"
     ingressClassName: ""
