@@ -45,6 +45,18 @@ spec:
             readOnly: false
         command: ["migrate-identity.bash"]
         # command: ["sh", "-c", "while true; do sleep 86400; done"]
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
         - name: migrate-script
           configMap:
