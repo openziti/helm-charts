@@ -267,7 +267,7 @@ identity:
 | edge.service.labels | object | `{}` | service labels |
 | edge.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer; default is ClusterIP, but you could use NodePort or LoadBalancer instead of an ingress controller |
 | enrollmentJwt | string | `nil` | enrollment one time token from the controller's management API |
-| enrollmentJwtFromSecret | bool | `false` | allow for using a secret to specify the enrollment token instead of unsing the enrollmentJwt field if enabled, setting the enrollment token on the enrollmentJwt field has no effect |
+| enrollmentJwtFromSecret | bool | `false` | allow for using a secret to specify the enrollment token instead of using the enrollmentJwt field if enabled, setting the enrollment token on the enrollmentJwt field has no effect |
 | enrollmentJwtSecretName | string | `""` | set the enrollment jwt from a secret The enrollment token secret must be of the following format: apiVersion: v1 kind: Secret metadata:   name: myEnrollmentJwtSecret type: Opaque data:   enrollmentJwt: |
 | env | object | `{}` | assign key=value in pod environment |
 | execMountDir | string | `"/usr/local/bin"` | read-only mountpoint for executables (must be in image's executable search PATH) |
