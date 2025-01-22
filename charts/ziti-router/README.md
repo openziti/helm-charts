@@ -303,6 +303,7 @@ identity:
 | linkListeners.transport.service.labels | object | `{}` | service labels |
 | linkListeners.transport.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | nodeSelector | object | `{}` | deployment template spec node selector |
+| omitIdentityMigration | bool | `false` | omit migration of identity secret to persistent volume Previous versions of this chart stored the router identity in a secret resource. A migration is provided by the execution of a pre-upgrade hook. If want to omit this migration (pre-upgrade hook) set this value to true. |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |
 | persistence.enabled | bool | `true` | required: place a storage claim for the ctrl endpoints state file |
