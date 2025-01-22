@@ -249,7 +249,7 @@ csr:
 execMountDir:     /usr/local/bin
 # -- enrollment one time token from the controller's management API
 enrollmentJwt:
-# -- allow for using a secret to specify the enrollment token instead of unsing the enrollmentJwt field
+# -- allow for using a secret to specify the enrollment token instead of using the enrollmentJwt field
 # if enabled, setting the enrollment token on the enrollmentJwt field has no effect
 enrollmentJwtFromSecret: false
 # -- set the enrollment jwt from a secret
