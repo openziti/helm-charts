@@ -373,6 +373,11 @@ tolerations: []
 # -- deployment template spec affinity
 affinity: {}
 
+# -- omit migration of identity secret to persistent volume
+# Previous versions of this chart stored the router identity in a secret resource. A migration is provided by the execution of a pre-upgrade hook.
+# If want to omit this migration (pre-upgrade hook) set this value to true.
+omitIdentityMigration: false
+
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
