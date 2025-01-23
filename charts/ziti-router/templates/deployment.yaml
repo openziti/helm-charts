@@ -59,7 +59,14 @@ spec:
             {{- end }}
           env:
             - name: ZITI_ENROLL_TOKEN
+              {{- if .Values.enrollmentJwtFromSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required (printf "You must set an enrollmentJwtSecretName, when using enrollmentJwtFromSecret. Try setting --set enrollmentJwtSecretName=myEnrollmentJwtSecret") .Values.enrollmentJwtSecretName }}
+                  key: enrollmentJwt
+              {{- else }}
               value: {{ .Values.enrollmentJwt | quote }}
+              {{- end }}
             # must be true or enroll() will not be called
             - name: ZITI_BOOTSTRAP
               value: "true"

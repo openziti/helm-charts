@@ -2,7 +2,7 @@
 # CA to issue the controller's router control plane identity. This CA issues the
 # server certificate that is presented by the controller to routers when they
 # connect to the controller's "ctrl" endpoint, i.e. the router control plane. The
-# same server certificate is re-used as a default identity if an alternative
+# same server certificate is reused as a default identity if an alternative
 # identity is not configured for a particular server TLS binding, e.g., web
 # binding for the client API.
 ######
