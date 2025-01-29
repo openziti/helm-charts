@@ -1,4 +1,4 @@
-
+{{if not .Values.noHelmHooks}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -79,3 +79,4 @@ data:
     else
       echo "INFO: identity secret does not exist"
     fi
+{{end}}
