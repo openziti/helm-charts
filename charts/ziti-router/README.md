@@ -302,18 +302,19 @@ identity:
 | linkListeners.transport.service.enabled | bool | `true` | create a cluster service for the router transport link listener; unnecessary if advertisedHost is shared with edge listener (the default) |
 | linkListeners.transport.service.labels | object | `{}` | service labels |
 | linkListeners.transport.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
+| noHelmHooks | bool | `false` | disable the execution of hooks, defined within this chart This chart makes use of Helm hooks. Setting this to true will prevent the hooks from being deployed. This is useful when using the chart with tools like ArgoCD |
 | nodeSelector | object | `{}` | deployment template spec node selector |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |
 | persistence.enabled | bool | `true` | required: place a storage claim for the ctrl endpoints state file |
 | persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled: true If defined, PVC must be created manually before volume will be bound |
-| persistence.size | string | `"50Mi"` | 50Mi is plenty for this state file  |
+| persistence.size | string | `"50Mi"` | 50Mi is plenty for this state file |
 | persistence.storageClass | string | `""` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
 | persistence.volumeName | string | `nil` | PVC volume name |
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the list of ctrl endpoints |
-| proxy | object | `{}` | Explicit proxy setting in the router configuration. Router can be deployed in a site  where all egress traffic is forwarded through an explicit proxy. The enrollment will also be forwarded through the proxy. |
+| proxy | object | `{}` | Explicit proxy setting in the router configuration. Router can be deployed in a site where all egress traffic is forwarded through an explicit proxy. The enrollment will also be forwarded through the proxy. |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
 | tolerations | list | `[]` | deployment template spec tolerations |

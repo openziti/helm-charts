@@ -7,7 +7,7 @@ ctrl:
   # -- required control plane endpoint, e.g., ctrl.ziti.example.com:443
   endpoint: ""
 
-# -- Explicit proxy setting in the router configuration. Router can be deployed in a site 
+# -- Explicit proxy setting in the router configuration. Router can be deployed in a site
 # where all egress traffic is forwarded through an explicit proxy.
 # The enrollment will also be forwarded through the proxy.
 proxy: {}
@@ -373,6 +373,11 @@ tolerations: []
 # -- deployment template spec affinity
 affinity: {}
 
+# -- disable the execution of hooks, defined within this chart
+# This chart makes use of Helm hooks. Setting this to true will prevent the hooks from being deployed.
+# This is useful when using the chart with tools like ArgoCD
+noHelmHooks: false
+
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
@@ -399,7 +404,7 @@ persistence:
   volumeName:
   # -- PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed)
   accessMode: ReadWriteOnce
-  # -- 50Mi is plenty for this state file 
+  # -- 50Mi is plenty for this state file
   size: 50Mi
 fabric:
   metrics:
