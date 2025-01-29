@@ -1,4 +1,4 @@
-{{if not .Values.omitIdentityMigration}}
+{{if not .Values.noHelmHooks}}
 ---
 apiVersion: batch/v1
 kind: Job
