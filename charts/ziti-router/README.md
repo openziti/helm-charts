@@ -229,6 +229,10 @@ identity:
       serverKey: /etc/ziti/alt-server-cert-3/server3.key
 ```
 
+## GitOps
+
+If you plan to use this chart with a GitOps tool like ArgoCD, set the `noHelmHooks` flag to `true`. This is because GitOps tools may not handle Helm hooks consistently.
+
 ## Values Reference
 
 | Key | Type | Default | Description |
