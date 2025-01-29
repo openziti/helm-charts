@@ -1,8 +1,11 @@
 name: Release Notes Labeler
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
+
+# Set default permissions as read only
+permissions: read-all
 
 jobs:
   release-notes-labeler:
@@ -21,8 +24,8 @@ jobs:
         uses: maxisam/changed-files-labeler@v0.1.1
         with:
             authToken: ${{ secrets.GITHUB_TOKEN }}
-            basePaths: 'charts'
-            prefixes: 'notes|skip'
+            basePaths: charts
+            prefixes: notes|skip
             includedGlob: ""  # no filter
             debugShowPaths: true
             layers: 1
