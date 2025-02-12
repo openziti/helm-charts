@@ -27,3 +27,6 @@ __snapshot__
 __snapshot__
 .cr-release-packages/
 .cr-index/
+
+# top-level directory with local test data
+/valuestest/

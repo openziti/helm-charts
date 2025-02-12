@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.1.17](https://img.shields.io/badge/Version-1.1.17-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.2](https://img.shields.io/badge/AppVersion-1.2.2-informational?style=flat-square)
+![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -170,7 +170,7 @@ You can split the client and management APIs into separate cluster services by s
 
 This Helm chart's values allow for both operational scenarios: combined and split. The default choice is to expose the combined client and management APIs as the cluster service named `{release}-client`, which is convenient because you can use the `ziti` CLI immediately. For additional security, you may shelter the management API by splitting these two sets of features, exposing them as separate API servers. After the split, you can access the management API in several ways:
 
-* deploy a tunneler to bind a Ziti service targeting {release}-mgmt.{namespace}.svc:{port}.
+* deploy a tunneler to bind a Ziti service targeting `{release}-mgmt.{namespace}.svc:{port}`.
 * `kubectl -n {namespace} port-forward deployments/{release}-mgmt 8443:{port}`
 
 The web console (ZAC) is always bound to the same web listener as the management API, so you can access it at that `/zac/` path on the same URL.
