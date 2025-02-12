@@ -189,7 +189,7 @@ tunnel:
     #  advertisedPort: 80
     #  # -- override the container port (default: advertisedPort)
     #  containerPort: 8443
-  # -- if tunnel mode is "proxy", create the a cluster service named {{ release }}-proxy-default listening on each "advertisedPort" defined in "proxyServices"
+  # -- if tunnel mode is "proxy", create the a cluster service named `{{ release }}-proxy-default` listening on each "advertisedPort" defined in "proxyServices"
   proxyDefaultK8sService:
     enabled: true
     type: ClusterIP
