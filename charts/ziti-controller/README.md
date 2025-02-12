@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.1.17](https://img.shields.io/badge/Version-1.1.17-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.2](https://img.shields.io/badge/AppVersion-1.2.2-informational?style=flat-square)
+![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -170,7 +170,7 @@ You can split the client and management APIs into separate cluster services by s
 
 This Helm chart's values allow for both operational scenarios: combined and split. The default choice is to expose the combined client and management APIs as the cluster service named `{release}-client`, which is convenient because you can use the `ziti` CLI immediately. For additional security, you may shelter the management API by splitting these two sets of features, exposing them as separate API servers. After the split, you can access the management API in several ways:
 
-* deploy a tunneler to bind a Ziti service targeting {release}-mgmt.{namespace}.svc:{port}.
+* deploy a tunneler to bind a Ziti service targeting `{release}-mgmt.{namespace}.svc:{port}`.
 * `kubectl -n {namespace} port-forward deployments/{release}-mgmt 8443:{port}`
 
 The web console (ZAC) is always bound to the same web listener as the management API, so you can access it at that `/zac/` path on the same URL.
@@ -288,7 +288,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
 | ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
-| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altIngress":{"advertisedHost":"","annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"containerPort":"{{ .Values.clientApi.containerPort }}","dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
+| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altIngress":{"advertisedHost":"","annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"containerPort":1281,"dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
 | managementApi.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
 | managementApi.altIngress.advertisedHost | string | `""` | alternative ingress host, e.g., ziti.example.com; must be distinct from managementApi.advertisedHost and all other advertised names |
@@ -297,7 +297,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | managementApi.altIngress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
 | managementApi.altIngress.labels | object | `{}` | ingress labels |
 | managementApi.altIngress.tls | object | `{}` | deprecated: tls passthrough is required; configure an alternative certificate to project into the container in webBindingPki.altServerCerts |
-| managementApi.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
+| managementApi.containerPort | int | `1281` | cluster service target port on the container |
 | managementApi.dnsNames | list | `[]` | additional DNS SANs |
 | managementApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | managementApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
