@@ -323,7 +323,7 @@ identity:
 | tunnel.lanIf | string | `"lo"` | interface device name for setting up INPUT firewall rules if fw enabled. It must be set but not needed in containers. Thus, it is set to lo by default |
 | tunnel.mode | string | `"none"` | run mode for the router's built-in tunnel component: host, tproxy, proxy, or none |
 | tunnel.proxyAdditionalK8sServices | list | `[]` | if tunnel mode is "proxy", create a separate cluster service for each Ziti service listed in "proxyServices" which k8sService == name |
-| tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | if tunnel mode is "proxy", create the a cluster service named {{ release }}-proxy-default listening on each "advertisedPort" defined in "proxyServices" |
+| tunnel.proxyDefaultK8sService | object | `{"enabled":true,"type":"ClusterIP"}` | if tunnel mode is "proxy", create the a cluster service named `{{ release }}-proxy-default` listening on each "advertisedPort" defined in "proxyServices" |
 | tunnel.proxyServices | list | `[]` | list of Ziti services for which K8s services are to be created by this deployment, default is one cluster service port per Ziti service |
 | tunnel.resolver | string | `nil` | Ziti nameserver listener where OS must be configured to send DNS queries (default: udp://127.0.0.1:53) |
 | websocket.enableCompression | bool | `true` | enable compression on websocket |
