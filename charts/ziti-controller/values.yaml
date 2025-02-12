@@ -52,7 +52,7 @@ clientApi:
 # etc.  for the management API by setting managementApi.service.enabled=true
 managementApi:
   # -- cluster service target port on the container
-  containerPort: "{{ .Values.clientApi.containerPort }}"
+  containerPort: 1281
   # -- global DNS name by which routers can resolve a reachable IP for this service
   advertisedHost: "{{ .Values.clientApi.advertisedHost }}"
   # -- cluster service, node port, load balancer, and ingress port
