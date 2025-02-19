@@ -52,6 +52,11 @@ identity:
     #  # -- 'localFile': path to the alternative server key
     #  serverKey:
 
+linkDialers:
+  transport:
+    # -- extra properties to define for the transport link dialer, e.g., groups
+    extraProps: {}
+
 # listen for router links
 linkListeners:
   transport:
@@ -67,6 +72,8 @@ linkListeners:
     advertisedPort: '{{ .Values.edge.advertisedPort }}'
     # -- link listener options
     options: {}
+    # -- extra properties to define for the transport link listener, e.g., groups
+    extraProps: {}
     service:
       # -- create a cluster service for the router transport link listener;
       # unnecessary if advertisedHost is shared with edge listener (the default)

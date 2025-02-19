@@ -57,6 +57,9 @@ data:
     link:
       dialers:
         - binding: transport
+          {{- if .Values.linkDialers.transport.extraProps }}
+          {{- toYaml .Values.linkDialers.transport.extraProps | nindent 10 }}
+          {{- end }}
       # When 'transport' is disabled this means we are a 'private' router, i.e.,
       # not providing incoming links to other routers. Private routers still
       # join the mesh, but only form outgoing links.
@@ -70,6 +73,9 @@ data:
             {{- toYaml .Values.linkListeners.transport.options | nindent 10 }}
           {{- else }}
           options: {}
+          {{- end }}
+          {{- if .Values.linkListeners.transport.extraProps }}
+          {{- toYaml .Values.linkListeners.transport.extraProps | nindent 10 }}
           {{- end }}
       {{- end }}
     {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "none" )) (eq .Values.edge.enabled true) }}
