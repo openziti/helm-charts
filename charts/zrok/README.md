@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 0.2.8](https://img.shields.io/badge/Version-0.2.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.49](https://img.shields.io/badge/AppVersion-0.4.49-informational?style=flat-square)
+![Version: 1.0.0-rc6](https://img.shields.io/badge/Version-1.0.0--rc6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0-rc6](https://img.shields.io/badge/AppVersion-1.0.0--rc6-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -38,7 +38,7 @@ helm upgrade \
     --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
     --set "ziti.password=${ZITI_PWD}" \
     --set "dnsZone=${ZROK_DNS_ZONE}" \
-    --set "controller.ingress.hosts[0]=ctrl.${ZROK_DNS_ZONE}" \
+    --set "controller.ingress.hosts[0]=api.${ZROK_DNS_ZONE}" \
     zrok openziti/zrok
 ```
 
@@ -99,7 +99,7 @@ kubectl -n zrok get ingress zrok
 
 ```text title="Output"
 NAME   CLASS   HOSTS                             ADDRESS        PORTS   AGE
-zrok   nginx   ctrl.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
+zrok   nginx   api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
 ```
 
 ## Values Reference

@@ -47,7 +47,7 @@ helm upgrade \
     --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
     --set "ziti.password=${ZITI_PWD}" \
     --set "dnsZone=${ZROK_DNS_ZONE}" \
-    --set "controller.ingress.hosts[0]=ctrl.${ZROK_DNS_ZONE}" \
+    --set "controller.ingress.hosts[0]=api.${ZROK_DNS_ZONE}" \
     zrok openziti/zrok
 ```
 
@@ -108,7 +108,7 @@ kubectl -n zrok get ingress zrok
 
 ```text title="Output"
 NAME   CLASS   HOSTS                             ADDRESS        PORTS   AGE
-zrok   nginx   ctrl.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
+zrok   nginx   api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
 ```
 
 ## Values Reference
