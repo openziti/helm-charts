@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 0.2.7](https://img.shields.io/badge/Version-0.2.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.44](https://img.shields.io/badge/AppVersion-0.4.44-informational?style=flat-square)
+![Version: 0.2.8](https://img.shields.io/badge/Version-0.2.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.49](https://img.shields.io/badge/AppVersion-0.4.49-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -116,9 +116,9 @@ zrok   nginx   ctrl.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
 | controller.ingress.annotations | object | `{}` | The annotations to use for the zrok controller ingress resource |
 | controller.ingress.className | string | `""` | The ingress class to use for the zrok controller |
 | controller.ingress.enabled | bool | `false` | enable the ingress resource for  |
-| controller.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The hosts to use for the zrok controller ingress resource |
+| controller.ingress.hosts | list | `[]` | domain names for the zrok controller ingress resource; first is used for email templates |
 | controller.ingress.scheme | string | `"https"` | URI scheme to advertise for the controller's ingress resource |
-| controller.ingress.tls | list | `[]` | The TLS configuration for the zrok controller ingress resource |
+| controller.ingress.tls | list | `[]` | ingress tls configurations for the zrok controller ingress resource |
 | controller.invites.open | bool | `true` | enable the zrok controller to onboard new users when they run "zrok invite" |
 | controller.invites.token_required | bool | `false` | require new users to submit an invitation token when they run "zrok invite", tokens are generated with "zrok admin generate" |
 | controller.metrics.agent.source.type | string | `"websocketSource"` | initiate a WebSocket connection to the Ziti Management API URL to receive fabric usage metrics |

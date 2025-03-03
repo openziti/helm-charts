@@ -30,8 +30,14 @@ spec:
   tls:
     {{- range .Values.controller.ingress.tls }}
     - hosts:
+        {{- if .hosts }}
         {{- range .hosts }}
         - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        {{- range $.Values.controller.ingress.hosts }}
+        - {{ . | quote }}
+        {{- end }}
         {{- end }}
       secretName: {{ .secretName }}
     {{- end }}
