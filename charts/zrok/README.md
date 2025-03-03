@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 0.2.8](https://img.shields.io/badge/Version-0.2.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.49](https://img.shields.io/badge/AppVersion-0.4.49-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -38,23 +38,25 @@ helm upgrade \
     --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
     --set "ziti.password=${ZITI_PWD}" \
     --set "dnsZone=${ZROK_DNS_ZONE}" \
-    --set "controller.ingress.hosts[0]=ctrl.${ZROK_DNS_ZONE}" \
+    --set "controller.ingress.hosts[0]=api.${ZROK_DNS_ZONE}" \
     zrok openziti/zrok
 ```
 
 ## TLS termination with Nginx
 
-One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
+One way to terminate TLS with Nginx is to use Cert Manager. Cert Manager will issue a certificate, store it in the specified Secret, and configure the Ingress to use the certificate. This example shows the default behavior to use the Ingress host(s) as DNS SANs.
 
 1. Install Cert Manager
 1. Create a ClusterIssuer with a Let's Encrypt account and DNS challenge solver. Solving the DNS challenge is one way
     for Cert Manager to obtain a wildcard certificate which is necessary for zrok frontend's Ingress.
-1. Annotate zrok's Ingresses with the name of the ClusterIssuer.
+1. Set input values to annotate zrok's Ingresses with the name of the ClusterIssuer and specify a TLS secret name.
 
     ```bash
     helm upgrade zrok \
-        --set "frontend.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
         --set "controller.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        --set "controller.ingress.tlsSecretName=zrok-api-tls" \
+        --set "frontend.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        --set "frontend.ingress.tlsSecretName=zrok-wildcard-tls" \
         openziti/zrok
     ```
 
@@ -99,7 +101,7 @@ kubectl -n zrok get ingress zrok
 
 ```text title="Output"
 NAME   CLASS   HOSTS                             ADDRESS        PORTS   AGE
-zrok   nginx   ctrl.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
+zrok   nginx   api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
 ```
 
 ## Values Reference
@@ -159,7 +161,7 @@ zrok   nginx   ctrl.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
 | controller.service.advertisedPort | int | `80` | The port to advertise for the zrok controller service |
 | controller.service.containerPort | int | `18080` | The port to expose on the zrok controller container |
 | controller.service.type | string | `"ClusterIP"` | The service type to use for the zrok controller |
-| controller.specVersion | int | `3` |  |
+| controller.specVersion | int | `4` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
 | frontend.deBootstrapScript | string | `"delete-identity.sh"` |  |
 | frontend.extraConfig | object | `{}` | append additional frontend config |
