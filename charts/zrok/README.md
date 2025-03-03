@@ -44,17 +44,19 @@ helm upgrade \
 
 ## TLS termination with Nginx
 
-One way to terminate TLS with Nginx is to use Cert Manager. Here's an overview.
+One way to terminate TLS with Nginx is to use Cert Manager. Cert Manager will issue a certificate, store it in the specified Secret, and configure the Ingress to use the certificate. This example shows the default behavior to use the Ingress host(s) as DNS SANs.
 
 1. Install Cert Manager
 1. Create a ClusterIssuer with a Let's Encrypt account and DNS challenge solver. Solving the DNS challenge is one way
     for Cert Manager to obtain a wildcard certificate which is necessary for zrok frontend's Ingress.
-1. Annotate zrok's Ingresses with the name of the ClusterIssuer.
+1. Set input values to annotate zrok's Ingresses with the name of the ClusterIssuer and specify a TLS secret name.
 
     ```bash
     helm upgrade zrok \
-        --set "frontend.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
         --set "controller.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        --set "controller.ingress.tlsSecretName=zrok-api-tls" \
+        --set "frontend.ingress.annotations=cert-manager.io/cluster-issuer: letsencrypt-prod" \
+        --set "frontend.ingress.tlsSecretName=zrok-wildcard-tls" \
         openziti/zrok
     ```
 
