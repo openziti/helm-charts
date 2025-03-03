@@ -67,17 +67,14 @@ controller:
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
-    # -- The hosts to use for the zrok controller ingress resource
-    hosts:
-      - host: chart-example.local
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-    # -- The TLS configuration for the zrok controller ingress resource
+    # -- domain names for the zrok controller ingress resource; first is used for email templates
+    hosts: []
+    # - api.zrok.example.com
+    # -- ingress tls configurations for the zrok controller ingress resource
     tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
+    #  - secretName: zrok-wildcard-tls
+    # -- optional alternative domain names for the zrok controller ingress TLS; .ingress.hosts used if this is empty
+    #    hosts: []
   metrics:
     # -- enable metrics collection and reporting for the zrok controller
     enabled: false
