@@ -44,6 +44,13 @@ clientApi:
     tls: {}
   # -- additional DNS SANs
   dnsNames: []
+  traefik:
+    # -- enable Traefik IngressRouteTCP
+    enabled: false
+    # -- IngressRouteTCP options
+    ingressRouteTcp:
+      entryPoints:
+        - websecure
 
 # -- by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the management API because it shares a TLS listener with the
@@ -90,6 +97,13 @@ managementApi:
     tls: {}
   # -- additional DNS SANs
   dnsNames: []
+  traefik:
+    # -- enable Traefik IngressRouteTCP
+    enabled: false
+    # -- IngressRouteTCP options
+    ingressRouteTcp:
+      entryPoints:
+        - websecure
 
 # by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the ctrl plane because it shares a TLS listener with the
@@ -110,7 +124,7 @@ ctrlPlane:
     # -- create a separate cluster service for the ctrl plane; enabling this
     # requires you to also set the host and port for a separate ctrl plane TLS
     # listener
-    enabled: true
+    enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP
   ingress:
@@ -132,6 +146,13 @@ ctrlPlane:
     # name:
   # -- additional DNS SANs for the ctrl plane identity
   dnsNames: []
+  traefik:
+    # -- enable Traefik IngressRouteTCP
+    enabled: false
+    # -- IngressRouteTCP options
+    ingressRouteTcp:
+      entryPoints:
+        - websecure
 
 # -- set name to value in containers' environment
 env: {}
