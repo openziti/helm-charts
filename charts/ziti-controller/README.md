@@ -16,11 +16,11 @@ Host an OpenZiti controller in Kubernetes
 
 ## Overview
 
-This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. It is a limitation of Trust Manager to have one instance per cluster and one namespace from which trust Bundle inputs may be sourced, so a single Ziti controller may occupy the cluster unless you use case allows for controllers from multiple networks to share a namespace. You must set the Trust Manager's "trust namespace" to the namespace of the Ziti controller so that it will be able to build trust Bundle resources from Ziti's root CA cert(s).
+This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. It is a limitation of Trust Manager to have one instance per cluster and one namespace from which trust Bundle inputs may be sourced, so a single Ziti controller may occupy the cluster unless your use case allows for controllers from multiple networks to share a namespace. You must set the Trust Manager's "trust namespace" to the namespace of the Ziti controller so that it will be able to build trust Bundle resources from Ziti's root CA cert(s).
 
-The client API must be published with a TLS passthrough Ingress, NodePort, or LoadBalancer. The ctrl plane and management API share the client API's TLS listener, so they're reached through the same address by default.
+Ziti's TLS server ports must be published with a TLS passthrough. This may be done with a Traefik IngressRouteTCP, Gateway API TLSRoute, Ingress, NodePort, LoadBalancer, etc. The ctrl plane and management API share the client API's TLS listener by default.
 
-## Setup
+## Prerequisites
 
 Add the OpenZiti Charts Repo to Helm.
 
@@ -63,7 +63,7 @@ trust-manager:
       namespace: ziti
 ```
 
-## NodePort Services Example
+## NodePort Service Example
 
 | Value | Description |
 |-------|-------------|
