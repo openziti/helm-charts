@@ -101,19 +101,9 @@ trust-manager:
       namespace: ziti
 ```
 
-A default admin user and password will be generated and saved to a secret during installation. The credentials can be retrieved using this command:
-
-<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
-```bash
-kubectl get secret \
-    -n ziti-controller ziti-controller-minimal1-admin-secret \
-    -o go-template='{{`{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}`}}'
-```
-<!-- {% endraw %} -->
-
 Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com:32171/zac/
 
-You may log in the `ziti` CLI with one command or omit the `-p` part to prompt:
+Log in with the `ziti` CLI.
 
 <!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
 ```bash
@@ -122,6 +112,7 @@ ziti edge login ctrl1.ziti.example.com:32171 --yes --username admin --password $
 )
 ```
 <!-- {% endraw %} -->
+
 
 ## Nginx Ingress Example
 
@@ -144,7 +135,7 @@ kubectl patch deployment "ingress-nginx-controller" \
 Create a Helm chart values file like this.
 
 ```yaml
-# /tmp/controller-values.yml
+# ziti-controller-values.yml
 clientApi:
     advertisedHost: ctrl1.ziti.example.com
     advertisedPort: 443
@@ -161,11 +152,23 @@ clientApi:
 Now install or upgrade this controller chart with your values file.
 
 ```bash
-helm install \
-    --namespace ziti-controller ziti-controller-managed1 \
-    openziti/ziti-controller \
-    --values /tmp/controller-values.yml
+helm upgrade ziti-controller openziti/ziti-controller \
+    --install \
+    --namespace ziti \
+    --values ziti-controller-values.yml
 ```
+
+Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/
+
+Log in with the `ziti` CLI.
+
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
+```bash
+ziti edge login ctrl1.ziti.example.com:443 --yes --username admin --password $(
+    kubectl -n ziti-controller get secrets ziti-controller-minimal1-admin-secret -o go-template='{{`{{index .data "admin-password" | base64decode }}`}}'
+)
+```
+<!-- {% endraw %} -->
 
 ## Traefik IngressRouteTCP Example
 
@@ -181,6 +184,30 @@ helm upgrade ziti-controller openziti/ziti-controller \
     --set clientApi.service.type=ClusterIP \
     --set clientApi.traefik.enabled=true
 ```
+
+Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/
+
+Log in with the `ziti` CLI.
+
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
+```bash
+ziti edge login ctrl1.ziti.example.com:443 --yes --username admin --password $(
+    kubectl -n ziti-controller get secrets ziti-controller-minimal1-admin-secret -o go-template='{{`{{index .data "admin-password" | base64decode }}`}}'
+)
+```
+<!-- {% endraw %} -->
+
+## Admin User and Password
+
+A default admin user and password will be generated and saved to a secret during installation. The credentials can be retrieved using this command.
+
+<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
+```bash
+kubectl get secret \
+    -n ziti-controller ziti-controller-minimal1-admin-secret \
+    -o go-template='{{`{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}`}}'
+```
+<!-- {% endraw %} -->
 
 ## Extra Security for the Management API
 
