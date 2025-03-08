@@ -44,6 +44,13 @@ clientApi:
     tls: {}
   # -- additional DNS SANs
   dnsNames: []
+  traefik:
+    # -- enable Traefik IngressRouteTCP
+    enabled: false
+    # -- IngressRouteTCP options
+    ingressRouteTcp:
+      entryPoints:
+        - websecure
 
 # -- by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the management API because it shares a TLS listener with the
@@ -90,6 +97,13 @@ managementApi:
     tls: {}
   # -- additional DNS SANs
   dnsNames: []
+  traefik:
+    # -- enable Traefik IngressRouteTCP
+    enabled: false
+    # -- IngressRouteTCP options
+    ingressRouteTcp:
+      entryPoints:
+        - websecure
 
 # by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the ctrl plane because it shares a TLS listener with the
@@ -110,7 +124,7 @@ ctrlPlane:
     # -- create a separate cluster service for the ctrl plane; enabling this
     # requires you to also set the host and port for a separate ctrl plane TLS
     # listener
-    enabled: true
+    enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP
   ingress:
@@ -132,6 +146,13 @@ ctrlPlane:
     # name:
   # -- additional DNS SANs for the ctrl plane identity
   dnsNames: []
+  traefik:
+    # -- enable Traefik IngressRouteTCP
+    enabled: false
+    # -- IngressRouteTCP options
+    ingressRouteTcp:
+      entryPoints:
+        - websecure
 
 # -- set name to value in containers' environment
 env: {}
@@ -490,30 +511,33 @@ network:
 # A note about sub-charts: these values may serve as a partial reference for
 # configuring the charts on which this chart depends.
 
+# -- install the cert-manager subchart
+cert-manager-enabled: false
 cert-manager:
-  # -- install the cert-manager subchart
-  enabled: false
+  # -- always use the cert-manager namespace because trust-manager assumes it is there
+  namespace: cert-manager
   # -- clean up secret when certificate is deleted
   enableCertificateOwnerRef: true
   # -- CRDs must be applied in advance of installing the parent chart
   installCRDs: false
 
-trust-manager:
   # -- install the trust-manager subchart
-  enabled: false
+trust-manager-enabled: false
+trust-manager:
+  namespace: cert-manager
   app:
     trust:
       # -- trust-manager needs to be configured to trust the namespace in which
       # the controller is deployed so that it will create the Bundle resource
       # for the ctrl plane trust bundle
-      namespace: "{{ .Release.Namespace }}"
+      namespace:
   crds:
     # -- CRDs must be applied in advance of installing the parent chart
     enabled: false
 
+# -- install the ingress-nginx subchart
+ingress-nginx-enabled: false
 ingress-nginx:
-  # -- install the ingress-nginx subchart
-  enabled: false
   controller:
     extraArgs:
       # -- configure subchart ingress-nginx to enable the pass-through TLS feature
