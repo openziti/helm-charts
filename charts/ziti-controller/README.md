@@ -107,7 +107,7 @@ Log in with the `ziti` CLI.
 <!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
 ```bash
 ziti edge login ctrl1.ziti.example.com:32171 --yes --username admin --password $(
-    kubectl -n ziti-controller get secrets ziti-controller-minimal1-admin-secret -o go-template='{{index .data "admin-password" | base64decode }}'
+    kubectl -n ziti get secrets ziti-controller-admin-secret -o go-template='{{index .data "admin-password" | base64decode }}'
 )
 ```
 <!-- {% endraw %} -->
@@ -163,7 +163,7 @@ Log in with the `ziti` CLI.
 <!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
 ```bash
 ziti edge login ctrl1.ziti.example.com:443 --yes --username admin --password $(
-    kubectl -n ziti-controller get secrets ziti-controller-minimal1-admin-secret -o go-template='{{index .data "admin-password" | base64decode }}'
+    kubectl -n ziti get secrets ziti-controller-admin-secret -o go-template='{{index .data "admin-password" | base64decode }}'
 )
 ```
 <!-- {% endraw %} -->
@@ -190,7 +190,7 @@ Log in with the `ziti` CLI.
 <!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
 ```bash
 ziti edge login ctrl1.ziti.example.com:443 --yes --username admin --password $(
-    kubectl -n ziti-controller get secrets ziti-controller-minimal1-admin-secret -o go-template='{{index .data "admin-password" | base64decode }}'
+    kubectl -n ziti get secrets ziti-controller-admin-secret -o go-template='{{index .data "admin-password" | base64decode }}'
 )
 ```
 <!-- {% endraw %} -->
@@ -202,7 +202,7 @@ A default admin user and password will be generated and saved to a secret during
 <!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
 ```bash
 kubectl get secret \
-    -n ziti-controller ziti-controller-minimal1-admin-secret \
+    -n ziti ziti-controller-admin-secret \
     -o go-template='{{range $k,$v := .data}}{{printf "%s: " $k}}{{if not $v}}{{$v}}{{else}}{{$v | base64decode}}{{end}}{{"\n"}}{{end}}'
 ```
 <!-- {% endraw %} -->
