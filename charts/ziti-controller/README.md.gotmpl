@@ -21,6 +21,8 @@ This chart runs a Ziti controller in Kubernetes. It uses the custom resources pr
 
 Ziti's TLS server ports must be published with a TLS passthrough. This may be done with a Traefik IngressRouteTCP, Gateway API TLSRoute, Ingress, NodePort, LoadBalancer, etc. The ctrl plane and management API share the client API's TLS listener by default.
 
+It is not normally necessary to obtain publicly trusted certificates for Ziti's TLS servers. Ziti manages the trust relationships between the controller and routers and clients independent of the web's root authorities. See the [Alternative Web Server Certificates](#alternative-web-server-certificates) section for more information.
+
 ## Prerequisites
 
 Add the OpenZiti Charts Repo to Helm.
@@ -257,13 +259,12 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 ## TODO's
 
-* replicas - Each controller replica needs to be it's own HA member. We have to wait until HA https://github.com/openziti/ziti/blob/release-next/doc/ha/overview.md is officially released.
-* lower CA / Cert lifetime; how to refresh stuff when Certs are updated?
+* High availability clustered mode
 * Deploy Prometheus scraper configuration when `prometheus.enabled = true`
 
 ## Alternative Web Server Certificates
 
-The purpose of the alt_server_certs feature is to bind a publicly trusted server certificate to the controller's web listener. This is useful for publishing the controller's client API with a different DNS name for BrowZer and console clients that must verify the controller's identity with their OS trusted root store.
+The purpose of the `alt_server_certs` feature is to bind a publicly trusted server certificate to the controller's web listener. This is useful for publishing the controller's client API with a different DNS name for BrowZer and console clients that must verify the controller's identity with their OS trusted root store.
 
 ### Request an alternative server certificate from a cert-manager issuer
 
