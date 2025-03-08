@@ -34,8 +34,12 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 This chart requires declaring the Certificate, Issuer, and Bundle custom resource APIs before installation.
 
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
-kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.7.0/deploy/crds/trust.cert-manager.io_bundles.yaml
+kubectl apply \
+    --filename https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
+helm template trust-manager jetstack/trust-manager \
+    --version v0.16.0 --set crds.keep=false --show-only templates/crd-trust.cert-manager.io_bundles.yaml \
+| yq 'del(.metadata.labels."app.kubernetes.io/managed-by") | del(.metadata.labels."helm.sh/chart")' \
+| kubectl apply --filename -
 ```
 
 ## Optional Sub-Charts
@@ -43,16 +47,14 @@ kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0
 Ziti Controller requires Cert Manager and Trust Manager operators running in the cluster. You may use existing deployments of either or install either or both as sub-charts by setting additional input values on the command line.
 
 ```bash
---set cert-manager.enabled="true" --set trust-manager.enabled="true"
+--set cert-manager-enabled="true" --set trust-manager-enabled="true"
 ```
 
 Or, as YAML:
 
 ```yaml
-cert-manager:
-    enabled: true
-trust-manager:
-    enabled: true
+cert-manager-enabled: true
+trust-manager-enabled: true
 ```
 
 ## Minimal Installation
