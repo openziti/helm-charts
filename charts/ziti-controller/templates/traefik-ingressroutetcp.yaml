@@ -1,0 +1,67 @@
+{{- if .Values.clientApi.traefik.enabled }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.clientApi.traefik.ingressRouteTcp.labels | nindent 4 }}
+spec:
+  entryPoints:
+{{- range .Values.clientApi.traefik.ingressRouteTcp.entryPoints }}
+    - {{ . }}
+{{- end }}
+  routes:
+    - match: HostSNI(`{{ .Values.clientApi.advertisedHost }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" . }}-client
+          port: {{ .Values.clientApi.advertisedPort }}
+  tls:
+    passthrough: true
+{{- end }}
+
+---
+{{- if .Values.ctrlPlane.traefik.enabled }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.ctrlPlane.traefik.ingressRouteTcp.labels | nindent 4 }}
+spec:
+  entryPoints:
+{{- range .Values.ctrlPlane.traefik.ingressRouteTcp.entryPoints }}
+    - {{ . }}
+{{- end }}
+  routes:
+    - match: HostSNI(`{{ .Values.ctrlPlane.advertisedHost }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" . }}-ctrl
+          port: {{ .Values.ctrlPlane.advertisedPort }}
+  tls:
+    passthrough: true
+{{- end }}
+
+---
+{{- if .Values.managementApi.traefik.enabled }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.managementApi.traefik.ingressRouteTcp.labels | nindent 4 }}
+spec:
+  entryPoints:
+{{- range .Values.managementApi.traefik.ingressRouteTcp.entryPoints }}
+    - {{ . }}
+{{- end }}
+  routes:
+    - match: HostSNI(`{{ .Values.managementApi.advertisedHost }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" . }}-mgmt
+          port: {{ .Values.managementApi.advertisedPort }}
+  tls:
+    passthrough: true
+{{- end }}
