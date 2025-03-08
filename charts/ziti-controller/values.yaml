@@ -504,30 +504,33 @@ network:
 # A note about sub-charts: these values may serve as a partial reference for
 # configuring the charts on which this chart depends.
 
+# -- install the cert-manager subchart
+cert-manager-enabled: false
 cert-manager:
-  # -- install the cert-manager subchart
-  enabled: false
+  # -- always use the cert-manager namespace because trust-manager assumes it is there
+  namespace: cert-manager
   # -- clean up secret when certificate is deleted
   enableCertificateOwnerRef: true
   # -- CRDs must be applied in advance of installing the parent chart
   installCRDs: false
 
-trust-manager:
   # -- install the trust-manager subchart
-  enabled: false
+trust-manager-enabled: false
+trust-manager:
+  namespace: cert-manager
   app:
     trust:
       # -- trust-manager needs to be configured to trust the namespace in which
       # the controller is deployed so that it will create the Bundle resource
       # for the ctrl plane trust bundle
-      namespace: "{{ .Release.Namespace }}"
+      namespace:
   crds:
     # -- CRDs must be applied in advance of installing the parent chart
     enabled: false
 
+# -- install the ingress-nginx subchart
+ingress-nginx-enabled: false
 ingress-nginx:
-  # -- install the ingress-nginx subchart
-  enabled: false
   controller:
     extraArgs:
       # -- configure subchart ingress-nginx to enable the pass-through TLS feature

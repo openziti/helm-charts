@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 1.2.2](https://img.shields.io/badge/Version-1.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.4.2](https://img.shields.io/badge/AppVersion-1.4.2-informational?style=flat-square)
+![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.4.3](https://img.shields.io/badge/AppVersion-1.4.3-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -10,9 +10,9 @@ Host an OpenZiti controller in Kubernetes
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.jetstack.io | cert-manager | ~1.14.0 |
-| https://charts.jetstack.io | trust-manager | ~0.7.0 |
-| https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.10.1 |
+| https://charts.jetstack.io | cert-manager | ~1.17 |
+| https://charts.jetstack.io | trust-manager | ~0.16 |
+| https://kubernetes.github.io/ingress-nginx/ | ingress-nginx | ~4.12 |
 
 ## Overview
 
@@ -33,8 +33,12 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 This chart requires declaring the Certificate, Issuer, and Bundle custom resource APIs before installation.
 
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
-kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0.7.0/deploy/crds/trust.cert-manager.io_bundles.yaml
+kubectl apply \
+    --filename https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
+helm template trust-manager jetstack/trust-manager \
+    --version v0.16.0 --set crds.keep=false --show-only templates/crd-trust.cert-manager.io_bundles.yaml \
+| yq 'del(.metadata.labels."app.kubernetes.io/managed-by") | del(.metadata.labels."helm.sh/chart")' \
+| kubectl apply --filename -
 ```
 
 ## Optional Sub-Charts
@@ -42,16 +46,14 @@ kubectl apply -f https://raw.githubusercontent.com/cert-manager/trust-manager/v0
 Ziti Controller requires Cert Manager and Trust Manager operators running in the cluster. You may use existing deployments of either or install either or both as sub-charts by setting additional input values on the command line.
 
 ```bash
---set cert-manager.enabled="true" --set trust-manager.enabled="true"
+--set cert-manager-enabled="true" --set trust-manager-enabled="true"
 ```
 
 Or, as YAML:
 
 ```yaml
-cert-manager:
-    enabled: true
-trust-manager:
-    enabled: true
+cert-manager-enabled: true
+trust-manager-enabled: true
 ```
 
 ## Minimal Installation
@@ -216,8 +218,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
+| cert-manager-enabled | bool | `false` | install the cert-manager subchart |
 | cert-manager.enableCertificateOwnerRef | bool | `true` | clean up secret when certificate is deleted |
-| cert-manager.enabled | bool | `false` | install the cert-manager subchart |
 | cert-manager.installCRDs | bool | `false` | CRDs must be applied in advance of installing the parent chart |
 | cert.duration | string | `"87840h"` | server certificate duration as Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
@@ -289,8 +291,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
+| ingress-nginx-enabled | bool | `false` | install the ingress-nginx subchart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
-| ingress-nginx.enabled | bool | `false` | install the ingress-nginx subchart |
 | managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altIngress":{"advertisedHost":"","annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"containerPort":1281,"dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
 | managementApi.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
@@ -354,9 +356,9 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
 | spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
 | tolerations | list | `[]` | deployment template spec tolerations |
+| trust-manager-enabled | bool | `false` |  |
 | trust-manager.app.trust.namespace | string | `"{{ .Release.Namespace }}"` | trust-manager needs to be configured to trust the namespace in which the controller is deployed so that it will create the Bundle resource for the ctrl plane trust bundle |
 | trust-manager.crds.enabled | bool | `false` | CRDs must be applied in advance of installing the parent chart |
-| trust-manager.enabled | bool | `false` | install the trust-manager subchart |
 | trustDomain | string | `""` | permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release) |
 | useCustomAdminSecret | bool | `false` | allow for using a custom admin secret, which has to be created beforehand if enabled, the admin secret will not be generated by this Helm chart |
 | webBindingPki.altServerCerts | list | `[]` |  |
