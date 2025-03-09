@@ -288,6 +288,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ctrlPlane.alternativeIssuer | object | `{}` | obtain the ctrl plane identity from an existing issuer instead of generating a new PKI |
 | ctrlPlane.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | ctrlPlane.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses |
+| ctrlPlane.dnsNames | list | `[]` | additional DNS SANs for the ctrl plane identity |
 | ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | ctrlPlane.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
