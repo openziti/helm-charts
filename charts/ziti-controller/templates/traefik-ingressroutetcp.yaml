@@ -1,3 +1,4 @@
+---
 {{- if .Values.clientApi.traefik.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRouteTCP
@@ -16,10 +17,67 @@ spec:
       services:
         - name: {{ include "ziti-controller.fullname" . }}-client
           port: {{ .Values.clientApi.advertisedPort }}
+{{- if and (hasKey .Values.clientApi "dnsNames") (.Values.clientApi.dnsNames) }}
+{{- range .Values.clientApi.dnsNames }}
+    - match: HostSNI(`{{ . }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" $ }}-client
+          port: {{ $.Values.clientApi.advertisedPort }}
+{{- end }}
+{{- end }}
+{{- if and (hasKey .Values.clientApi "altDnsNames") (.Values.clientApi.altDnsNames) }}
+{{- range .Values.clientApi.altDnsNames }}
+    - match: HostSNI(`{{ . }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" $ }}-client
+          port: {{ $.Values.clientApi.advertisedPort }}
+{{- end }}
+{{- end }}
   tls:
     passthrough: true
 {{- end }}
 
+# disabled by default and shares a TLS listener and SNI with the client API
+---
+{{- if .Values.managementApi.traefik.enabled }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.managementApi.traefik.ingressRouteTcp.labels | nindent 4 }}
+spec:
+  entryPoints:
+{{- range .Values.managementApi.traefik.ingressRouteTcp.entryPoints }}
+    - {{ . }}
+{{- end }}
+  routes:
+    - match: HostSNI(`{{ .Values.managementApi.advertisedHost }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" . }}-mgmt
+          port: {{ .Values.managementApi.advertisedPort }}
+{{- if and (hasKey .Values.managementApi "dnsNames") (.Values.managementApi.dnsNames) }}
+{{- range .Values.managementApi.dnsNames }}
+    - match: HostSNI(`{{ . }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" $ }}-mgmt
+          port: {{ $.Values.managementApi.advertisedPort }}
+{{- end }}
+{{- end }}
+{{- if and (hasKey .Values.managementApi "altDnsNames") (.Values.managementApi.altDnsNames) }}
+{{- range .Values.managementApi.altDnsNames }}
+    - match: HostSNI(`{{ . }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" $ }}-mgmt
+          port: {{ $.Values.managementApi.advertisedPort }}
+{{- end }}
+{{- end }}
+  tls:
+    passthrough: true
+{{- end }}
+
+# this is disabled by default and shares a TLS listener and SNI with the client API
 ---
 {{- if .Values.ctrlPlane.traefik.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
@@ -43,25 +101,3 @@ spec:
     passthrough: true
 {{- end }}
 
----
-{{- if .Values.managementApi.traefik.enabled }}
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRouteTCP
-metadata:
-  name: {{ include "ziti-controller.fullname" . }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-{{- toYaml .Values.managementApi.traefik.ingressRouteTcp.labels | nindent 4 }}
-spec:
-  entryPoints:
-{{- range .Values.managementApi.traefik.ingressRouteTcp.entryPoints }}
-    - {{ . }}
-{{- end }}
-  routes:
-    - match: HostSNI(`{{ .Values.managementApi.advertisedHost }}`)
-      services:
-        - name: {{ include "ziti-controller.fullname" . }}-mgmt
-          port: {{ .Values.managementApi.advertisedPort }}
-  tls:
-    passthrough: true
-{{- end }}

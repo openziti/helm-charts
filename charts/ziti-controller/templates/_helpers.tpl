@@ -98,7 +98,9 @@ ctrl-plane-cas.crt
 {{- end }}
 
 {{- define "ziti-controller.console" -}}
-    {{- if .Values.managementApi.service.enabled -}}
+    {{- if ne (len .Values.consoleAltIngress) 0 -}}
+https://{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.consoleAltIngress.host "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.consoleAltIngress.port "context" .) }}/zac/
+    {{- else if .Values.managementApi.service.enabled -}}
 https://{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}/zac/
     {{- else -}}
 https://{{ .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}/zac/
