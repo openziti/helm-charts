@@ -35,6 +35,20 @@ spec:
                 name: {{ include "ziti-controller.fullname" . }}-ctrl
                 port:
                   number: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedPort "context" .) }}
+{{- if and (hasKey .Values.ctrlPlane "dnsNames") (.Values.ctrlPlane.dnsNames) }}
+{{- range .Values.ctrlPlane.dnsNames }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-controller.fullname" . }}-ctrl
+                port:
+                  number: {{ .Values.ctrlPlane.advertisedPort }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{- if .Values.clientApi.ingress.enabled }}

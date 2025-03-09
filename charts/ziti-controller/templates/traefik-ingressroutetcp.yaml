@@ -99,5 +99,13 @@ spec:
           port: {{ .Values.ctrlPlane.advertisedPort }}
   tls:
     passthrough: true
+{{- if and (hasKey .Values.ctrlPlane "dnsNames") (.Values.ctrlPlane.dnsNames) }}
+{{- range .Values.ctrlPlane.dnsNames }}
+    - match: HostSNI(`{{ . }}`)
+      services:
+        - name: {{ include "ziti-controller.fullname" $ }}-ctrl
+          port: {{ $.Values.ctrlPlane.advertisedPort }}
+{{- end }}
+{{- end }}
 {{- end }}
 
