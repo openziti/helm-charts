@@ -126,7 +126,43 @@ spec:
         {{- end }}
       {{- end }}
     {{- end }}
-    {{- if .Values.managementApi.service.enabled }}
+  # uris:
+  #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
+  ipAddresses:
+    - 127.0.0.1
+    - "::1"
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+
+  {{- if .Values.managementApi.service.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-mgmt-api-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: {{ include "ziti-controller.fullname" . }}-mgmt
+  secretName: {{ include "ziti-controller.fullname" . }}-web-mgmt-api-secret
+  isCA: false
+  duration: {{ .Values.cert.duration }}
+  renewBefore: {{ .Values.cert.renewBefore }}
+  privateKey:
+# It seems OSX has problems validating ECDSA tokens.. :-/
+#    algorithm: ECDSA
+#    size: 256
+    algorithm: RSA
+    size: 4096
+  usages:
+    - server auth
+    - digital signature
+    - content commitment
+    - key encipherment
+  # At least one of a DNS Name, URI, or IP address is required.
+  dnsNames:
+    - localhost
     - {{ include "ziti-controller.fullname" . }}-mgmt
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
@@ -137,15 +173,50 @@ spec:
     - {{ . | quote }}
         {{- end }}
       {{- end }}
-    {{- end }}
-  # uris:
-  #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
   ipAddresses:
     - 127.0.0.1
     - "::1"
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+  {{- end }}
+
+  {{- if .Values.prometheus.service.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-web-prometheus-metrics-cert
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  commonName: {{ include "ziti-controller.fullname" . }}-prometheus
+  secretName: {{ include "ziti-controller.fullname" . }}-web-prometheus-metrics-secret
+  isCA: false
+  duration: {{ .Values.cert.duration }}
+  renewBefore: {{ .Values.cert.renewBefore }}
+  privateKey:
+# It seems OSX has problems validating ECDSA tokens.. :-/
+#    algorithm: ECDSA
+#    size: 256
+    algorithm: RSA
+    size: 4096
+  usages:
+    - server auth
+    - digital signature
+    - content commitment
+    - key encipherment
+  # At least one of a DNS Name, URI, or IP address is required.
+  dnsNames:
+    - localhost
+    - {{ .Values.prometheus.advertisedHost | default (printf "%s-prometheus.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}
+  ipAddresses:
+    - 127.0.0.1
+    - "::1"
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+  {{- end }}
 
 ---
 # the controller's web client identity
