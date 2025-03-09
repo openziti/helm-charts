@@ -269,14 +269,9 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
 | clientApi.advertisedHost | string | `""` | global DNS name by which routers can resolve a reachable IP for this service |
 | clientApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
-| clientApi.altIngress.advertisedHost | string | `""` | alternative ingress host, e.g., ziti.example.com |
-| clientApi.altIngress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
-| clientApi.altIngress.enabled | bool | `false` | create an ingress for the client API's ClusterIP service with a trusted certificate for clients that require a trusted certificate, e.g., BrowZer, ZAC |
-| clientApi.altIngress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
-| clientApi.altIngress.labels | object | `{}` | ingress labels |
-| clientApi.altIngress.tls | object | `{}` | deprecated: tls passthrough is required; configure an alternative certificate to project into the container in webBindingPki.altServerCerts |
+| clientApi.altDnsNames | list | `[]` | besides advertisedHost and dnsNames, add these DNS SANs to any ingresses but not the web identity |
 | clientApi.containerPort | int | `1280` | cluster service target port on the container |
-| clientApi.dnsNames | list | `[]` | additional DNS SANs |
+| clientApi.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the web identity and any ingresses |
 | clientApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | clientApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
 | clientApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
@@ -286,11 +281,13 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | clientApi.traefik.enabled | bool | `false` | enable Traefik IngressRouteTCP |
 | clientApi.traefik.ingressRouteTcp | object | `{"entryPoints":["websecure"]}` | IngressRouteTCP options |
+| consoleAltIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console |
 | ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
 | ctrlPlane.alternativeIssuer | object | `{}` | obtain the ctrl plane identity from an existing issuer instead of generating a new PKI |
 | ctrlPlane.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | ctrlPlane.dnsNames | list | `[]` | additional DNS SANs for the ctrl plane identity |
+| ctrlPlane.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses |
 | ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | ctrlPlane.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
@@ -341,17 +338,12 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx-enabled | bool | `false` | install the ingress-nginx subchart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
-| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altIngress":{"advertisedHost":"","annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"containerPort":1281,"dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefik":{"enabled":false,"ingressRouteTcp":{"entryPoints":["websecure"]}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
+| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altDnsNames":[],"containerPort":1281,"dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefik":{"enabled":false,"ingressRouteTcp":{"entryPoints":["websecure"]}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
 | managementApi.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
-| managementApi.altIngress.advertisedHost | string | `""` | alternative ingress host, e.g., ziti.example.com; must be distinct from managementApi.advertisedHost and all other advertised names |
-| managementApi.altIngress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
-| managementApi.altIngress.enabled | bool | `false` | create an ingress for the client API's ClusterIP service with a trusted certificate, e.g., for BrowZer, ZAC |
-| managementApi.altIngress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
-| managementApi.altIngress.labels | object | `{}` | ingress labels |
-| managementApi.altIngress.tls | object | `{}` | deprecated: tls passthrough is required; configure an alternative certificate to project into the container in webBindingPki.altServerCerts |
+| managementApi.altDnsNames | list | `[]` | besides advertisedHost and dnsNames, add these DNS SANs to any mgmt api ingresses, but not the web identity |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
-| managementApi.dnsNames | list | `[]` | additional DNS SANs |
+| managementApi.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the web identity and any mgmt api ingresses |
 | managementApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | managementApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
 | managementApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
