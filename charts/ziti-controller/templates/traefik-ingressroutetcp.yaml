@@ -1,15 +1,15 @@
 ---
-{{- if .Values.clientApi.traefik.enabled }}
+{{- if .Values.clientApi.traefikTcpRoute.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRouteTCP
 metadata:
   name: {{ include "ziti-controller.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{- toYaml .Values.clientApi.traefik.ingressRouteTcp.labels | nindent 4 }}
+{{- toYaml .Values.clientApi.traefikTcpRoute.labels | nindent 4 }}
 spec:
   entryPoints:
-{{- range .Values.clientApi.traefik.ingressRouteTcp.entryPoints }}
+{{- range .Values.clientApi.traefikTcpRoute.entryPoints }}
     - {{ . }}
 {{- end }}
   routes:
@@ -39,17 +39,17 @@ spec:
 
 # disabled by default and shares a TLS listener and SNI with the client API
 ---
-{{- if .Values.managementApi.traefik.enabled }}
+{{- if .Values.managementApi.traefikTcpRoute.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRouteTCP
 metadata:
   name: {{ include "ziti-controller.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{- toYaml .Values.managementApi.traefik.ingressRouteTcp.labels | nindent 4 }}
+{{- toYaml .Values.managementApi.traefikTcpRoute.labels | nindent 4 }}
 spec:
   entryPoints:
-{{- range .Values.managementApi.traefik.ingressRouteTcp.entryPoints }}
+{{- range .Values.managementApi.traefikTcpRoute.entryPoints }}
     - {{ . }}
 {{- end }}
   routes:
@@ -79,17 +79,17 @@ spec:
 
 # this is disabled by default and shares a TLS listener and SNI with the client API
 ---
-{{- if .Values.ctrlPlane.traefik.enabled }}
+{{- if .Values.ctrlPlane.traefikTcpRoute.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRouteTCP
 metadata:
   name: {{ include "ziti-controller.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{- toYaml .Values.ctrlPlane.traefik.ingressRouteTcp.labels | nindent 4 }}
+{{- toYaml .Values.ctrlPlane.traefikTcpRoute.labels | nindent 4 }}
 spec:
   entryPoints:
-{{- range .Values.ctrlPlane.traefik.ingressRouteTcp.entryPoints }}
+{{- range .Values.ctrlPlane.traefikTcpRoute.entryPoints }}
     - {{ . }}
 {{- end }}
   routes:

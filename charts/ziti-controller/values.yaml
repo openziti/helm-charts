@@ -32,13 +32,14 @@ clientApi:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
-  traefik:
+  traefikTcpRoute:
     # -- enable Traefik IngressRouteTCP
     enabled: false
-    # -- IngressRouteTCP options
-    ingressRouteTcp:
-      entryPoints:
-        - websecure
+    # -- IngressRouteTCP entrypoints
+    entryPoints:
+      - websecure
+    # -- IngressRouteTCP labels
+    labels: {}
 
 # -- by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the management API because it shares a TLS listener with the
@@ -72,13 +73,14 @@ managementApi:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
-  traefik:
+  traefikTcpRoute:
     # -- enable Traefik IngressRouteTCP
     enabled: false
-    # -- IngressRouteTCP options
-    ingressRouteTcp:
-      entryPoints:
-        - websecure
+    # -- IngressRouteTCP entrypoints
+    entryPoints:
+      - websecure
+    # -- IngressRouteTCP labels
+    labels: {}
 
 # by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the ctrl plane because it shares a TLS listener with the
