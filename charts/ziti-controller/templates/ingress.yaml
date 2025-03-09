@@ -1,3 +1,4 @@
+# disabled by default and shares a TLS listener and DNS SAN with the client API
 {{- if .Values.ctrlPlane.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -72,80 +73,37 @@ spec:
                 name: {{ include "ziti-controller.fullname" . }}-client
                 port:
                   number: {{ .Values.clientApi.advertisedPort }}
-{{- end }}
-
-{{- if .Values.clientApi.altIngress.enabled }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ include "ziti-controller.fullname" . }}-alt-client
-  labels:
-  {{- include "ziti-controller.labels" . | nindent 4 }}
-  {{- with .Values.clientApi.altIngress.labels }}
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.clientApi.altIngress.annotations }}
-  annotations:
-  {{ toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  {{- if .Values.clientApi.altIngress.ingressClassName }}
-  ingressClassName: {{ .Values.clientApi.altIngress.ingressClassName }}
-  {{- end }}
-  {{- if .Values.clientApi.altIngress.tls }}
-  tls:
-    {{- toYaml .Values.clientApi.altIngress.tls | nindent 4 }}
-  {{- end }}
-  rules:
-    - host: {{ .Values.clientApi.altIngress.advertisedHost }}
+{{- if and (hasKey .Values.clientApi "dnsNames") (.Values.clientApi.dnsNames) }}
+{{- range .Values.clientApi.dnsNames }}
+    - host: {{ . }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "ziti-controller.fullname" . }}-client
+                name: {{ include "ziti-controller.fullname" $ }}-client
                 port:
-                  number: {{ .Values.clientApi.advertisedPort }}
+                  number: {{ $.Values.clientApi.advertisedPort }}
 {{- end }}
-
-{{- if .Values.managementApi.altIngress.enabled }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ include "ziti-controller.fullname" . }}-alt-mgmt
-  labels:
-  {{- include "ziti-controller.labels" . | nindent 4 }}
-  {{- with .Values.managementApi.altIngress.labels }}
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.managementApi.altIngress.annotations }}
-  annotations:
-  {{ toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  {{- if .Values.managementApi.altIngress.ingressClassName }}
-  ingressClassName: {{ .Values.managementApi.altIngress.ingressClassName }}
-  {{- end }}
-  {{- if .Values.managementApi.altIngress.tls }}
-  tls:
-    {{- toYaml .Values.managementApi.altIngress.tls | nindent 4 }}
-  {{- end }}
-  rules:
-    - host: {{ .Values.managementApi.altIngress.advertisedHost }}
+{{- end }}
+{{- if and (hasKey .Values.clientApi "altDnsNames") (.Values.clientApi.altDnsNames) }}
+{{- range .Values.clientApi.altDnsNames }}
+    - host: {{ . }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "ziti-controller.fullname" . }}-mgmt
+                name: {{ include "ziti-controller.fullname" $ }}-client
                 port:
-                  number: {{ .Values.managementApi.advertisedPort }}
+                  number: {{ $.Values.clientApi.advertisedPort }}
+{{- end }}
+{{- end }}
 {{- end }}
 
+# disabled by default and shares a TLS listener with the client API
 {{- if .Values.managementApi.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -182,4 +140,32 @@ spec:
                 name: {{ include "ziti-controller.fullname" . }}-mgmt
                 port:
                   number: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
+{{- if and (hasKey .Values.managementApi "dnsNames") (.Values.managementApi.dnsNames) }}
+{{- range .Values.managementApi.dnsNames }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-controller.fullname" $ }}-mgmt
+                port:
+                  number: {{ $.Values.managementApi.advertisedPort }}
+{{- end }}
+{{- end }}
+{{- if and (hasKey .Values.managementApi "altDnsNames") (.Values.managementApi.altDnsNames) }}
+{{- range .Values.managementApi.altDnsNames }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ziti-controller.fullname" $ }}-mgmt
+                port:
+                  number: {{ $.Values.managementApi.advertisedPort }}
+{{- end }}
+{{- end }}
 {{- end }}
