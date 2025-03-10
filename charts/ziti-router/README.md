@@ -236,7 +236,7 @@ identity:
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-router container |
 | affinity | object | `{}` | deployment template spec affinity |
 | configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
-| configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints statefile in same dir |
+| configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints.yml statefile in same dir |
 | csr | object | `{"country":"","locality":"","organization":"","organizationalUnit":"","province":"","sans":{"dns":[],"email":[],"ip":[],"noDefaults":false,"uri":[]}}` | Certificate signing request distinguished name and subject alternative names |
 | csr.country | string | `""` | country |
 | csr.locality | string | `""` | city |
@@ -308,7 +308,7 @@ identity:
 | nodeSelector | object | `{}` | deployment template spec node selector |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |
-| persistence.enabled | bool | `true` | required: place a storage claim for the ctrl endpoints state file |
+| persistence.enabled | bool | `true` | required: place a storage claim for the ctrl endpoints.yml state file |
 | persistence.existingClaim | string | `""` | A manually managed Persistent Volume and Claim Requires persistence.enabled: true If defined, PVC must be created manually before volume will be bound |
 | persistence.size | string | `"50Mi"` | 50Mi is plenty for this state file |
 | persistence.storageClass | string | `""` | Storage class of PV to bind. By default it looks for the default storage class. If the PV uses a different storage class, specify that here. |
