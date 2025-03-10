@@ -272,7 +272,7 @@ enrollmentJwtSecretName: ""
 # -- read-only mountpoint for router identity secret specified in deployment for use by router run container
 identityMountDir: /etc/ziti/identity
 # -- writeable mountpoint where read-only config file is projected to allow router
-# to write ./endpoints statefile in same dir
+# to write ./endpoints.yml statefile in same dir
 configMountDir:   /etc/ziti/config
 # -- filename of router config YAML
 configFile:       ziti-router.yaml
@@ -389,7 +389,7 @@ noHelmHooks: false
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
 persistence:
-  # -- required: place a storage claim for the ctrl endpoints state file
+  # -- required: place a storage claim for the ctrl endpoints.yml state file
   enabled: true
   # -- annotations for the PVC
   annotations: {}
