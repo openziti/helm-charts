@@ -188,6 +188,7 @@ spec:
 {{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) (gt (len .Values.tunnel.proxyAdditionalK8sServices) 0) }}
 {{- $root := . }}
 {{- range .Values.tunnel.proxyAdditionalK8sServices }}
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -235,11 +236,11 @@ spec:
   publishNotReadyAddresses: {{ . }}
   {{- end }}
   ports:
-  {{- $service_name := .name }}
+  {{- $ziti_service := .zitiService }}
   {{- range $root.Values.tunnel.proxyServices }}
-    {{- if and .k8sService (eq .k8sService $service_name) }}
-    - port: {{ .advertisedrPort }}
-      targetPort: {{ .containerPortPort }}
+    {{- if and .zitiService (eq .zitiService $ziti_service) }}
+    - port: {{ .advertisedPort }}
+      targetPort: {{ .containerPort }}
       protocol: {{ .serviceProtocol | default "TCP" }}
       name: {{ regexReplaceAll "\\W+" .zitiService "-" }}
       {{- if eq $type "NodePort" }}
