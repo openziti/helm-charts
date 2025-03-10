@@ -19,7 +19,7 @@ spec:
     {{- toYaml $cert.issuerRef | nindent 4 }}
   {{- if gt (len $cert.dnsNames) 0 }}
   dnsNames:
-    {{- range $cert.altDnsNames }}
+    {{- range $cert.dnsNames }}
     - {{ include "ziti-controller.tplOrLiteral" (dict "value" . "context" $) }}
     {{- end }}
   {{- else }}
