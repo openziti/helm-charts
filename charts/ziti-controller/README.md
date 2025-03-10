@@ -182,7 +182,7 @@ helm upgrade ziti-controller openziti/ziti-controller \
     --set clientApi.advertisedHost=ctrl1.ziti.example.com \
     --set clientApi.advertisedPort=443 \
     --set clientApi.service.type=ClusterIP \
-    --set clientApi.traefik.enabled=true
+    --set clientApi.traefikTcpRoute.enabled=true
 ```
 
 Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/
@@ -279,14 +279,14 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| clientApi.traefik.enabled | bool | `false` | enable Traefik IngressRouteTCP |
-| clientApi.traefik.ingressRouteTcp | object | `{"entryPoints":["websecure"]}` | IngressRouteTCP options |
+| clientApi.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
+| clientApi.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
+| clientApi.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
 | consoleAltIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console |
 | ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
 | ctrlPlane.alternativeIssuer | object | `{}` | obtain the ctrl plane identity from an existing issuer instead of generating a new PKI |
 | ctrlPlane.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
-| ctrlPlane.dnsNames | list | `[]` | additional DNS SANs for the ctrl plane identity |
 | ctrlPlane.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses |
 | ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
@@ -295,8 +295,10 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ctrlPlane.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | ctrlPlane.service.enabled | bool | `false` | create a separate cluster service for the ctrl plane; enabling this requires you to also set the host and port for a separate ctrl plane TLS listener |
 | ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| ctrlPlane.traefik.enabled | bool | `false` | enable Traefik IngressRouteTCP |
-| ctrlPlane.traefik.ingressRouteTcp | object | `{"entryPoints":["websecure"]}` | IngressRouteTCP options |
+| ctrlPlane.traefikTcpRoute | object | `{"enabled":false,"entryPoints":["websecure"],"labels":{}}` | metadata name of the alternative issuer name: |
+| ctrlPlane.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
+| ctrlPlane.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
+| ctrlPlane.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
 | ctrlPlaneCasBundle.namespaceSelector | object | `{}` | namespaces where trust-manager will create the Bundle resource containing Ziti's trusted CA certs (default: empty means all namespaces) |
 | customAdminSecretName | string | `""` | set the admin user and password from a custom secret The custom admin secret must be of the following format: apiVersion: v1 kind: Secret metadata:   name: myCustomAdminSecret type: Opaque data:   admin-user:   admin-password: |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
@@ -338,7 +340,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | ingress-nginx-enabled | bool | `false` | install the ingress-nginx subchart |
 | ingress-nginx.controller.extraArgs.enable-ssl-passthrough | string | `"true"` | configure subchart ingress-nginx to enable the pass-through TLS feature |
-| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altDnsNames":[],"containerPort":1281,"dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefik":{"enabled":false,"ingressRouteTcp":{"entryPoints":["websecure"]}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
+| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altDnsNames":[],"containerPort":1281,"dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefikTcpRoute":{"enabled":false,"entryPoints":["websecure"],"labels":{}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
 | managementApi.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
 | managementApi.altDnsNames | list | `[]` | besides advertisedHost and dnsNames, add these DNS SANs to any mgmt api ingresses, but not the web identity |
@@ -351,8 +353,9 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | managementApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | managementApi.service.enabled | bool | `false` | create a cluster service for the deployment |
 | managementApi.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
-| managementApi.traefik.enabled | bool | `false` | enable Traefik IngressRouteTCP |
-| managementApi.traefik.ingressRouteTcp | object | `{"entryPoints":["websecure"]}` | IngressRouteTCP options |
+| managementApi.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
+| managementApi.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
+| managementApi.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
 | network.createCircuitRetries | int | `2` | createCircuitRetries controls the number of retries that will be attempted to create a path (and terminate it) for new circuits. |
 | network.cycleSeconds | int | `15` | Defines the period that the controller re-evaluates the performance of all of the circuits running on the network. |
 | network.initialLinkLatency | string | `"65s"` | Sets the latency of link when it's first created. Will be overwritten as soon as latency from the link is actually reported from the routers. Defaults to 65 seconds. |

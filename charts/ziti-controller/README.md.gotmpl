@@ -184,7 +184,7 @@ helm upgrade ziti-controller openziti/ziti-controller \
     --set clientApi.advertisedHost=ctrl1.ziti.example.com \
     --set clientApi.advertisedPort=443 \
     --set clientApi.service.type=ClusterIP \
-    --set clientApi.traefik.enabled=true
+    --set clientApi.traefikTcpRoute.enabled=true
 ```
 
 Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/

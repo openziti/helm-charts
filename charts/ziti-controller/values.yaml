@@ -119,19 +119,14 @@ ctrlPlane:
     tls: {}
   # -- obtain the ctrl plane identity from an existing issuer instead of generating a new PKI
   alternativeIssuer: {}
-    # -- type of alternative issuer for the controller's identity: Issuer, ClusterIssuer
-    # kind:
-    # -- metadata name of the alternative issuer
-    # name:
-  # -- additional DNS SANs for the ctrl plane identity
-  dnsNames: []
-  traefik:
+  traefikTcpRoute:
     # -- enable Traefik IngressRouteTCP
     enabled: false
-    # -- IngressRouteTCP options
-    ingressRouteTcp:
-      entryPoints:
-        - websecure
+    # -- IngressRouteTCP entrypoints
+    entryPoints:
+      - websecure
+    # -- IngressRouteTCP labels
+    labels: {}
 
 # -- override the address printed in Helm release notes if you configured an alternative DNS SAN for the console
 consoleAltIngress: {}
