@@ -1,4 +1,3 @@
-{{- $root := . }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -242,7 +241,7 @@ spec:
               {{- range .Values.webBindingPki.altServerCerts }}
                 {{- if eq .mode "certManager" }}
             - mountPath: {{ .mountPath }}
-              name: {{ printf "%v-%v" (include "ziti-controller.fullname" $root) .secretName }}
+              name: {{ printf "%v-%v" (include "ziti-controller.fullname" $) .secretName }}
               readOnly: true
                 {{- end }}
               {{- end }}
@@ -335,7 +334,7 @@ spec:
         {{- if gt (len .Values.webBindingPki.altServerCerts) 0 }}
           {{- range .Values.webBindingPki.altServerCerts }}
             {{- if eq .mode "certManager" }}
-        - name: {{ printf "%v-%v" (include "ziti-controller.fullname" $root) .secretName }}
+        - name: {{ printf "%v-%v" (include "ziti-controller.fullname" $) .secretName }}
           secret:
             secretName: {{ .secretName }}
             {{- end }}

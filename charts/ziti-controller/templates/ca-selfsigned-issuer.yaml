@@ -1,3 +1,6 @@
+# generate a self-signed issuer if no alternative issuer is configured for the controller's
+# control plane and web binding PKIs
+{{- if and (eq (len .Values.ctrlPlane.alternativeIssuer) 0) (eq (len .Values.webBindingPki.alternativeIssuer) 0) }}
 ---
 # an 'empty' Issuer for creating self-signed root-CA's
 apiVersion: cert-manager.io/v1
@@ -8,3 +11,4 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   selfSigned: {}
+{{- end }}

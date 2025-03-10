@@ -6,6 +6,10 @@
 # identity is not configured for a particular server TLS binding, e.g., web
 # binding for the client API.
 ######
+
+# generate a root CA if no alternative issuer is configured for the controller's
+# control plane PKI
+{{- if eq (len .Values.ctrlPlane.alternativeIssuer) 0 }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -40,6 +44,7 @@ metadata:
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
+{{- end }}
 
 ---
 apiVersion: cert-manager.io/v1
