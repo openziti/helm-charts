@@ -1,4 +1,3 @@
-{{- $root := . -}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -202,7 +201,7 @@ data:
             - server_cert: {{ .serverCert | quote }}
               server_key:  {{ .serverKey | quote }}
             {{- else if eq .mode "secret" }}
-            {{- $matchingVolumeMountPath := include "ziti-controller.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $root.Values.additionalVolumes) }}
+            {{- $matchingVolumeMountPath := include "ziti-controller.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $.Values.additionalVolumes) }}
             - server_cert: {{ printf "%s/tls.crt" $matchingVolumeMountPath | quote }}
               server_key:  {{ printf "%s/tls.key" $matchingVolumeMountPath | quote }}
             {{- else if eq .mode "certManager" }}
@@ -296,7 +295,7 @@ data:
             - server_cert: {{ .serverCert | quote }}
               server_key:  {{ .serverKey | quote }}
             {{- else if eq .mode "secret" }}
-            {{- $matchingVolumeMountPath := include "ziti-controller.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $root.Values.additionalVolumes) }}
+            {{- $matchingVolumeMountPath := include "ziti-controller.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $.Values.additionalVolumes) }}
             - server_cert: {{ printf "%s/tls.crt" $matchingVolumeMountPath | quote }}
               server_key:  {{ printf "%s/tls.key" $matchingVolumeMountPath | quote }}
             {{- else if eq .mode "certManager" }}
@@ -385,7 +384,7 @@ data:
             - cert: {{ .serverCert | quote }}
               key: {{ .serverKey | quote }}
             {{- else if eq .mode "secret" }}
-            {{- $matchingVolumeMountPath := include "ziti-controller.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $root.Values.additionalVolumes) }}
+            {{- $matchingVolumeMountPath := include "ziti-controller.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $.Values.additionalVolumes) }}
             - cert: {{ printf "%s/tls.crt" $matchingVolumeMountPath | quote }}
               key: {{ printf "%s/tls.key" $matchingVolumeMountPath | quote }}
             {{- else if eq .mode "certManager" }}

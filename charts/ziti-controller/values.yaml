@@ -124,7 +124,7 @@ ctrlPlane:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
-  # -- kind and name of alternative issuer for the controller's identity
+  # -- obtain the ctrl plane identity from an existing issuer instead of generating a new PKI
   alternativeIssuer: {}
     # -- type of alternative issuer for the controller's identity: Issuer, ClusterIssuer
     # kind:
@@ -244,7 +244,15 @@ cert:
 edgeSignerPki:
   # -- generate a separate PKI root of trust for the edge signer CA
   enabled: true
+  # -- obtain the edge signer intermediate CA from an existing issuer instead of generating a new PKI
+  alternativeIssuer: {}
+  # -- type of alternative issuer: Issuer, ClusterIssuer
+  # kind:
+  # -- metadata name of the alternative issuer
+  # name:
   admin_client_cert:
+    # -- create a client certificate for the admin user
+    enabled: false
     # -- admin client certificate duration as Go time.Duration
     duration: 8760h
     # -- renew admin client certificate before expiry as Go time.Duration
@@ -286,6 +294,12 @@ webBindingPki:
     #  serverCert:
     #  # -- 'localFile': path to the alternative server key
     #  serverKey:
+  # -- obtain the web identity from an existing issuer instead of generating a new PKI
+  alternativeIssuer: {}
+  # -- type of alternative issuer: Issuer, ClusterIssuer
+  # kind:
+  # -- metadata name of the alternative issuer
+  # name:
 
 spireAgent:
   # -- if you are running a container with the spire-agent binary installed

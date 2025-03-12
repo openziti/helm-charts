@@ -7,6 +7,7 @@
 # router control plane's identity in .identity.ca
 ######
 {{- if (eq .Values.edgeSignerPki.enabled true) }}
+{{- if eq (len .Values.edgeSignerPki.alternativeIssuer) 0 }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -41,6 +42,7 @@ metadata:
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-edge-root-secret
+{{- end }}
 
 ---
 apiVersion: cert-manager.io/v1
@@ -63,8 +65,14 @@ spec:
     algorithm: ECDSA
     size: 256
   issuerRef:
+    {{- if ne (len .Values.edgeSignerPki.alternativeIssuer) 0 }}
+      {{- with .Values.edgeSignerPki.alternativeIssuer }}
+        {{- toYaml . | nindent 4 }}
+      {{- end }}
+    {{- else }}
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-edge-root-issuer
+    {{- end }}
 
 ---
 apiVersion: cert-manager.io/v1
@@ -77,6 +85,7 @@ spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
 
+{{- if .Values.edgeSignerPki.admin_client_cert.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -101,5 +110,5 @@ spec:
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
-
+{{- end }}
 {{- end }}

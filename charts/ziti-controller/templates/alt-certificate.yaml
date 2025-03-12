@@ -1,17 +1,14 @@
 # openziti-helm-charts/charts/ziti-controller/templates/alt-certificate.yaml
-{{- $root := . }}
-{{- $values := $.Values }}
-
 {{- if gt (len $.Values.webBindingPki.altServerCerts) 0 -}}
-{{- $certs := ((include "ziti-controller.getCertManagerAltServerCerts" $values.webBindingPki.altServerCerts) | fromJson).certManagerCerts -}}
+{{- $certs := ((include "ziti-controller.getCertManagerAltServerCerts" $.Values.webBindingPki.altServerCerts) | fromJson).certManagerCerts -}}
 {{- if gt (len $certs) 0 }}
 {{- range $index, $cert := $certs }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ printf "%s-alt-cert-%d" (include "ziti-controller.fullname" $root) $index }}
-  namespace: {{ $root.Release.Namespace }}
+  name: {{ printf "%s-alt-cert-%d" (include "ziti-controller.fullname" $) $index }}
+  namespace: {{ $.Release.Namespace }}
 spec:
   {{- if $cert.secretName }}
   secretName: {{ $cert.secretName | quote }}
@@ -23,7 +20,7 @@ spec:
   {{- if gt (len $cert.dnsNames) 0 }}
   dnsNames:
     {{- range $cert.dnsNames }}
-    - {{ include "ziti-controller.tplOrLiteral" (dict "value" . "context" $root) }}
+    - {{ include "ziti-controller.tplOrLiteral" (dict "value" . "context" $) }}
     {{- end }}
   {{- else }}
   dnsNames: []
