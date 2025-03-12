@@ -15,56 +15,21 @@
 
 {{ template "chart.requirementsSection" . }}
 
-## Overview
-
-This chart runs a Ziti controller in Kubernetes. It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. It is a limitation of Trust Manager to have one instance per cluster and one namespace from which trust Bundle inputs may be sourced, so a single Ziti controller may occupy the cluster unless your use case allows for controllers from multiple networks to share a namespace. You must set the Trust Manager's "trust namespace" to the namespace of the Ziti controller so that it will be able to build trust Bundle resources from Ziti's root CA cert(s).
-
-Ziti's TLS server ports must be published with a TLS passthrough. This may be done with a Traefik IngressRouteTCP, Gateway API TLSRoute, Ingress, NodePort, LoadBalancer, etc. The ctrl plane and management API share the client API's TLS listener by default.
-
-It is not normally necessary to obtain publicly trusted certificates for Ziti's TLS servers. Ziti manages the trust relationships between the controller and routers and clients independent of the web's root authorities. See the [Alternative Web Server Certificates](#alternative-web-server-certificates) section for more information.
-
 ## Prerequisites
 
-Add the OpenZiti Charts Repo to Helm.
+Add the OpenZiti Charts Repo with Helm.
 
 ```bash
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-Ziti Controller requires Cert Manager and Trust Manager operators running in the cluster. You may use existing deployments of either or install either or both as sub-charts.
+This chart runs a Ziti controller in Kubernetes. 
 
-When installing either CM or TM as a sub-chart, you must pre-install the CRDs because they can not be automatically installed with the sub-chart. 
+It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. It is a limitation of Trust Manager to have one instance per cluster and one namespace from which trust Bundle inputs may be sourced, so a single Ziti controller may occupy the cluster unless your use case allows for controllers from multiple networks to share a namespace. You must set the Trust Manager's "trust namespace" to the namespace of the Ziti controller so that it will be able to build trust Bundle resources from Ziti's root CA cert(s).
 
-```bash
-kubectl apply \
-    --filename https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
-helm template trust-manager jetstack/trust-manager \
-    --version v0.16.0 --set crds.keep=false --show-only templates/crd-trust.cert-manager.io_bundles.yaml \
-| yq 'del(.metadata.labels."app.kubernetes.io/managed-by") | del(.metadata.labels."helm.sh/chart")' \
-| kubectl apply --filename -
-```
+Ziti's TLS server ports must be published with a TLS passthrough. This may be done with a Traefik IngressRouteTCP, Gateway API TLSRoute, Ingress, NodePort, LoadBalancer, etc. The ctrl plane and management API share the client API's TLS listener by default, so there's one TCP port by default that must be published with TLS passthrough enabled.
 
-You may enable and configure the sub-charts with command line or YAML input values.
-
-```bash
---set cert-manager-enabled=true
---set cert-manager.namespace=ziti
---set trust-manager-enabled=true
---set trust-manager.namespace=ziti
---set trust-manager.app.trust.namespace=ziti
-```
-
-```yaml
-cert-manager-enabled: true
-cert-manager:
-  namespace: cert-manager
-trust-manager-enabled: true
-trust-manager:
-  namespace: cert-manager
-  app:
-    trust:
-      namespace: ziti
-```
+It is not normally necessary to obtain publicly trusted certificates for Ziti's TLS servers. Ziti manages the trust relationships between the controller and routers and clients independent of the web's root authorities. See the [Alternative Web Server Certificates](#alternative-web-server-certificates) section for more information.
 
 ## NodePort Service Example
 
@@ -92,15 +57,6 @@ clientApi:
   advertisedPort: 32171
   service:
     type: NodePort
-cert-manager-enabled: true
-cert-manager:
-  namespace: ziti
-trust-manager-enabled: true
-trust-manager:
-  namespace: ziti
-  app:
-    trust:
-      namespace: ziti
 ```
 
 Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com:32171/zac/
