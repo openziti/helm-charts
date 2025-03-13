@@ -43,9 +43,9 @@ jobs:
       - name: install ziti cli
         uses: supplypike/setup-bin@v4
         with:
-          uri: https://github.com/openziti/ziti/releases/download/v1.2.0/ziti-linux-amd64-1.2.0.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/v1.4.3/ziti-linux-amd64-1.4.3.tar.gz
           name: ziti
-          version: 1.2.0
+          version: 1.4.3
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
@@ -59,9 +59,13 @@ jobs:
       - name: Run miniziti with latest release charts
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
         run: miniziti start --no-hosts --verbose
+        env:
+          MINIZITI_TIMEOUT_SECS: 300
 
       - name: Upgrade miniziti with charts from this branch
         run: miniziti start --no-hosts --verbose --charts ./charts
+        env:
+          MINIZITI_TIMEOUT_SECS: 300
 
       - name: Verify the Console is Available
         shell: bash
