@@ -6,7 +6,7 @@
 
 Host an OpenZiti controller in Kubernetes
 
-## Prerequisites
+## Requirements
 
 Add the OpenZiti Charts Repo with Helm.
 
@@ -21,6 +21,8 @@ It uses the custom resources provided by [cert-manager](https://cert-manager.io/
 Ziti's TLS server ports must be published with a TLS passthrough. This may be done with a Traefik IngressRouteTCP, Gateway API TLSRoute, Ingress, NodePort, LoadBalancer, etc. The ctrl plane and management API share the client API's TLS listener by default, so there's one TCP port by default that must be published with TLS passthrough enabled.
 
 It is not normally necessary to obtain publicly trusted certificates for Ziti's TLS servers. Ziti manages the trust relationships between the controller and routers and clients independent of the web's root authorities. See the [Alternative Web Server Certificates](#alternative-web-server-certificates) section for more information.
+
+The deployment must have exactly one replica.
 
 ## NodePort Service Example
 
