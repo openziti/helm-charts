@@ -16,13 +16,63 @@ helm repo add openziti https://docs.openziti.io/helm-charts/
 
 This chart runs a Ziti controller in Kubernetes.
 
-It uses the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. It is a limitation of Trust Manager to have one instance per cluster and one namespace from which trust Bundle inputs may be sourced, so a single Ziti controller may occupy the cluster unless your use case allows for controllers from multiple networks to share a namespace. You must set the Trust Manager's "trust namespace" to the namespace of the Ziti controller so that it will be able to build trust Bundle resources from Ziti's root CA cert(s).
+### Mutual TLS
 
-Ziti's TLS server ports must be published with a TLS passthrough. This may be done with a Traefik IngressRouteTCP, Gateway API TLSRoute, Ingress, NodePort, LoadBalancer, etc. The ctrl plane and management API share the client API's TLS listener by default, so there's one TCP port by default that must be published with TLS passthrough enabled.
+Ziti's TLS server ports must be published with a TLS passthrough to allow the controller to validate the client certificates from routers and identities. This may be done with a Traefik IngressRouteTCP, Gateway API TLSRoute, Ingress, NodePort, LoadBalancer, etc. The ctrl plane and management API share the client API's TLS listener by default, so there's one TCP port by default that must be published with TLS passthrough enabled.
+
+### Certificates
 
 It is not normally necessary to obtain publicly trusted certificates for Ziti's TLS servers. Ziti manages the trust relationships between the controller and routers and clients independent of the web's root authorities. See the [Alternative Web Server Certificates](#alternative-web-server-certificates) section for more information.
 
+### Deployment
+
 The deployment must have exactly one replica.
+
+### Custom Resources
+
+This chart requires the custom resources provided by [cert-manager](https://cert-manager.io/docs/installation/) and [trust-manager](https://cert-manager.io/docs/projects/trust-manager/#installation), i.e., Issuer, Certificate, and Bundle. It is a limitation of Trust Manager to have one instance per cluster and one namespace from which trust Bundle inputs may be sourced, so a single Ziti controller may occupy the cluster unless your use case allows for controllers from multiple networks to share a namespace. You must set the Trust Manager's "trust namespace" to the namespace of the Ziti controller so that it will be able to compose a trust Bundle resource from Ziti's root CA cert(s).
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+
+helm upgrade --install cert-manager jetstack/cert-manager \
+    --namespace cert-manager --create-namespace \
+    --set crds.enabled=true
+
+kubectl create namespace ziti
+helm upgrade --install trust-manager jetstack/trust-manager \
+    --namespace cert-manager \
+    --set crds.keep=false \
+    --set app.trust.namespace=ziti
+```
+
+### Breaking Change
+
+Version 2 of this chart introduces a breaking change. You must decouple cert-manager and trust-manager from the Ziti controller chart if they were previously installed as subcharts. This allows them to be upgraded and configured independently of the Ziti controller chart.
+
+**Symptom**
+
+> Error: Unable to continue with install: CustomResourceDefinition "certificaterequests.cert-manager.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "cert-manager"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "cert-manager"
+
+**Cause**
+
+Cert Manager and Trust Manager are no longer included as subcharts. If you have version 1 of the chart installed and cert-manager or trust-manager were installed as subcharts in the same namespace as the Ziti controller, you can run `./files/chown-cert-manager.bash` to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources, allowing them to be imported by a future cert-manager or trust-manager installation.
+
+**Solution**
+
+Assuming your future CM release is named "cert-manager," your TM release is named "trust-manager," both are installed in namespace "cert-manager," and your Ziti controller is installed in namespace "ziti," you can run the provided script to pave the way to installing the version 2 ziti-controller chart.
+
+```bash
+helm pull openziti/ziti-controller
+tar -xvf ziti-controller-*.tgz
+CM_NAMESPACE=cert-manager \
+CM_RELEASE_NAME=cert-manager \
+TM_NAMESPACE=cert-manager \
+ZITI_NAMESPACE=ziti \
+./ziti-controller/files/chown-cert-manager.bash
+```
+
+You must install cert-manager and trust-manager Operators and CRDs before installing version 2 of the ziti-controller chart. See the [Custom Resources](#custom-resources) section above for an example.
 
 ## NodePort Service Example
 
@@ -46,10 +96,10 @@ Here's the YAML representation of the same set of input values.
 
 ```yaml
 clientApi:
-  advertisedHost: ctrl1.ziti.example.com
-  advertisedPort: 32171
-  service:
-    type: NodePort
+    advertisedHost: ctrl1.ziti.example.com
+    advertisedPort: 32171
+    service:
+        type: NodePort
 ```
 
 Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com:32171/zac/
