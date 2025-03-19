@@ -52,7 +52,8 @@ jobs:
       - name: install miniziti
         uses: supplypike/setup-bin@v4
         with:
-          uri: https://get.openziti.io/miniziti.bash
+          # uri: https://get.openziti.io/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti/refs/heads/quick-k8s-helm-deps/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
 
