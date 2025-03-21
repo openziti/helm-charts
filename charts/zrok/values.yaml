@@ -42,7 +42,7 @@ securityContext: {}
   # runAsUser: 1000
 
 controller:
-  specVersion: 3
+  specVersion: 4
   service:
     # -- The service type to use for the zrok controller
     type: ClusterIP

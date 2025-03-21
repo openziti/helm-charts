@@ -1,23 +1,22 @@
 
-# these minimal input values serve the GitHub Actions workflow miniziti.yml which installs this chart in a minikube
-# cluster that is also running a minimal Ziti network, scripted by miniziti.bash
+# minimal input values for ingress-nginx; to enable tls, add cert manager issuer annotation and tls.secretName to each ingress dict
 
 controller:
   ingress:
     enabled: true
     scheme: http
     className: nginx
-    hosts: []
-    # hosts: ["ctrl.zrok.192.168.49.2.sslip.io"]
+    # annotations:
+    #   cert-manager.io/cluster-issuer: cloudflare-dns-issuer-prod
+    # tls:
+    #   secretName: zrok-api-tls
 
 frontend:
   ingress:
     enabled: true
     scheme: http
     className: nginx
-    hosts: []
-    # hosts: ["share.zrok.192.168.49.2.sslip.io"]
-
-ziti:
-  advertisedHost:
-  # advertisedHost: ziti-controller-client.miniziti.svc.cluster.local
+    # annotations:
+    #   cert-manager.io/cluster-issuer: cloudflare-dns-issuer-prod
+    # tls:
+    #   secretName: zrok-wildcard-tls

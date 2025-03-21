@@ -41,7 +41,7 @@ kubectl --namespace {{ .Release.Namespace }} port-forward deployment/zrok $ZROK_
 : this var must be exported so that the zrok CLI will configure itself
 export ZROK_API_ENDPOINT=$ZROK_SCHEME://$ZROK_HOST:$ZROK_PORT
 
-curl -sSf $ZROK_API_ENDPOINT/api/v1/version
+curl -sSf $ZROK_API_ENDPOINT | grep '<title>'
 
 Log in to the zrok console at $ZROK_API_ENDPOINT using the credential obtained with this command:
 

@@ -17,7 +17,14 @@ concurrency:
 jobs:
   miniziti:
     runs-on: ubuntu-latest
-    name: deploy to minikube
+    name: deploy to minikube (${{ matrix.kubernetes-version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        kubernetes-version:
+          - v1.32.3
+          - v1.31.7
+          - v1.30.11
     env:
       ZITI_NAMESPACE: miniziti
     steps:
@@ -27,7 +34,7 @@ jobs:
       - name: Start minikube
         uses: medyagh/setup-minikube@v0.0.18
         with:
-          start-args: --profile ${{ env.ZITI_NAMESPACE }}
+          start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ matrix.kubernetes-version }}
 
       - name: Find minikube IP address
         id: minikube_ip
@@ -36,25 +43,30 @@ jobs:
       - name: install ziti cli
         uses: supplypike/setup-bin@v4
         with:
-          uri: https://github.com/openziti/ziti/releases/download/v1.2.0/ziti-linux-amd64-1.2.0.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/v1.4.3/ziti-linux-amd64-1.4.3.tar.gz
           name: ziti
-          version: 1.2.0
+          version: 1.4.3
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
       - name: install miniziti
         uses: supplypike/setup-bin@v4
         with:
-          uri: https://get.openziti.io/miniziti.bash
+          # uri: https://get.openziti.io/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti/refs/heads/quick-k8s-helm-deps/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
 
       - name: Run miniziti with latest release charts
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
         run: miniziti start --no-hosts --verbose
+        env:
+          MINIZITI_TIMEOUT_SECS: 300
 
       - name: Upgrade miniziti with charts from this branch
         run: miniziti start --no-hosts --verbose --charts ./charts
+        env:
+          MINIZITI_TIMEOUT_SECS: 300
 
       - name: Verify the Console is Available
         shell: bash
