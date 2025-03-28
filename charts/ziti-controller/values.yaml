@@ -196,14 +196,11 @@ prometheus:
     # -- ServiceMonitor scrape timeout in Go duration format (e.g. 15s)
     scrapeTimeout: null
     # -- ServiceMonitor relabel configs to apply to samples before scraping
-    # https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
-    # (defines `relabel_configs`)
+    # (defines `relabel_configs`;  [reference](https://prometheus.io/docs/prometheus/latest/configuration/configuration))
     relabelings: []
-    # -- ServiceMonitor relabel configs to apply to samples as the last step before ingestion 
-    # ([see `metric_relabel_configs`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs))
+    # -- ServiceMonitor relabel configs to apply to samples as the last step before ingestion ([reference](https://prometheus.io/docs/prometheus/latest/configuration/configuration))
     metricRelabelings: []
-    # -- ServiceMonitor will add labels from the service to the Prometheus metric
-    # https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#servicemonitorspec
+    # -- ServiceMonitor will add labels from the service to the Prometheus metric ([reference](https://prometheus.io/docs/prometheus/latest/configuration/configuration))
     targetLabels: []
     # -- ServiceMonitor will use http by default, but you can pick https as well
     scheme: https
