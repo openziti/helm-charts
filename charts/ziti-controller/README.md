@@ -340,7 +340,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | prometheus.serviceMonitor.enabled | bool | `true` | If enabled, and prometheus service is enabled, ServiceMonitor resources for Prometheus Operator are created |
 | prometheus.serviceMonitor.interval | string | `nil` | ServiceMonitor scrape interval |
 | prometheus.serviceMonitor.labels | object | `{}` | Additional ServiceMonitor labels |
-| prometheus.serviceMonitor.metricRelabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples as the last step before ingestion ([see `metric_relabel_configs`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs)) |
+| prometheus.serviceMonitor.metricRelabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples as the last step before ingestion https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `metric_relabel_configs`) |
 | prometheus.serviceMonitor.namespace | string | `nil` | Alternative namespace for ServiceMonitor resources |
 | prometheus.serviceMonitor.namespaceSelector | object | `{}` | Namespace selector for ServiceMonitor resources |
 | prometheus.serviceMonitor.relabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples before scraping https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `relabel_configs`) |
