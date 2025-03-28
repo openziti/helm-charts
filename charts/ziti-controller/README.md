@@ -340,13 +340,13 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | prometheus.serviceMonitor.enabled | bool | `true` | If enabled, and prometheus service is enabled, ServiceMonitor resources for Prometheus Operator are created |
 | prometheus.serviceMonitor.interval | string | `nil` | ServiceMonitor scrape interval |
 | prometheus.serviceMonitor.labels | object | `{}` | Additional ServiceMonitor labels |
-| prometheus.serviceMonitor.metricRelabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples as the last step before ingestion https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `metric_relabel_configs`) |
+| prometheus.serviceMonitor.metricRelabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples as the last step before ingestion ([reference](https://prometheus.io/docs/prometheus/latest/configuration/configuration)) |
 | prometheus.serviceMonitor.namespace | string | `nil` | Alternative namespace for ServiceMonitor resources |
 | prometheus.serviceMonitor.namespaceSelector | object | `{}` | Namespace selector for ServiceMonitor resources |
-| prometheus.serviceMonitor.relabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples before scraping https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig (defines `relabel_configs`) |
+| prometheus.serviceMonitor.relabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples before scraping (defines `relabel_configs`;  [reference](https://prometheus.io/docs/prometheus/latest/configuration/configuration)) |
 | prometheus.serviceMonitor.scheme | string | `"https"` | ServiceMonitor will use http by default, but you can pick https as well |
 | prometheus.serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout in Go duration format (e.g. 15s) |
-| prometheus.serviceMonitor.targetLabels | list | `[]` | ServiceMonitor will add labels from the service to the Prometheus metric https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#servicemonitorspec |
+| prometheus.serviceMonitor.targetLabels | list | `[]` | ServiceMonitor will add labels from the service to the Prometheus metric ([reference](https://prometheus.io/docs/prometheus/latest/configuration/configuration)) |
 | prometheus.serviceMonitor.tlsConfig | object | `{"insecureSkipVerify":true}` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
 | prometheus.serviceMonitor.tlsConfig.insecureSkipVerify | bool | `true` | set TLS skip verify, because the SAN will not match with the pod IP |
 | resources | object | `{}` | deployment container resources |
