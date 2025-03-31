@@ -58,6 +58,11 @@ spec:
             - {{ . | quote }}
             {{- end }}
           env:
+            # first define overrides because first come, first served
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key | quote }}
+              value: {{ $val | quote }}
+            {{- end }}
             - name: ZITI_ENROLL_TOKEN
               {{- if .Values.enrollmentJwtFromSecret }}
               valueFrom:
@@ -84,10 +89,6 @@ spec:
               value: {{ .Values.configMountDir | quote }}
             - name: ZITI_ROUTER_NAME
               value: {{ include "ziti-router.fullname" . | quote }}
-            {{- range $key, $val := .Values.env }}
-            - name: {{ $key | quote }}
-              value: {{ $val | quote }}
-            {{- end }}
           volumeMounts:
             - mountPath: {{ .Values.configMountDir }}
               name: config-data

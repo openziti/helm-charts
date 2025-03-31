@@ -15,7 +15,7 @@ proxy: {}
 #  address: 192.168.0.142
 #  port: 3128
 
-# -- assign key=value in pod environment
+# -- assign key=value in pod environment to override any var set by this chart
 env: {}
   # SOME_ENV: "true"
 
