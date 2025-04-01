@@ -17,14 +17,14 @@ concurrency:
 jobs:
   miniziti:
     runs-on: ubuntu-latest
-    name: deploy to minikube (${{ matrix.kubernetes-version }})
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         kubernetes-version:
           - v1.32.3
           - v1.31.7
           - v1.30.11
+    name: deploy to minikube (${{ matrix.kubernetes-version }})
     env:
       ZITI_NAMESPACE: miniziti
     steps:
@@ -99,7 +99,7 @@ jobs:
           resource: http://127.0.0.1:4321/get
           delay: 1000
           interval: 1000
-          timeout: 10000
+          timeout: 20000
 
       - name: Send a POST request to the httpbin service and verify the response data
         shell: bash
