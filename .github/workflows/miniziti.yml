@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     name: deploy to minikube (${{ matrix.kubernetes-version }})
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         kubernetes-version:
           - v1.32.3
