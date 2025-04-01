@@ -58,11 +58,6 @@ spec:
             - {{ . | quote }}
             {{- end }}
           env:
-            # first define overrides because first come, first served
-            {{- range $key, $val := .Values.env }}
-            - name: {{ $key | quote }}
-              value: {{ $val | quote }}
-            {{- end }}
             - name: ZITI_ENROLL_TOKEN
               {{- if .Values.enrollmentJwtFromSecret }}
               valueFrom:
@@ -70,25 +65,30 @@ spec:
                   name: {{ required (printf "You must set an enrollmentJwtSecretName, when using enrollmentJwtFromSecret. Try setting --set enrollmentJwtSecretName=myEnrollmentJwtSecret") .Values.enrollmentJwtSecretName }}
                   key: enrollmentJwt
               {{- else }}
-              value: {{ .Values.enrollmentJwt | quote }}
+              value: {{ .Values.bootstrapEnv.ZITI_ENROLL_TOKEN | default .Values.enrollmentJwt | quote }}
               {{- end }}
             # must be true or enroll() will not be called
             - name: ZITI_BOOTSTRAP
-              value: "true"
+              value: {{ .Values.bootstrapEnv.ZITI_BOOTSTRAP | quote }}
             # -- enroll with controller if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true
             - name: ZITI_BOOTSTRAP_ENROLLMENT
-              value: "true"
+              value: {{ .Values.bootstrapEnv.ZITI_BOOTSTRAP_ENROLLMENT | quote }}
             # suppress generating a config.yml because in K8s we mount a configMap rendered by Helm
             - name: ZITI_BOOTSTRAP_CONFIG
-              value: "false"
+              value: {{ .Values.bootstrapEnv.ZITI_BOOTSTRAP_CONFIG | quote }}
             # entrypoint will append --extend to run command if "true"
             - name: ZITI_AUTO_RENEW_CERTS
-              value: "true"
+              value: {{ .Values.bootstrapEnv.ZITI_AUTO_RENEW_CERTS | quote }}
             # used by entrypoint's enroll() function to predict the path to the enrolled identity's cert
             - name: ZITI_HOME
               value: {{ .Values.configMountDir | quote }}
             - name: ZITI_ROUTER_NAME
               value: {{ include "ziti-router.fullname" . | quote }}
+            # set additional vars not already defined above (first defined has higher precedence)
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key | quote }}
+              value: {{ $val | quote }}
+            {{- end }}
           volumeMounts:
             - mountPath: {{ .Values.configMountDir }}
               name: config-data

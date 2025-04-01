@@ -15,10 +15,24 @@ proxy: {}
 #  address: 192.168.0.142
 #  port: 3128
 
-# -- assign key=value in pod environment to override any var set by this chart
+# -- default env vars for router bootstrapping in Kubernetes
+bootstrapEnv:
+  # -- must be true or enroll() will not be called
+  ZITI_BOOTSTRAP: "true"
+  # -- enroll with controller if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true
+  ZITI_BOOTSTRAP_ENROLLMENT: "true"
+  # -- "false" to suppress generating a config.yml because in K8s we mount a configMap rendered by Helm
+  ZITI_BOOTSTRAP_CONFIG: "false"
+  # -- entrypoint will append --extend to run command if "true"
+  ZITI_AUTO_RENEW_CERTS: "true"
+  # -- override enrollmentJwt - not currently used, possibly useful for re-enroll
+  ZITI_ENROLL_TOKEN: ""
+
+# -- additional env vars for the router pod that are not already defined in bootstrapEnv
 env: {}
   # SOME_ENV: "true"
 
+#
 identity:
   altServerCerts: []
     #  # -- request an alternative server certificate from a cert-manager
