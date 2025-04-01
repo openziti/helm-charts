@@ -17,7 +17,6 @@ concurrency:
 jobs:
   miniziti:
     runs-on: ubuntu-latest
-    name: deploy to minikube (${{ matrix.kubernetes-version }})
     strategy:
       fail-fast: true
       matrix:
@@ -25,6 +24,7 @@ jobs:
           - v1.32.3
           - v1.31.7
           - v1.30.11
+    name: deploy to minikube (${{ matrix.kubernetes-version }})
     env:
       ZITI_NAMESPACE: miniziti
     steps:
