@@ -1,8 +1,8 @@
 # openziti-helm-charts/charts/ziti-controller/templates/alt-certificate.yaml
 {{- if gt (len $.Values.webBindingPki.altServerCerts) 0 -}}
 {{- $certs := ((include "ziti-controller.getCertManagerAltServerCerts" $.Values.webBindingPki.altServerCerts) | fromJson).certManagerCerts -}}
-  {{- if gt (len $certs) 0 }}
-    {{- range $index, $cert := $certs }}
+{{- if gt (len $certs) 0 }}
+{{- range $index, $cert := $certs }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -17,18 +17,18 @@ spec:
   {{- end }}
   issuerRef:
     {{- toYaml $cert.issuerRef | nindent 4 }}
+  {{- if gt (len $cert.dnsNames) 0 }}
   dnsNames:
-    {{- if $cert.dnsNames }}
-      {{- range $cert.dnsNames }}
+    {{- range $cert.dnsNames }}
     - {{ include "ziti-controller.tplOrLiteral" (dict "value" . "context" $) }}
-      {{- end }}
-    {{- else }}
-    []
     {{- end }}
+  {{- else }}
+  dnsNames: []
+  {{- end }}
   usages:
     - digital signature
     - key encipherment
     - server auth
-    {{- end }}
   {{- end }}
+{{- end }}
 {{- end }}
