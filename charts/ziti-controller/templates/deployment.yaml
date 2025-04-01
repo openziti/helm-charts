@@ -102,6 +102,16 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/web-client-identity/
               name: cert-web-client-identity
               readOnly: true
+              {{- if .Values.managementApi.service.enabled }}
+            - mountPath: {{ include "configMountDir" . }}/web-mgmt-api/
+              name: cert-mgmt-api
+              readOnly: true
+              {{- end }}
+              {{- if .Values.prometheus.service.enabled }}
+            - mountPath: {{ include "configMountDir" . }}/web-prometheus-metrics/
+              name: cert-prometheus-metrics
+              readOnly: true
+              {{- end }}
             {{- end }}
       shareProcessNamespace: true  # this allows the admin container to observe the controller process namespace
       containers:
@@ -223,6 +233,16 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/web-client-identity/
               name: cert-web-client-identity
               readOnly: true
+              {{- if .Values.managementApi.service.enabled }}
+            - mountPath: {{ include "configMountDir" . }}/web-mgmt-api/
+              name: cert-mgmt-api
+              readOnly: true
+              {{- end }}
+              {{- if .Values.prometheus.service.enabled }}
+            - mountPath: {{ include "configMountDir" . }}/web-prometheus-metrics/
+              name: cert-prometheus-metrics
+              readOnly: true
+              {{- end }}
             {{- end }}
             {{- if .Values.fabric.events.enabled }}
             - mountPath: {{ .Values.fabric.events.mountDir }}
@@ -301,6 +321,16 @@ spec:
         - name: cert-web-client-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-web-client-identity-secret
+          {{- if .Values.managementApi.service.enabled }}
+        - name: cert-mgmt-api
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-mgmt-api-secret
+          {{- end }}
+          {{- if .Values.prometheus.service.enabled }}
+        - name: cert-prometheus-metrics
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-prometheus-metrics-secret
+          {{- end }}
         {{- end }}
         - name: data
         {{- if .Values.persistence.enabled }}
