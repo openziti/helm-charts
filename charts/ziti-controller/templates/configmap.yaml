@@ -251,12 +251,12 @@ data:
           #   - health-checks
           - binding: edge-client
             options: { }
+          - binding: edge-oidc
+            options: { }
           {{- if not .Values.managementApi.service.enabled }}
           - binding: edge-management
             options: { }
           - binding: fabric
-            options: { }
-          - binding: edge-oidc
             options: { }
           - binding: zac
             options:
@@ -344,11 +344,11 @@ data:
           #   - health-checks
           - binding: edge-client
             options: { }
+          - binding: edge-oidc
+            options: { }
           - binding: edge-management
             options: { }
           - binding: fabric
-            options: { }
-          - binding: edge-oidc
             options: { }
           - binding: health-checks
             options: { }
