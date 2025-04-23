@@ -251,12 +251,12 @@ data:
           #   - health-checks
           - binding: edge-client
             options: { }
+          - binding: edge-oidc
+            options: { }
           {{- if not .Values.managementApi.service.enabled }}
           - binding: edge-management
             options: { }
           - binding: fabric
-            options: { }
-          - binding: edge-oidc
             options: { }
           - binding: zac
             options:
@@ -285,9 +285,9 @@ data:
         identity:
           cert:        {{ include "configMountDir" . }}/web-client-identity/tls.crt
           key:         {{ include "configMountDir" . }}/web-client-identity/tls.key
-          server_cert: {{ include "configMountDir" . }}/web-identity/tls.crt
-          server_key:  {{ include "configMountDir" . }}/web-identity/tls.key
-          ca:          {{ include "configMountDir" . }}/web-identity/ca.crt
+          server_cert: {{ include "configMountDir" . }}/web-mgmt-api/tls.crt
+          server_key:  {{ include "configMountDir" . }}/web-mgmt-api/tls.key
+          ca:          {{ include "configMountDir" . }}/web-mgmt-api/ca.crt
           {{- if gt (len .Values.webBindingPki.altServerCerts) 0 }}
           alt_server_certs:
           {{- range .Values.webBindingPki.altServerCerts }}
@@ -344,11 +344,11 @@ data:
           #   - health-checks
           - binding: edge-client
             options: { }
+          - binding: edge-oidc
+            options: { }
           - binding: edge-management
             options: { }
           - binding: fabric
-            options: { }
-          - binding: edge-oidc
             options: { }
           - binding: health-checks
             options: { }
@@ -374,9 +374,9 @@ data:
         identity:
           cert:        {{ include "configMountDir" . }}/web-client-identity/tls.crt
           key:         {{ include "configMountDir" . }}/web-client-identity/tls.key
-          server_cert: {{ include "configMountDir" . }}/web-identity/tls.crt
-          server_key:  {{ include "configMountDir" . }}/web-identity/tls.key
-          ca:          {{ include "configMountDir" . }}/web-identity/ca.crt
+          server_cert: {{ include "configMountDir" . }}/web-prometheus-metrics/tls.crt
+          server_key:  {{ include "configMountDir" . }}/web-prometheus-metrics/tls.key
+          ca:          {{ include "configMountDir" . }}/web-prometheus-metrics/ca.crt
           {{- if gt (len .Values.webBindingPki.altServerCerts) 0 }}
           alt_server_certs:
           {{ range .Values.webBindingPki.altServerCerts }}
