@@ -22,9 +22,9 @@ jobs:
       fail-fast: true
       matrix:
         kubernetes-version:
+          - v1.33.0
           - v1.32.4
           - v1.31.8
-          - v1.30.12
     env:
       ZITI_NAMESPACE: miniziti
     steps:
