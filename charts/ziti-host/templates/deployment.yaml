@@ -51,6 +51,14 @@ spec:
           env:
             - name: ZITI_IDENTITY_BASENAME
               value: {{ include "ziti-host.fullname" . }}-identity
+            {{- if .Values.zitiIdentity }}
+            - name: ZITI_IDENTITY_JSON
+              value: {{ .Values.zitiIdentity | quote }}
+            {{- end }}
+            {{- if .Values.zitiEnrollToken }}
+            - name: ZITI_ENROLL_TOKEN
+              value: {{ .Values.zitiEnrollToken }}
+            {{- end }}
           volumeMounts:
             - mountPath: {{ include "ziti-host.identityMountPath" . }}
               name: persisted-identity
