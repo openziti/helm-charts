@@ -26,6 +26,13 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       dnsPolicy: {{ .Values.dnsPolicy }}
+      initContainers:
+        - name: chown-identity-dir
+          image: busybox:latest
+          command: ["sh", "-c", "chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }} {{ include "ziti-host.identityMountPath" . }}"]
+          volumeMounts:
+            - name: persisted-identity
+              mountPath: {{ include "ziti-host.identityMountPath" . }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -45,9 +52,11 @@ spec:
             - name: ZITI_IDENTITY_BASENAME
               value: {{ include "ziti-host.fullname" . }}-identity
           volumeMounts:
-            - mountPath: /ziti-edge-tunnel
+            - mountPath: {{ include "ziti-host.identityMountPath" . }}
               name: persisted-identity
+              {{- if .Values.secret.existingSecretName }}
               readOnly: true
+              {{- end }}
             {{- if .Values.spireAgent.enabled }}
             - mountPath: {{ .Values.spireAgent.spireSocketMnt }}
               name: spire-agent-socket
@@ -71,21 +80,19 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        {{- if .Values.secret.existingSecretName }}
         - name: persisted-identity
           secret:
-          {{- if .Values.secret.existingSecretName }}
             secretName: {{ .Values.secret.existingSecretName }}
             defaultMode: 0444
             items:
             - key: {{ .Values.secret.keyName | default "persisted-identity" | quote }}
               path: {{ include "ziti-host.fullname" . }}-identity.json
-          {{- else }}
-            secretName: {{ include "ziti-host.fullname" . }}-identity
-            defaultMode: 0444
-            items:
-            - key: persisted-identity
-              path: {{ include "ziti-host.fullname" . }}-identity.json
-          {{- end }}
+        {{- else }}
+        - name: persisted-identity
+          persistentVolumeClaim:
+            claimName: {{ include "ziti-host.fullname" . }}-identity-pvc
+        {{- end }}
         {{- if .Values.spireAgent.enabled }}
         - name: spire-agent-socket
           hostPath:
@@ -104,4 +111,3 @@ spec:
           emptyDir: {}
           {{- end }}
         {{- end }}
-

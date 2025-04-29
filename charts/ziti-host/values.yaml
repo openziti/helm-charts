@@ -32,10 +32,17 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  # -- int: UID to run the container as (default: nobody)
+  runAsUser: 65534
+  # -- int: GID to run the container as (default: nogroup)
+  runAsGroup: 65534
+  # -- int: fsGroup for podSecurityContext (default: nogroup)
+  fsGroup: 65534
 
+# -- bool: host network mode
 hostNetwork: False
+
 securityContext: {}
   # capabilities:
   #   add:
