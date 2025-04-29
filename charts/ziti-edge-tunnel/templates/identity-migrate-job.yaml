@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ziti-edge-tunnel.fullname" . }}-identity-migrate
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: default
+      containers:
+        - name: migrate-identity
+          image: bitnami/kubectl:latest
+          command: ["/bin/bash", "/scripts/migrate.sh"]
+          volumeMounts:
+            - name: identity-pvc
+              mountPath: {{ include "ziti-edge-tunnel.identityMountPath" . }}
+            - name: migrate-script
+              mountPath: /scripts
+      volumes:
+        - name: identity-pvc
+          persistentVolumeClaim:
+            claimName: {{ include "ziti-edge-tunnel.fullname" . }}-identity-pvc
+        - name: migrate-script
+          configMap:
+            name: {{ include "ziti-edge-tunnel.fullname" . }}-identity-migrate
+            defaultMode: 0755

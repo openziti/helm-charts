@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ziti-edge-tunnel.fullname" . }}-identity-migrate
+  labels:
+    app.kubernetes.io/name: {{ include "ziti-edge-tunnel.name" . }}
+    helm.sh/chart: {{ include "ziti-edge-tunnel.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  migrate.sh: |
+    #!/bin/bash
+    set -e
+    SECRET_NAME="{{ include "ziti-edge-tunnel.fullname" . }}-identity"
+    NAMESPACE="{{ .Release.Namespace }}"
+    PVC_MOUNT="{{ include "ziti-edge-tunnel.identityMountPath" . }}"
+    IDENTITY_FILE="${PVC_MOUNT}/{{ include "ziti-edge-tunnel.fullname" . }}-identity.json"
+    if [ -f "$IDENTITY_FILE" ]; then
+      echo "Identity file already exists in PVC, skipping migration."
+      exit 0
+    fi
+    if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
+      IDENTITY=$(kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" -o jsonpath='{.data.persisted-identity}' | base64 -d)
+      echo "$IDENTITY" > "$IDENTITY_FILE"
+      kubectl delete secret "$SECRET_NAME" -n "$NAMESPACE"
+      echo "Identity migrated to PVC and secret deleted."
+    else
+      echo "Secret $SECRET_NAME not found, nothing to migrate."
+    fi
