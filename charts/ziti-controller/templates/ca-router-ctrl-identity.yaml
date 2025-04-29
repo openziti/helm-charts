@@ -119,8 +119,9 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-ctrl.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
-    {{/*   */}}
+    {{- if .Values.ctrlPlane.advertisedHost }}
     - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) }}
+    {{- end }}
     {{- if .Values.ctrlPlane.dnsNames }}
       {{- range .Values.ctrlPlane.dnsNames }}
     - {{ . | quote }}
@@ -145,12 +146,14 @@ spec:
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc
     - {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}
+    {{- if .Values.managementApi.advertisedHost }}
     - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}
-      {{- if gt (len .Values.managementApi.dnsNames) 0 }}
-        {{- range .Values.managementApi.dnsNames }}
+    {{- end }}
+    {{- if .Values.managementApi.dnsNames }}
+      {{- range .Values.managementApi.dnsNames }}
     - {{ . | quote }}
-        {{- end }}
       {{- end }}
+    {{- end }}
     {{- end }}
   # uris:
   #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
