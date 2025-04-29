@@ -17,36 +17,50 @@ You may use this chart to publish cluster services to your Ziti network. For exa
 
 This chart deploys a pod running `ziti-edge-tunnel`, [the OpenZiti Linux tunneler](https://docs.openziti.io/docs/reference/tunnelers/linux/), in service hosting mode. The chart uses container image `docker.io/openziti/ziti-host` which runs `ziti-edge-tunnel run-host`. This puts the Linux tunneler in "hosting" mode which is useful for binding Ziti services without any need for elevated permissions and without any Ziti nameserver or intercepting proxy. You'll be able to publish any server that is known by an IP address or domain name that is reachable from the pod deployed by this chart.
 
+The enrolled Ziti identity JSON is persisted in a volume, and the chart will migrate the identity from a secret to the volume if the legacy secret exists.
+
 ## Installation
 
 ```bash
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-After adding the charts repo to Helm then you may enroll the identity and install the chart. You must supply a Ziti identity JSON file when you install the chart.
+After adding the charts repo to Helm then you may enroll the identity and install the chart. You may supply a Ziti identity JSON file when you install the chart. This approach enables you to use any option available to the `ziti edge enroll` command.
 
 ```bash
 ziti edge enroll --jwt /tmp/k8s-tunneler.jwt --out /tmp/k8s-tunneler.json
-helm install ziti-release03 openziti/ziti-host --set-file zitiIdentity=/tmp/k8s-tunneler-03.json
+helm install ziti-host openziti/ziti-host --set-file zitiIdentity=/tmp/k8s-tunneler.json
 ```
 
-### Installation using a existing / pre-created secret
+Alternatively, you may supply the JWT directly to the chart. In this case, a private key will be generated on first run and the identity will be enrolled.
 
-Alternatively when you want to use a existing / pre-created secret (i.e. you have sealed-secrets enabled in your setup), you could refer to an existing secret with the ziti identity to use.
+```bash
+helm install ziti-host openziti/ziti-host --set-file zitiEnrollToken=/tmp/k8s-tunneler.jwt
+```
 
-This sample shows you how to create the secret:
+### Installation using an existing secret
+
+**Warning:** this approach does not allow the tunneler to autonomously renew its identity certificate, so you must renew the identity certificate out of band and supply it as an existing secret.
+
+Create the secret:
 
 ```bash
 kubectl create secret generic k8s-tunneler-identity --from-file=persisted-identity=k8s-tunneler.json
 ```
 
-When you deploy the helm chart refer to the existing secret:
+Deploy the Helm chart, referring to the existing secret:
 
 ```bash
 helm install ziti-host openziti/ziti-host --set secret.existingSecretName=k8s-tunneler-identity
 ```
 
-When you don't want to use the default key name `persisted-identity` you can define your own name by adding `--set secret.keyName=myKeyName`.
+If desired, change the key name `persisted-identity` with `--set secret.keyName=myKeyName`.
+
+### Identity Directory and Volume
+
+The Ziti identity is stored in a directory inside the container, which is backed by a PersistentVolumeClaim (PVC) by default. This ensures that identity renewals and updates are preserved across pod restarts. If you use an existing secret instead, the identity directory will be read-only, and renewals will not be persisted.
+
+**Warning:** If the identity directory is not writable or not backed by a persistent volume, identity renewals and updates will NOT be preserved across container restarts.
 
 ## Values Reference
 
