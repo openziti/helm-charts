@@ -61,3 +61,10 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Define the mount path for the identity PVC.
+*/}}
+{{- define "ziti-host.identityMountPath" -}}
+/ziti-edge-tunnel
+{{- end }}
