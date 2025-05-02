@@ -39,7 +39,7 @@ spec:
             - name: HOME
               value: {{ .Values.controller.persistence.mount_dir }}
           volumeMounts:
-            - name: zrok-config
+            - name: zrok-controller-config
               mountPath: /etc/zrok
               readOnly: true
             - name: bootstrap-ziti
@@ -72,7 +72,7 @@ spec:
             - name: HOME
               value: {{ .Values.controller.persistence.mount_dir }}
           volumeMounts:
-            - name: zrok-config
+            - name: zrok-controller-config
               mountPath: /etc/zrok
               readOnly: true
             - name: persistence
@@ -94,7 +94,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}z
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.affinity }}
       affinity:
@@ -105,7 +105,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: zrok-config
+        - name: zrok-controller-config
           configMap:
             name: {{ include "zrok.fullname" . }}-config
             defaultMode: 0444

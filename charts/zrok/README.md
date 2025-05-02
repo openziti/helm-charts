@@ -163,7 +163,6 @@ zrok   nginx   api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
 | controller.service.type | string | `"ClusterIP"` | The service type to use for the zrok controller |
 | controller.specVersion | int | `4` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
-| frontend.deBootstrapScript | string | `"delete-identity.sh"` |  |
 | frontend.extraConfig | object | `{}` | append additional frontend config |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
 | frontend.ingress.annotations | object | `{}` | The annotations to use for the frontend's ingress resource |
