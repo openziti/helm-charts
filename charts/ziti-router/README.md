@@ -241,7 +241,7 @@ identity:
 | bootstrapEnv.ZITI_BOOTSTRAP_ENROLLMENT | string | `"true"` | enroll with controller if "true," overwrite if "force"; requires ZITI_BOOTSTRAP=true |
 | bootstrapEnv.ZITI_ENROLL_TOKEN | string | `""` | override enrollmentJwt - not currently used, possibly useful for re-enroll |
 | configFile | string | `"ziti-router.yaml"` | filename of router config YAML |
-| configMountDir | string | `"/etc/ziti/config"` | writeable mountpoint where read-only config file is projected to allow router to write ./endpoints.yml statefile in same dir |
+| configMountDir | string | `"/etc/ziti/config"` | writable mountpoint where read-only config file is projected to allow router to write ./endpoints.yml statefile in same dir |
 | csr | object | `{"country":"","locality":"","organization":"","organizationalUnit":"","province":"","sans":{"dns":[],"email":[],"ip":[],"noDefaults":false,"uri":[]}}` | Certificate signing request distinguished name and subject alternative names |
 | csr.country | string | `""` | country |
 | csr.locality | string | `""` | city |

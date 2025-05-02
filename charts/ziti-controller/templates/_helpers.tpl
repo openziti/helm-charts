@@ -77,7 +77,7 @@ Read-only mountpoint where configFile and various read-only identity dirs are pr
 {{- end }}
 
 {{/* 
-Writeable mountpoint where the controller will create dbFile during init
+Writable mountpoint where the controller will create dbFile during init
 */}}
 {{- define "dataMountDir" -}}
 /persistent

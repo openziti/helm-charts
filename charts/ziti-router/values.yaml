@@ -285,7 +285,7 @@ enrollmentJwtFromSecret: false
 enrollmentJwtSecretName: ""
 # -- read-only mountpoint for router identity secret specified in deployment for use by router run container
 identityMountDir: /etc/ziti/identity
-# -- writeable mountpoint where read-only config file is projected to allow router
+# -- writable mountpoint where read-only config file is projected to allow router
 # to write ./endpoints.yml statefile in same dir
 configMountDir:   /etc/ziti/config
 # -- filename of router config YAML
