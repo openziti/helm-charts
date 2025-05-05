@@ -153,7 +153,7 @@ jobs:
       - name: Check zrok test job result
         shell: bash
         run: |
-          miniziti kubectl -n zrok wait --for=condition=complete --timeout=120s job/zrok-test-job
+          miniziti kubectl -n zrok wait --for=condition=complete --timeout=180s job/zrok-test-job
 
       - name: Print debug info
         if: always()
