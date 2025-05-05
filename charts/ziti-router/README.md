@@ -295,6 +295,7 @@ identity:
 | image.repository | string | `"docker.io/openziti/ziti-router"` | container image tag for deployment |
 | image.tag | string | `nil` | container image tag (default is Chart's appVersion) |
 | linkDialers.transport.extraProps | object | `{}` | extra properties to define for the transport link dialer, e.g., groups |
+| linkListeners.additionalListeners | list | `[]` | Additional link listeners. Each entry defines an extra 'link' binding in the router config. |
 | linkListeners.transport.advertisedHost | string | `"{{ .Values.edge.advertisedHost }}"` | DNS name that other routers will use to form mesh transport links to this listener |
 | linkListeners.transport.advertisedPort | string | `"{{ .Values.edge.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port for this listener; default is edge.advertisedPort |
 | linkListeners.transport.containerPort | string | `"{{ .Values.edge.containerPort }}"` | cluster service target port on the container; default is to share a listener with the edge, providing ziti-link ALPN |
