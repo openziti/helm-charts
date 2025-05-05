@@ -107,6 +107,36 @@ linkListeners:
       labels: {}
       # -- ingress annotations, e.g., to configure ingress-nginx
       annotations: {}
+  # -- Additional link listeners. Each entry defines an extra 'link' binding in the router config.
+  additionalListeners: []
+    # - name: router11-link
+    #   # -- override the binding type for this listener; defaults to 'transport' if not set
+    #   binding: transport
+    #   # -- protocol for the link listener, e.g., tls
+    #   protocol: tls
+    #   # -- container port for this link listener
+    #   containerPort: 3023
+    #   # -- DNS name that other routers will use to form mesh links to this listener
+    #   advertisedHost: router11-link.ziti.example.com
+    #   # -- port advertised to other routers
+    #   advertisedPort: 443
+    #   # -- options for this link listener
+    #   options: {}
+    #   # -- extra properties for this listener, e.g., groups
+    #   extraProps: {}
+    #   # -- create a cluster service for this link listener
+    #   service:
+    #     enabled: true
+    #     type: ClusterIP
+    #     labels: {}
+    #     annotations: {}
+    #   # -- create an ingress for this link listener
+    #   ingress:
+    #     enabled: false
+    #     ingressClassName: ""
+    #     labels: {}
+    #     annotations: {}
+
 
 # listen for edge clients
 edge:

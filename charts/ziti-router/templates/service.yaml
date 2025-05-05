@@ -120,6 +120,71 @@ spec:
     app.kubernetes.io/component: "ziti-router"
 {{- end }}
 
+{{- if .Values.linkListeners.additionalListeners }}
+{{- range $listener := .Values.linkListeners.additionalListeners }}
+{{- if $listener.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ziti-router.fullname" $ }}-{{ $listener.name }}
+  labels:
+  {{- include "ziti-router.labels" $ | nindent 4 }}
+  {{- with $listener.service.labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $listener.service.annotations }}
+  annotations:
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $type := default "ClusterIP" $listener.service.type }}
+  type: {{ $type }}
+  {{- if eq $type "ClusterIP" }}
+  {{- with $listener.service.clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  {{- else if eq $type "LoadBalancer" }}
+  {{- with $listener.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with $listener.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
+  {{- with $listener.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if $listener.service.sessionAffinity }}
+  sessionAffinity: {{ $listener.service.sessionAffinity }}
+  {{- with $listener.service.sessionAffinityConfig }}
+  sessionAffinityConfig:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- with $listener.service.externalIPs }}
+  externalIPs:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $listener.service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ . }}
+  {{- end }}
+  ports:
+    - port: {{ $listener.advertisedPort }}
+      targetPort: {{ $listener.containerPort }}
+      protocol: TCP
+      name: link
+      {{- if (eq $type "NodePort") }}
+      nodePort: {{ $listener.port }}
+      {{- end }}
+  selector:
+    {{- include "ziti-router.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: "ziti-router"
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy" ) .Values.tunnel.proxyDefaultK8sService.enabled }}
 ---
 apiVersion: v1
