@@ -77,6 +77,17 @@ data:
           {{- if .Values.linkListeners.transport.extraProps }}
           {{- toYaml .Values.linkListeners.transport.extraProps | nindent 10 }}
           {{- end }}
+        {{- if .Values.linkListeners.additionalListeners }}
+        {{- range $index, $element := .Values.linkListeners.additionalListeners }}
+        - binding: {{ $element.binding | default "transport" }}
+          address: {{ $element.protocol }}:0.0.0.0:{{ $element.containerPort }}
+          options:
+            advertise: {{ required (printf "You must set .Values.linkListeners.additionalListeners[%d].advertisedHost to the domain name to advertise for this router's additional link listener. Try adding --set linkListeners.additionalListeners[%d].advertisedHost=router11-link.ziti.example.org to your Helm command" $index $index) $element.advertisedHost }}:{{ $element.advertisedPort }}
+            {{- if $element.options }}
+              {{- toYaml $element.options | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
       {{- end }}
     {{- if or (and .Values.tunnel.mode (ne .Values.tunnel.mode "none" )) (eq .Values.edge.enabled true) }}
     listeners:
