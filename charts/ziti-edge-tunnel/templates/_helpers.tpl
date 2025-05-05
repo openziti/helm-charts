@@ -52,6 +52,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Define the mount path for the identity PVC.
+*/}}
+{{- define "ziti-edge-tunnel.identityMountPath" -}}
+/ziti-edge-tunnel
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "ziti-edge-tunnel.serviceAccountName" -}}
