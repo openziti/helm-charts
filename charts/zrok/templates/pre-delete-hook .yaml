@@ -45,22 +45,25 @@ spec:
                 secretKeyRef:
                   name:  {{ include "zrok.fullname" . }}-ziti-mgmt-secret
                   key: admin-password
-            # this is needed for ziti CLI to work because it assumes a writeable config dir
+            # this is needed for ziti CLI to work because it assumes a writable config dir
             - name: HOME
               value: /tmp
           volumeMounts:
-            - name: zrok-config
-              mountPath: /usr/local/bin/{{ .Values.frontend.deBootstrapScript }}
-              subPath: {{ .Values.frontend.deBootstrapScript }}
+            - name: zrok-frontend-config
+              mountPath: /usr/local/bin/unbootstrap.bash
+              subPath: unbootstrap.bash
             # used by ziti CLI in zitiLogin
+            - name: zrok-controller-config
+              mountPath: /etc/zrok
+              readOnly: true
             - name: ziti-ctrl-plane-cas
               mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
               subPath: {{ .Values.ziti.ca_cert_file }}
               readOnly: true
             - mountPath: /usr/local/bin/zitiLogin
-              name: zrok-config
+              name: zrok-frontend-config
               subPath: zitiLogin
-          command: ["{{ .Values.frontend.deBootstrapScript }}"]
+          command: ["unbootstrap.bash"]
           # command: ["sh", "-c", "while true; do sleep 86400; done"]
       {{- with .Values.affinity }}
       affinity:
@@ -71,16 +74,23 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: zrok-config
+        - name: zrok-frontend-config
           configMap:
             name: {{ include "zrok.fullname" . }}-frontend-config
             items:
-              - key: {{ .Values.frontend.deBootstrapScript }}
-                path: {{ .Values.frontend.deBootstrapScript }}
+              - key: unbootstrap.bash
+                path: unbootstrap.bash
                 mode: 0555
               - key: zitiLogin
                 path: zitiLogin
                 mode: 0555
+        - name: zrok-controller-config
+          configMap:
+            name: {{ include "zrok.fullname" . }}-config
+            defaultMode: 0444
+            items:
+              - key: ctrl.yaml
+                path: ctrl.yaml
         - name: ziti-ctrl-plane-cas
           configMap:
             name: {{ .Values.ziti.ca_cert_configmap }}

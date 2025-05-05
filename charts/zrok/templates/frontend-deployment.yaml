@@ -54,7 +54,7 @@ spec:
                 secretKeyRef:
                   name:  {{ include "zrok.fullname" . }}-ziti-mgmt-secret
                   key: admin-password
-            # this is needed for ziti CLI to work because it assumes a writeable config dir
+            # this is needed for ziti CLI to work because it assumes a writable config dir
             - name: HOME
               value: /tmp
           volumeMounts:

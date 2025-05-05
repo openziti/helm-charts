@@ -220,7 +220,6 @@ frontend:
   # -- a read-only mountpoint for the frontend's Ziti identity is "homeDir"
   # because zrok always looks in $HOME/.zrok/identities
   homeDir: /var/lib/zrok
-  deBootstrapScript: delete-identity.sh
   # -- append additional frontend config
   extraConfig: {}
 

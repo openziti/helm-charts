@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.0.1](https://img.shields.io/badge/Version-1.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.4](https://img.shields.io/badge/AppVersion-1.0.4-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -163,7 +163,6 @@ zrok   nginx   api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
 | controller.service.type | string | `"ClusterIP"` | The service type to use for the zrok controller |
 | controller.specVersion | int | `4` |  |
 | dnsZone | string | `"zrok.example.com"` | The DNS zone with a wildcard * A record to use for the zrok public frontend |
-| frontend.deBootstrapScript | string | `"delete-identity.sh"` |  |
 | frontend.extraConfig | object | `{}` | append additional frontend config |
 | frontend.homeDir | string | `"/var/lib/zrok"` | a read-only mountpoint for the frontend's Ziti identity is "homeDir" because zrok always looks in $HOME/.zrok/identities |
 | frontend.ingress.annotations | object | `{}` | The annotations to use for the frontend's ingress resource |
