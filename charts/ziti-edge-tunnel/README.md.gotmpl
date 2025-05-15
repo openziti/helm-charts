@@ -26,36 +26,44 @@ For multinode kubernetes installations, where your cluster DNS could run on a di
 
 This chart deploys a pod running `ziti-edge-tunnel`, [the OpenZiti Linux tunneler](https://docs.openziti.io/docs/reference/tunnelers/linux/), in transparent proxy mode with DNS nameserver. The chart uses container image `docker.io/openziti/ziti-edge-tunnel` which runs `ziti-edge-tunnel run`.
 
+The enrolled Ziti identity JSON is persisted in a volume, and the chart will migrate the identity from a secret to the volume if the legacy secret exists.
+
 ## Installation
 
 ```console
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-After adding the charts repo to Helm then you may enroll the identity and install the chart. You must supply a Ziti identity JSON file when you install the chart.
+After adding the charts repo to Helm then you may enroll the identity and install the chart. You may supply a Ziti identity JSON file when you install the chart. This approach enables you to use any option available to the `ziti-edge-tunnel enroll` command.
 
 ```console
-ziti edge enroll --jwt /tmp/k8s-tunneler.jwt --out /tmp/k8s-tunneler.json
-helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set-file zitiIdentity=/tmp/k8s-tunneler-03.json
+ziti-edge-tunnel enroll --jwt /tmp/k8s-tunneler.jwt --identity /tmp/k8s-tunneler.json
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set-file zitiIdentity=/tmp/k8s-tunneler.json
 ```
 
-### Installation using a existing / pre-created secret
+Alternatively, you may supply the JWT directly to the chart. In this case, a private key will be generated on first run and the identity will be enrolled.
 
-Alternatively when you want to use a existing / pre-created secret (i.e. you have sealed-secrets enabled in your setup), you could refer to an existing secret with the ziti identity to use.
+```console
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set-file zitiEnrollToken=/tmp/k8s-tunneler.jwt
+```
 
-This sample shows you how to create the secret:
+### Installation using a existing secret
+
+**Warning:** this approach does not allow the tunneler to autonomously renew its identity certificate, so you must renew the identity certificate out of band and supply it as an existing secret.
+
+Create the secret:
 
 ```console
 kubectl create secret generic k8s-tunneler-identity --from-file=persisted-identity=k8s-tunneler.json
 ```
 
-When you deploy the helm chart refer to the existing secret:
+Deploy the Helm chart, referring to the existing secret:
 
 ```console
 helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set secret.existingSecretName=k8s-tunneler-identity
 ```
 
-When you don't want to use the default key name `persisted-identity` you can define your own name by adding `--set secret.keyName=myKeyName`.
+If desired, change the key name `persisted-identity` with `--set secret.keyName=myKeyName`.
 
 ### Configure CoreDNS
 

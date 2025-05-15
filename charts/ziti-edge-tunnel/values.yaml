@@ -7,25 +7,30 @@ image:
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
-  args: []  # the ziti-edge-tunnel image execs "ziti-edge-tunnel run" to intercept/proxy, and DNS
+  args: []  # list(string): additional args passed to the container command
+  command: []  # list(string): override entrypoint command (optional)
+
+# -- JSON of an enrolled identity to write in the PVC
+zitiIdentity: ""
+# -- JWT to enroll a new identity and write in the PVC
+zitiEnrollToken: ""
 
 dnsPolicy: ClusterFirstWithHostNet
 
 secret: {}
-  # Use an existing secret name
-  # existingSecretName: ""
+  # existingSecretName: ""  # string: Use an existing secret name (if set, disables PVC)
+  # keyName: persisted-identity  # string: key in the secret (default: persisted-identity)
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+imagePullSecrets: []  # list(string)
+nameOverride: ""  # string
+fullnameOverride: ""  # string
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
   name: ""
 
 # Configures the liveness probe for the tunnel pod
@@ -34,7 +39,7 @@ livenessProbe:
     command:
       - /bin/bash
       - -c
-      - if (ziti-edge-tunnel tunnel_status | sed -E 's/(^received\sresponse\s<|>$)//g' | jq '.Success'); then true; else false; fi
+      - if (ziti-edge-tunnel tunnel_status | jq '.Success'); then true; else false; fi
   failureThreshold: 3
   initialDelaySeconds: 180
   periodSeconds: 60
@@ -42,20 +47,16 @@ livenessProbe:
   timeoutSeconds: 10
 
 log:
-  # Ziti log level, from 0 to 6 (see README.md Reference)
+  # -- Ziti log level, from 0 to 6 (see README.md Reference)
   zitiLevel: 3
-  # TLSUV log level, from 0 to 6 (see README.md Reference)
+  # -- TLSUV log level, from 0 to 6 (see README.md Reference)
   tlsUVLevel: 3
-  # Set log time format, if set to "utc", then in UTC format,
-  # otherwise in milliseconds since the program has started.
+  # -- Set log time format, if set to "utc", then in UTC format, otherwise in milliseconds since the program has started.
   timeFormat: utc
 
-podAnnotations: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-hostNetwork: True
+podAnnotations: {}  # object
+podSecurityContext: {}  # object
+hostNetwork: true  # bool
 securityContext:
   privileged: true
 

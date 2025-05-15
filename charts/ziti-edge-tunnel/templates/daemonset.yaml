@@ -44,6 +44,14 @@ spec:
           env:
             - name: ZITI_IDENTITY_BASENAME
               value: {{ include "ziti-edge-tunnel.fullname" . }}-identity
+            {{- if .Values.zitiIdentity }}
+            - name: ZITI_IDENTITY_JSON
+              value: {{ .Values.zitiIdentity | quote }}
+            {{- end }}
+            {{- if .Values.zitiEnrollToken }}
+            - name: ZITI_ENROLL_TOKEN
+              value: {{ .Values.zitiEnrollToken }}
+            {{- end }}
             - name: ZITI_LOG
               value: {{ .Values.log.zitiLevel | default 3 | quote }}
             - name: TLSUV_DEBUG
@@ -55,9 +63,11 @@ spec:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - mountPath: /ziti-edge-tunnel
+            - mountPath: {{ include "ziti-edge-tunnel.identityMountPath" . }}
               name: persisted-identity
+              {{- if .Values.secret.existingSecretName }}
               readOnly: true
+              {{- end }}
             {{- if .Values.systemDBus.enabled }}
             - mountPath: {{ .Values.systemDBus.systemDBusSocketMnt }}
               name: system-bus-socket
@@ -85,21 +95,19 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        {{- if .Values.secret.existingSecretName }}
         - name: persisted-identity
           secret:
-          {{- if .Values.secret.existingSecretName }}
             secretName: {{ .Values.secret.existingSecretName }}
             defaultMode: 0444
             items:
             - key: {{ .Values.secret.keyName | default "persisted-identity" | quote }}
               path: {{ include "ziti-edge-tunnel.fullname" . }}-identity.json
-          {{- else }}
-            secretName: {{ include "ziti-edge-tunnel.fullname" . }}-identity
-            defaultMode: 0444
-            items:
-            - key: persisted-identity
-              path: {{ include "ziti-edge-tunnel.fullname" . }}-identity.json
-          {{- end }}
+        {{- else }}
+        - name: persisted-identity
+          persistentVolumeClaim:
+            claimName: {{ include "ziti-edge-tunnel.fullname" . }}-identity-pvc
+        {{- end }}
         {{- if .Values.systemDBus.enabled }}
         - name: system-bus-socket
           hostPath:
@@ -124,4 +132,3 @@ spec:
           emptyDir: {}
           {{- end }}
         {{- end }}
-
