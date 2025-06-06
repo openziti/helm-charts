@@ -12,6 +12,10 @@ clientApi:
   advertisedHost: ""
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: 443
+  # -- besides advertisedHost, add these DNS SANs to the web identity and any ingresses
+  dnsNames: []
+  # -- besides advertisedHost and dnsNames, add these DNS SANs to any ingresses but not the web identity
+  altDnsNames: []
   service:
     # -- create a cluster service for the deployment
     enabled: true
@@ -28,22 +32,14 @@ clientApi:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
-  altIngress:
-    # -- create an ingress for the client API's ClusterIP service with a trusted certificate for clients that require a trusted certificate, e.g., BrowZer, ZAC
+  traefikTcpRoute:
+    # -- enable Traefik IngressRouteTCP
     enabled: false
-    # -- alternative ingress host, e.g., ziti.example.com
-    advertisedHost: ""
-    # -- ingress class name, e.g., "nginx"
-    ingressClassName: ""
-    # -- ingress labels
+    # -- IngressRouteTCP entrypoints
+    entryPoints:
+      - websecure
+    # -- IngressRouteTCP labels
     labels: {}
-    # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations: {}
-    # -- deprecated: tls passthrough is required; configure an alternative
-    # certificate to project into the container in webBindingPki.altServerCerts
-    tls: {}
-  # -- additional DNS SANs
-  dnsNames: []
 
 # -- by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the management API because it shares a TLS listener with the
@@ -57,6 +53,10 @@ managementApi:
   advertisedHost: "{{ .Values.clientApi.advertisedHost }}"
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: "{{ .Values.clientApi.advertisedPort }}"
+  # -- besides advertisedHost, add these DNS SANs to the web identity and any mgmt api ingresses
+  dnsNames: []
+  # -- besides advertisedHost and dnsNames, add these DNS SANs to any mgmt api ingresses, but not the web identity
+  altDnsNames: []
   service:
     # -- create a cluster service for the deployment
     enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
@@ -73,23 +73,14 @@ managementApi:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
-  altIngress:
-    # -- create an ingress for the client API's ClusterIP service with a trusted certificate, e.g., for BrowZer, ZAC
+  traefikTcpRoute:
+    # -- enable Traefik IngressRouteTCP
     enabled: false
-    # -- alternative ingress host, e.g., ziti.example.com; must be distinct from managementApi.advertisedHost and all
-    # other advertised names
-    advertisedHost: ""
-    # -- ingress class name, e.g., "nginx"
-    ingressClassName: ""
-    # -- ingress labels
+    # -- IngressRouteTCP entrypoints
+    entryPoints:
+      - websecure
+    # -- IngressRouteTCP labels
     labels: {}
-    # -- ingress annotations, e.g., to configure ingress-nginx
-    annotations: {}
-    # -- deprecated: tls passthrough is required; configure an alternative
-    # certificate to project into the container in webBindingPki.altServerCerts
-    tls: {}
-  # -- additional DNS SANs
-  dnsNames: []
 
 # by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the ctrl plane because it shares a TLS listener with the
@@ -106,11 +97,13 @@ ctrlPlane:
   advertisedHost: "{{ .Values.clientApi.advertisedHost }}"
   # -- cluster service, node port, load balancer, and ingress port
   advertisedPort: "{{ .Values.clientApi.advertisedPort }}"
+  # -- besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses
+  dnsNames: []
   service:
     # -- create a separate cluster service for the ctrl plane; enabling this
     # requires you to also set the host and port for a separate ctrl plane TLS
     # listener
-    enabled: true
+    enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP
   ingress:
@@ -126,12 +119,19 @@ ctrlPlane:
     tls: {}
   # -- obtain the ctrl plane identity from an existing issuer instead of generating a new PKI
   alternativeIssuer: {}
-    # -- type of alternative issuer for the controller's identity: Issuer, ClusterIssuer
-    # kind:
-    # -- metadata name of the alternative issuer
-    # name:
-  # -- additional DNS SANs for the ctrl plane identity
-  dnsNames: []
+  traefikTcpRoute:
+    # -- enable Traefik IngressRouteTCP
+    enabled: false
+    # -- IngressRouteTCP entrypoints
+    entryPoints:
+      - websecure
+    # -- IngressRouteTCP labels
+    labels: {}
+
+# -- override the address printed in Helm release notes if you configured an alternative DNS SAN for the console
+consoleAltIngress: {}
+  # host: ""
+  # port: 443
 
 # -- set name to value in containers' environment
 env: {}
@@ -262,19 +262,15 @@ webBindingPki:
     #  mode: certManager
     #  # -- name of the tls secret for cert-manager to create and manage the server
     #  #    certificate and private key
+    #  # -- request a certificate for these alternative names distinct from advertisedHost and dnsNames of the clientApi, managementApi, and ctrlPlane
+    #  altDnsNames: []
     #  secretName: ziti-controller-alt-server-cert
-    #  # -- DNS SANs to request; HA-style OIDC requires a DNS SAN that matches
-    #  the advertisedHost of the client API; the inline template example is
-    #  correct for requesting a certificate from cert-manager for the client
-    #  API's alternative ingress
-    #  dnsNames:
-    #  - "{{ .Values.clientApi.altIngress.advertisedHost }}"
     #  # -- issuer ref to use when requesting the alternative server certificate
     #  issuerRef:
     #    group: cert-manager.io
     #    kind: ClusterIssuer
     #    name: cloudflare-dns01-issuer
-    #  # -- where to mount the tls secret on the pod
+    #  # -- where to mount the tls secret on the pod - must not collide with another mountpoint
     #  mountPath: /etc/ziti/alt-server-cert
 
     #  # -- use an alternative certificate and key from a tls secret declared in additionalVolumes
@@ -495,38 +491,6 @@ network:
     # `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this
     # `cycleSeconds` period will be limited to 1.
     rerouteCap: 4
-
-# A note about sub-charts: these values may serve as a partial reference for
-# configuring the charts on which this chart depends.
-
-cert-manager:
-  # -- install the cert-manager subchart
-  enabled: false
-  # -- clean up secret when certificate is deleted
-  enableCertificateOwnerRef: true
-  # -- CRDs must be applied in advance of installing the parent chart
-  installCRDs: false
-
-trust-manager:
-  # -- install the trust-manager subchart
-  enabled: false
-  app:
-    trust:
-      # -- trust-manager needs to be configured to trust the namespace in which
-      # the controller is deployed so that it will create the Bundle resource
-      # for the ctrl plane trust bundle
-      namespace: "{{ .Release.Namespace }}"
-  crds:
-    # -- CRDs must be applied in advance of installing the parent chart
-    enabled: false
-
-ingress-nginx:
-  # -- install the ingress-nginx subchart
-  enabled: false
-  controller:
-    extraArgs:
-      # -- configure subchart ingress-nginx to enable the pass-through TLS feature
-      enable-ssl-passthrough: "true"
 
 # -- Append additional config blocks in specific top-level keys: edge,
 # web, network, ctrl. If events are defined here, they replace the default
