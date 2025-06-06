@@ -426,13 +426,8 @@ clientApi:
     service:
         enabled: true
         type: ClusterIP
-    altIngress:
-        enabled: true
-        ingressClassName: nginx
-        advertisedHost: alt-edge.ziti.example.com  # this must be different from clientApi.advertisedHost and must match one of the dnsNames in the altServerCert
-        annotations:
-            kubernetes.io/ingress.allow-http: "false"
-            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    altDnsNames:
+        - "alt-edge.ziti.example.com"
 
 webBindingPki:
     enabled: true
@@ -440,7 +435,7 @@ webBindingPki:
         - mode: certManager
             secretName: my-alt-server-cert
             dnsNames:
-                - "{{ .Values.clientApi.altIngress.advertisedHost }}"
+                - "{{ .Values.clientApi.altDnsNames[0] }}"
             issuerRef:
                 group: cert-manager.io
                 kind: ClusterIssuer
