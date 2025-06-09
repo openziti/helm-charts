@@ -69,7 +69,14 @@ Cert Manager and Trust Manager are no longer included as subcharts. If you have 
 
 **Solution**
 
-Assuming your future CM release is named "cert-manager," your TM release is named "trust-manager," both are installed in namespace "cert-manager," and your Ziti controller is installed in namespace "ziti," you can run the provided script to pave the way to installing the version 2 ziti-controller chart.
+1. Run the provided script to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
+1. Upgrade the Ziti controller Helm release to chart v2.
+1. Install cert-manager and trust-manager Helm charts (see [Custom Resources](#custom-resources) section above for an example).
+
+> [!IMPORTANT]
+> You must use the same values for CM and TM Helm release names and namespaces when you run the provided script and when you re-install the cert-manager and trust-manager Helm charts.
+
+Assuming your future CM release will be named "cert-manager," your future TM release will be named "trust-manager," and both will be installed in namespace "cert-manager," and your Ziti controller is installed in namespace "ziti," you can use these example values to run the provided script to pave the way to installing the version 2 ziti-controller chart, which will delete the cert-manager and trust-manager Operators, preserving the CRDs and their associated resources.
 
 ```bash
 helm pull openziti/ziti-controller
@@ -77,6 +84,7 @@ tar -xvf ziti-controller-*.tgz
 CM_NAMESPACE=cert-manager \
 CM_RELEASE_NAME=cert-manager \
 TM_NAMESPACE=cert-manager \
+TM_RELEASE_NAME=trust-manager \
 ZITI_NAMESPACE=ziti \
 ./ziti-controller/files/chown-cert-manager.bash
 ```
