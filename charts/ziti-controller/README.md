@@ -56,13 +56,15 @@ Version 2 of this chart introduces a breaking change. You must decouple cert-man
 
 **Cause**
 
-Cert Manager and Trust Manager are no longer included as subcharts. If you have version 1 of the chart installed and cert-manager or trust-manager were installed as subcharts in the same namespace as the Ziti controller, you can run `./files/chown-cert-manager.bash` to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources, allowing them to be imported by a future cert-manager or trust-manager installation.
+Cert Manager and Trust Manager are no longer included as subcharts, so upgrading the Ziti controller chart will delete the cert-manager and trust-manager Operators along with their respective CRDs and associated resources which are critical for the Ziti controller.
 
 **Solution**
 
-1. Run the provided script to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
+1. As with any controller upgrade, you are advised to back up the database before proceeding so that you will have the option to roll back to a snapshot prior to any database schema migrations that may occur during the upgrade.
 1. Upgrade the Ziti controller Helm release to chart v2.
 1. Install cert-manager and trust-manager Helm charts (see [Custom Resources](#custom-resources) section above for an example).
+1. If the cert-manager or trust-manager charts fail to install with the "symptom" above, then run the provided script to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
+1. Retry installing cert-manager and trust-manager Helm charts. When they are installed successfully, their respective Helm releases will own the CRDs that were annotated and labeled by the provided BASH script.
 
 > [!IMPORTANT]
 > You must use the same values for CM and TM Helm release names and namespaces when you run the provided script and when you re-install the cert-manager and trust-manager Helm charts.
