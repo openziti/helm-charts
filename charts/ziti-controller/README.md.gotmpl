@@ -69,10 +69,10 @@ Cert Manager and Trust Manager are no longer included as subcharts, so upgrading
 
 **Solution**
 
-1. As with any controller upgrade, you are advised to back up the database before proceeding so that you will have the option to roll back to a snapshot prior to any database schema migrations that may occur during the upgrade.
-1. Upgrade the Ziti controller Helm release to chart v2.
-1. Install cert-manager and trust-manager Helm charts (see [Custom Resources](#custom-resources) section above for an example).
-1. If the cert-manager or trust-manager charts fail to install with the "symptom" above, then run the provided script to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
+1. As with any controller upgrade, you are advised to back up the database before proceeding so that you will have the option to roll back to a snapshot prior to any irreversible database schema migrations that may occur during an upgrade.
+1. Upgrade the Ziti controller Helm release to chart v2. This will temporarily uninstall the CM and TM Helm releases if they were originally installed as dependencies of the Ziti controller chart.
+1. Install or upgrade as desired the cert-manager and trust-manager Helm releases (see [Custom Resources](#custom-resources) section above for an example that is compatible with this upgrade path).
+1. If the cert-manager or trust-manager charts fail to install with the "symptom" above, then run the provided BASH script (`chown-cert-manager.bash`) to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
 1. Retry installing cert-manager and trust-manager Helm charts. When they are installed successfully, their respective Helm releases will own the CRDs that were annotated and labeled by the provided BASH script.
 
 > [!IMPORTANT]
@@ -90,8 +90,6 @@ TM_RELEASE_NAME=trust-manager \
 ZITI_NAMESPACE=ziti \
 ./ziti-controller/files/chown-cert-manager.bash
 ```
-
-You must install cert-manager and trust-manager Operators and CRDs before installing version 2 of the ziti-controller chart. See the [Custom Resources](#custom-resources) section above for an example.
 
 ## NodePort Service Example
 
