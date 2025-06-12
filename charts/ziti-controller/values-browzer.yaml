@@ -1,17 +1,14 @@
 clientApi:
-  altIngress:
-    advertisedHost: ""  # client.ziti.example.com
-    annotations: {}  # annotate as per ingress controller to enable ssl passthrough
-    enabled: true
-    ingressClassName: ""
+  altDnsNames:
+    - ""  # client.ziti.example.com
 
 webBindingPki:
   altServerCerts:
     - mode: certManager
       secretName: ziti-controller-alt-server-cert1
       dnsNames:
-        # preserve this template to ensure the DNS SAN matches altIngress.advertisedHost
-        - "{{ .Values.clientApi.altIngress.advertisedHost }}"
+        # ensure the DNS SAN matches altDnsNames
+        - "{{ .Values.clientApi.altDnsNames[0] }}"
       issuerRef:
         group: cert-manager.io
         # ClusterIssuer or Issuer
