@@ -22,3 +22,6 @@ ctrlPlane:
     annotations:
       kubernetes.io/ingress.allow-http: "false"
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      # enable CORS for SPA apps - this matches config built into Ziti's API
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "*"
