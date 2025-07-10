@@ -322,6 +322,13 @@ identity:
 | podAnnotations | object | `{}` | annotations to apply to all pods deployed by this chart |
 | podSecurityContext | object | `{"fsGroup":2171}` | deployment template spec security context |
 | podSecurityContext.fsGroup | int | `2171` | this is the GID of "ziggy" run-as user in the container that has access to any files created by the router process in the emptyDir volume used to persist the list of ctrl endpoints |
+| probe | object | `{"active":true,"failureThreshold":5,"initialDelaySeconds":10,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":5}` | deployment container probe config |
+| probe.active | bool | `true` | enables the readiness and liveness probes for the deployment |
+| probe.failureThreshold | int | `5` | Number of consecutive probe failures before k8s marks the check as failed |
+| probe.initialDelaySeconds | int | `10` | seconds to wait before the first probe |
+| probe.periodSeconds | int | `10` | how often (in seconds) to perform the probe |
+| probe.successThreshold | int | `1` | minimum consecutive successes for the probe to be considered successful |
+| probe.timeoutSeconds | int | `5` | number of seconds after which the probe times out |
 | proxy | object | `{}` | Explicit proxy setting in the router configuration. Router can be deployed in a site where all egress traffic is forwarded through an explicit proxy. The enrollment will also be forwarded through the proxy. |
 | resources | object | `{}` | deployment container resources |
 | securityContext | string | `nil` | deployment container security context |
