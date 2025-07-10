@@ -112,7 +112,7 @@ spec:
           # deployment condition ready and receive traffic when this passes
           readinessProbe:
             exec:
-              command: {{ .Values.readinessProbe.command | toYaml }}
+              command: {{- toYaml .Values.readinessProbe.command | nindent 14 }}
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
@@ -123,7 +123,7 @@ spec:
           # delete pod if this fails
           livenessProbe:
             exec:
-              command: {{ .Values.livenessProbe.command | toYaml }}
+              command: {{- toYaml .Values.livenessProbe.command | nindent 14 }}
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
