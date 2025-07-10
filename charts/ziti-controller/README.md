@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.2](https://img.shields.io/badge/AppVersion-1.6.2-informational?style=flat-square)
+![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.5](https://img.shields.io/badge/AppVersion-1.6.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -422,6 +422,7 @@ The purpose of the `alt_server_certs` feature is to bind a publicly trusted serv
 The most automatic way to bind an alt cert is the certManager mode provided by this chart. This example implies you have separately created a cert-manager ClusterIssuer named "cloudflare-dns01-issuer" that is able to obtain a certificate for the specified DNS name. If publishing the client API's alternative DNS name as a separate Ingress, you may reference that advertised host when requesting the alternative server certificate as shown here with an inline template to ensure they match.
 
 <!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
+
 ```yaml
 clientApi:
     advertisedHost: edge.ziti.example.com
