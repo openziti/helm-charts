@@ -108,6 +108,7 @@ spec:
                 {{- end }}
               {{- end }}
             {{- end }}
+          {{- if or .Values.probe.active (eq (.Values.probe.active | toString) "<nil>") }}
           # deployment condition ready and receive traffic when this passes
           readinessProbe:
             exec:
@@ -115,8 +116,11 @@ spec:
                 - /bin/sh
                 - -c
                 - ziti agent stats
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probe.periodSeconds }}
+            timeoutSeconds: {{ .Values.probe.timeoutSeconds }}
+            successThreshold: {{ .Values.probe.successThreshold 
+            failureThreshold: {{ .Values.probe.failureThreshold }}
           # delete pod if this fails
           livenessProbe:
             exec:
@@ -124,8 +128,12 @@ spec:
                 - /bin/sh
                 - -c
                 - ziti agent stats
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probe.periodSeconds }}
+            timeoutSeconds: {{ .Values.probe.timeoutSeconds }}
+            successThreshold: {{ .Values.probe.successThreshold }}
+            failureThreshold: {{ .Values.probe.failureThreshold }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
