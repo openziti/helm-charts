@@ -28,6 +28,7 @@ spec:
   privateKey:
     algorithm: ECDSA
     size: 256
+    rotationPolicy: Never
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
@@ -64,6 +65,7 @@ spec:
   privateKey:
     algorithm: ECDSA
     size: 256
+    rotationPolicy: Always
   issuerRef:
     {{- if ne (len .Values.edgeSignerPki.alternativeIssuer) 0 }}
       {{- with .Values.edgeSignerPki.alternativeIssuer }}
@@ -102,6 +104,7 @@ spec:
   privateKey:
     algorithm: ECDSA
     size: 256
+    rotationPolicy: Always
   usages:
     - client auth
     - digital signature
