@@ -470,3 +470,37 @@ forwarder:
   linkDialWorkerCount: 32
   rateLimitedQueueLength: 5000
   rateLimitedWorkerCount: 64
+
+# -- deployment container readiness probe config
+readinessProbe:
+  # -- enables the readiness probe for the deployment
+  active: true
+  # -- command to run to determine if the container is ready
+  command: ["/bin/sh", "-c", "ziti agent stats"]
+  # -- seconds to wait before the first probe
+  initialDelaySeconds: 10
+  # -- how often (in seconds) to perform the probe
+  periodSeconds: 10
+  # -- number of seconds after which the probe times out
+  timeoutSeconds: 5
+  # -- minimum consecutive successes for the probe to be considered successful
+  successThreshold: 1
+  # -- Number of consecutive probe failures before k8s marks the check as failed
+  failureThreshold: 5
+
+# -- deployment container liveness probe config
+livenessProbe:
+  # -- enables the liveness probe for the deployment
+  active: true
+  # -- command to run to determine if the container is ready
+  command: ["/bin/sh", "-c", "ziti agent stats"]
+  # -- seconds to wait before the first probe
+  initialDelaySeconds: 10
+  # -- how often (in seconds) to perform the probe
+  periodSeconds: 10
+  # -- number of seconds after which the probe times out
+  timeoutSeconds: 5
+  # -- minimum consecutive successes for the probe to be considered successful
+  successThreshold: 1
+  # -- Number of consecutive probe failures before k8s marks the check as failed
+  failureThreshold: 5
