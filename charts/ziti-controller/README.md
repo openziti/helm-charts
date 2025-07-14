@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.5](https://img.shields.io/badge/AppVersion-1.6.5-informational?style=flat-square)
+![Version: 2.0.2](https://img.shields.io/badge/Version-2.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.5](https://img.shields.io/badge/AppVersion-1.6.5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -380,6 +380,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | prometheus.advertisedHost | string | `""` | DNS name to advertise in place of the default internal cluster name built from the Helm release name |
 | prometheus.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | prometheus.containerPort | int | `9090` | cluster service target port on the container |
+| prometheus.maxTLSVersion | string | `"TLS1.3"` | maximum TLS version to offer to clients |
+| prometheus.minTLSVersion | string | `"TLS1.2"` | minimum TLS version to offer to clients |
 | prometheus.service.annotations | object | `{}` |  |
 | prometheus.service.enabled | bool | `false` | create a cluster service for the deployment |
 | prometheus.service.labels | object | `{"app":"prometheus"}` | extra labels for matching only this service, ie. serviceMonitor |
@@ -407,6 +409,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | webBindingPki.altServerCerts | list | `[]` |  |
 | webBindingPki.alternativeIssuer | object | `{}` | obtain the web identity from an existing issuer instead of generating a new PKI |
 | webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
+| webBindingPki.maxTLSVersion | string | `"TLS1.3"` | maximum TLS version to offer to clients |
+| webBindingPki.minTLSVersion | string | `"TLS1.2"` | minimum TLS version to offer to clients |
 
 ## TODO's
 

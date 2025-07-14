@@ -236,10 +236,10 @@ data:
           writeTimeout: 100000ms
           # minTLSVersion - optional, default TLS1.2
           # The minimum version of TSL to support
-          minTLSVersion: TLS1.2
+          minTLSVersion: {{ .Values.webBindingPki.minTLSVersion }}
           # maxTLSVersion - optional, default TLS1.3
           # The maximum version of TSL to support
-          maxTLSVersion: TLS1.3
+          maxTLSVersion: {{ .Values.webBindingPki.maxTLSVersion }}
         # apis - required
         # Allows one or more APIs to be bound to this webListener
         apis:
@@ -329,10 +329,10 @@ data:
           writeTimeout: 100000ms
           # minTLSVersion - optional, default TLS1.2
           # The minimum version of TSL to support
-          minTLSVersion: TLS1.3
+          minTLSVersion: {{ .Values.webBindingPki.minTLSVersion }}
           # maxTLSVersion - optional, default TLS1.3
           # The maximum version of TSL to support
-          maxTLSVersion: TLS1.3
+          maxTLSVersion: {{ .Values.webBindingPki.maxTLSVersion }}
         # apis - required
         # Allows one or more APIs to be bound to this webListener
         apis:
@@ -398,7 +398,9 @@ data:
           {{- end }}
           {{- end }}
         {{- end }}
-        options: { }
+        options:
+          minTLSVersion: {{ .Values.prometheus.minTLSVersion }}
+          maxTLSVersion: {{ .Values.prometheus.maxTLSVersion }}
         apis:
           - binding: metrics
             options: { }
