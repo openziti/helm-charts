@@ -176,8 +176,13 @@ prometheus:
     type: ClusterIP
     # -- extra labels for matching only this service, ie. serviceMonitor
     labels:
-      app: "prometheus"
+      app: prometheus
     annotations: {}
+  # -- minimum TLS version to offer to clients
+  minTLSVersion: TLS1.2
+  # -- maximum TLS version to offer to clients
+  maxTLSVersion: TLS1.3
+
 
   # ServiceMonitor configuration
   serviceMonitor:
@@ -291,6 +296,10 @@ webBindingPki:
   # kind:
   # -- metadata name of the alternative issuer
   # name:
+  # -- minimum TLS version to offer to clients
+  minTLSVersion: TLS1.2
+  # -- maximum TLS version to offer to clients
+  maxTLSVersion: TLS1.3
 
 spireAgent:
   # -- if you are running a container with the spire-agent binary installed
