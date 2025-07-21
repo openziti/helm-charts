@@ -22,7 +22,7 @@ jobs:
       fail-fast: true
       matrix:
         kubernetes-version:
-          - v1.33.2
+          - v1.33.1
           - v1.32.6
           - v1.31.10
     env:
