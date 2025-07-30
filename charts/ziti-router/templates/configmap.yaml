@@ -1,4 +1,5 @@
 {{- $root := . -}}
+{{- $edgeAdvertisedHost := .Values.edge.advertisedHost | default (printf "%s-edge.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) -}}
 ---
 # Chart name: {{- .Chart.Name }} {{- .Values.nameOverride }}
 apiVersion: v1
@@ -96,7 +97,7 @@ data:
       - binding: edge
         address: {{ .Values.edge.protocol }}:0.0.0.0:{{ .Values.edge.containerPort }}
         options:
-          advertise: {{ coalesce .Values.edge.advertisedHost (printf "%s-edge.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ .Values.edge.advertisedPort }}
+          advertise: {{ $edgeAdvertisedHost }}:{{ .Values.edge.advertisedPort }}
           {{- if .Values.edge.options }}
             {{- toYaml .Values.edge.options | nindent 10 }}
           {{- end }}
@@ -167,8 +168,8 @@ data:
           dns:
             {{- if eq (default false .Values.csr.sans.noDefaults) false }}
             - localhost
-              {{- if and .Values.edge.enabled .Values.edge.advertisedHost }}
-            - {{ .Values.edge.advertisedHost }}
+              {{- if .Values.edge.enabled }}
+            - {{ $edgeAdvertisedHost }}
               {{- end }}
               {{- if .Values.edge.additionalListeners }}
                 {{- range .Values.edge.additionalListeners }}
