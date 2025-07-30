@@ -96,7 +96,7 @@ data:
       - binding: edge
         address: {{ .Values.edge.protocol }}:0.0.0.0:{{ .Values.edge.containerPort }}
         options:
-          advertise: {{ coalesce .Values.edge.advertisedHost (printf "%s-edge.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace) }}:{{ .Values.edge.advertisedPort }}
+          advertise: {{ if .Values.edge.advertisedHost }}{{ .Values.edge.advertisedHost }}{{ else }}{{ printf "%s-edge.%s.svc" (include "ziti-router.fullname" . ) .Release.Namespace }}{{ end }}:{{ .Values.edge.advertisedPort }}
           {{- if .Values.edge.options }}
             {{- toYaml .Values.edge.options | nindent 10 }}
           {{- end }}
