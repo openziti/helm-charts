@@ -33,12 +33,14 @@ ziti edge create edge-router "router1" \
 helm repo add openziti https://openziti.github.io/helm-charts/
 
 # install the router chart with a public address
-helm upgrade --install \
+helm upgrade \
+  --install \
+  --version "^1.0.0" \
   "ziti-router-123456789" \
   openziti/ziti-router \
     --set-file enrollmentJwt=/tmp/router1.jwt \
     --set ctrl.endpoint=ctrl.ziti.example.com:443 \
-    --set edge.advertisedHost=router1.ziti.example.com \
+    --set edge.advertisedHost=router1.ziti.example.com
 ```
 ### Ingress TLS Passthrough
 
@@ -93,7 +95,9 @@ edge:
 Now upgrade your router chart release with the values file.
 
 ```bash
-helm upgrade --install \
+helm upgrade \
+  --install \
+  --version "^1.0.0" \
   "ziti-router-1" \
   openziti/ziti-router \
     --set-file enrollmentJwt=/tmp/router1.jwt \
@@ -105,7 +109,9 @@ helm upgrade --install \
 Disable the link listener if the router does not have a public address set (`edge.advertisedHost`). Ziti identities inside the cluster can still use the private router's edge listener ClusterIP service by authorizing them with a Ziti edge router policy.
 
 ```bash
-helm upgrade --install \
+helm upgrade \
+  --install \
+  --version "^1.0.0" \
   "ziti-router-1" \
   openziti/ziti-router \
     --set-file enrollmentJwt=/tmp/router1.jwt \
@@ -115,19 +121,19 @@ helm upgrade --install \
 
 ## Tunnel Modes
 
+You may disable tunneling with input value `tunnel.mode=none`.
+
 ### Host tunnel mode
 
-Default: `tunnel.mode=none`
-
-Host mode enables a router's identity to reverse proxy Ziti service traffic to a target address on the regular network. Enable this mode by updating the router's identity in the controller to enable tunneling, then set `tunnel.mode=host` and upgrade the Helm release to start hosting Ziti services.
+This is the default mode for the chart, i.e., `tunnel.mode=host`, because it supports hosting Ziti services targeting servers on this router's regular network and does not require any special privileges beyond outgoing network access. Enable this mode by administratively creating or updating the Ziti edge router to enable tunneling.
 
 ```bash
-ziti edge update identity "router1" --tunneler-enabled
+ziti edge update edge-router "router1" --tunneler-enabled
 ```
 
 ### Proxy tunnel mode
 
-`tunnel.mode=proxy`
+Input value: `tunnel.mode=proxy`
 
 Proxy mode enables the router to publish Ziti services as Kubernetes services.
 
