@@ -1,0 +1,30 @@
+name: Deploy README to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'README.md'
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Prepare file for deployment
+        run: |
+          mkdir -p public
+          cp README.md public/index.md
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          keep_files: true
