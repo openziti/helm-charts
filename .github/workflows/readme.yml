@@ -16,14 +16,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Install pandoc
+        shell: bash
+        run: |
+          set -o pipefail
+          set -o xtrace
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
       - name: Prepare file for deployment
         shell: bash
         run: |
           set -o pipefail
           set -o xtrace
           mkdir -p ./public
-          cp ./README.md ./public/index.md
-          cp ./_config.yml ./public/_config.yml
+          pandoc -f gfm -t html5 -s ./README.md -o ./public/index.html
+
+      - name: Verify only index.html will be published
+        shell: bash
+        run: |
+          set -o pipefail
+          set -o xtrace
+          # Fail if anything besides index.html is present
+          find ./public -type f ! -name 'index.html' -print -quit | grep -q . && {
+            echo "ERROR: unexpected files in ./public besides index.html" >&2
+            find ./public -type f -ls
+            exit 1
+          }
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
