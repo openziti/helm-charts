@@ -1,3 +1,7 @@
+---
+layout: default
+title: Helm Charts
+---
 # OpenZiti Helm Charts
 
 This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](https://docs.openziti.io) on [Kubernetes](https://kubernetes.io/).
