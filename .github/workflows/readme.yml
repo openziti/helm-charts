@@ -29,20 +29,10 @@ jobs:
         run: |
           set -o pipefail
           set -o xtrace
+          rm -rf ./public
           mkdir -p ./public
           pandoc -f gfm -t html5 -s ./README.md -o ./public/index.html
-
-      - name: Verify only index.html will be published
-        shell: bash
-        run: |
-          set -o pipefail
-          set -o xtrace
-          # Fail if anything besides index.html is present
-          find ./public -type f ! -name 'index.html' -print -quit | grep -q . && {
-            echo "ERROR: unexpected files in ./public besides index.html" >&2
-            find ./public -type f -ls
-            exit 1
-          }
+          echo "Staged files:" && find ./public -type f -ls || true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
