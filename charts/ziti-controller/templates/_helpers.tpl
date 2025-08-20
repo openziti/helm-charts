@@ -158,3 +158,14 @@ else return the literal value
   {{- $value -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Get the SPIFFE ID for a controller
+Usage: {{ include "ziti-controller.get-spiffe-id-uri" . }}
+Returns: spiffe://{trustDomain}/controller/{nodeName}
+*/}}
+{{- define "ziti-controller.get-spiffe-uri" -}}
+  {{- $trustDomain := required ".Values.trustDomain must be set" .Values.trustDomain -}}
+  {{- $nodeName := required ".Values.nodeName must be set" .Values.nodeName -}}
+  spiffe://{{ $trustDomain }}/controller/{{ $nodeName }}
+{{- end -}}

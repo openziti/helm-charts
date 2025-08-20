@@ -32,6 +32,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       dnsPolicy: {{ .Values.dnsPolicy }}
+      {{- if or (eq .Values.trustDomain "") (eq .Values.nodeName "") }}
       initContainers:
         - name: {{ .Chart.Name }}-init
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
@@ -55,11 +56,6 @@ spec:
                   name: {{ include "ziti-controller.fullname" . }}-admin-secret
                 {{- end }}
                   key: admin-password
-            - name: ZITI_TRUST_DOMAIN
-              valueFrom:
-                secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-trust-domain
-                  key: trustDomain
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
             - name: HOME
@@ -113,6 +109,7 @@ spec:
               readOnly: true
               {{- end }}
             {{- end }}
+      {{- end }}
       shareProcessNamespace: true  # this allows the admin container to observe the controller process namespace
       containers:
         - name: {{ .Chart.Name }}
@@ -148,6 +145,10 @@ spec:
             {{- range .Values.image.additionalArgs }}
             - {{ . | quote }}
             {{- end }}
+            {{- if and (ne .Values.trustDomain "") (ne .Values.nodeName "") }}
+            - "--cli-agent-addr=tcp:127.0.0.1:{{ .Values.agent.listenPort }}"
+            - "--cli-agent-alias={{ .Values.nodeName }}"
+            {{- end }}
 
           env:
             - name: ZITI_CTRL_PLANE_CA
@@ -178,11 +179,6 @@ spec:
                   name: {{ include "ziti-controller.fullname" . }}-admin-secret
                 {{- end }}
                   key: admin-password
-            - name: ZITI_TRUST_DOMAIN
-              valueFrom:
-                secretKeyRef:
-                  name:  {{ include "ziti-controller.fullname" . }}-trust-domain
-                  key: trustDomain
             # Add additional environment variables
             {{- range $key, $val := .Values.env }}
             - name: {{ $key | quote }}
@@ -266,6 +262,42 @@ spec:
                 {{- end }}
               {{- end }}
             {{- end }}
+        {{- if and (ne .Values.trustDomain "") (ne .Values.nodeName "") }}
+        - name: cluster-init
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash","-c"]
+          args:
+            - |
+              {{ include "execMountDir" . }}/ziti-cluster-init.bash; sleep infinity
+          env:
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
+                  key: admin-user
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                {{- if .Values.useCustomAdminSecret }}
+                  name:  {{ .Values.customAdminSecretName }}
+                {{- else }}
+                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
+                {{- end }}
+                  key: admin-password
+            - name: HOME
+              value: {{ .Values.image.homeDir }}
+          volumeMounts:
+            - mountPath: {{ include "execMountDir" . }}/ziti-cluster-init.bash
+              name: ziti-controller-configmap
+              subPath: ziti-cluster-init.bash
+            - mountPath: {{ include "dataMountDir" . }}
+              name: data
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -285,6 +317,9 @@ spec:
             items:
               - key: ziti-controller-init.bash
                 path: ziti-controller-init.bash
+                mode: 0555
+              - key: ziti-cluster-init.bash
+                path: ziti-cluster-init.bash
                 mode: 0555
               - key: ziti-controller.yaml
                 path: ziti-controller.yaml
