@@ -6,9 +6,11 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 data:
+
   ziti-controller-init.bash: |-
     #!/usr/bin/env bash
     set -euo pipefail
+    # set -o xtrace  # DEBUG
 
     if [[ -s "{{ include "dataMountDir" . }}/{{ .Values.dbFile }}" ]]; then
       echo "INFO: noop because BoltDB exists in {{ include "dataMountDir" . }}/{{ .Values.dbFile }}"
@@ -21,15 +23,46 @@ data:
         -p "${ZITI_ADMIN_PASSWORD}"
     fi
 
+  ziti-cluster-init.bash: |-
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # set -o xtrace  # DEBUG
+
+    MARKER="{{ include "dataMountDir" . }}/cluster.initialized"
+    if [[ -f "${MARKER}" ]]; then
+      echo "INFO: cluster already initialized - marker file ${MARKER} exists"
+      exit 0
+    else
+      echo "INFO: initializing Ziti Cluster"
+    fi
+
+    AGENT_ADDR="127.0.0.1:{{ .Values.agent.listenPort }}"
+
+    echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
+    for i in $(seq 1 120); do
+      if ziti agent cluster list --tcp-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
+        echo "INFO: CLI agent is responsive"
+        break
+      fi
+      sleep 2
+    done
+
+    # Perform cluster initialization (creates default admin identity)
+    echo "INFO: running: ziti agent cluster init ${ZITI_ADMIN_USER} ***** ${ZITI_ADMIN_USER}"
+    ziti agent cluster init --tcp-addr "${AGENT_ADDR}" "${ZITI_ADMIN_USER}" "${ZITI_ADMIN_PASSWORD}" "${ZITI_ADMIN_USER}"
+
+    # Mark as initialized
+    touch "${MARKER}"
+    echo "INFO: Ziti cluster initialized"
+
   zitiLogin: |-
     #!/usr/bin/env bash
     ziti edge login "${ZITI_MGMT_API}" \
       --username "${ZITI_ADMIN_USER}" \
       --password "${ZITI_ADMIN_PASSWORD}" \
       --ca "${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}"
-  
-  .bash_profile: |-
 
+  .bash_profile: |-
     # customize ziggy's profile for login shells here
     zitiLogin
 
@@ -37,14 +70,13 @@ data:
 
     v: 3
 
-    #trace:
-    #  path: "controller.trace"
-
-    #profile:
-    #  memory:
-    #    path: ctrl.memprof
-
+    {{- if and (ne .Values.trustDomain "") (ne .Values.nodeName "") }}
+    cluster:
+      dataDir:              {{ include "dataMountDir" . }}/raft
+    {{- else }}
     db:                     {{ include "dataMountDir" . }}/{{ .Values.dbFile }}
+    trustDomain:            ${ZITI_TRUST_DOMAIN}
+    {{- end }}
 
     identity:
       cert:                 {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.crt
@@ -52,8 +84,6 @@ data:
       server_cert:          {{ include "configMountDir" . }}/ctrl-plane-identity/tls.crt
       server_key:           {{ include "configMountDir" . }}/ctrl-plane-identity/tls.key
       ca:                   ${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
-
-    trustDomain: ${ZITI_TRUST_DOMAIN}
 
     {{- if and .Values.fabric.events.enabled (not .Values.additionalConfigs.events) }}
     events:
@@ -71,11 +101,6 @@ data:
     {{- .Values.additionalConfigs.events | toYaml | nindent 6 }}
     {{- end }}
 
-    # Network Configuration
-    #
-    # Configure how the controller will establish and manage the overlay network, and routing operations on top of
-    # the network.
-    #
     network:
     {{- if .Values.fabric.events.enabled }}
     {{- .Values.fabric.events.network | toYaml | nindent 6 }}
@@ -87,57 +112,29 @@ data:
     {{- .Values.additionalConfigs.network | toYaml | nindent 6 }}
     {{- end }}
 
-    # the endpoint that routers will connect to the controller over.
     ctrl:
       listener:                tls:0.0.0.0:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.containerPort "context" .) }}
       options:
         advertiseAddress: tls:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedPort "context" .) }}
-        # set the maximum number of connect requests that are buffered and waiting to be acknowledged (1 to 5000, default 1)
-        #maxQueuedConnects:      1
-        # the maximum number of connects that have  begun hello synchronization (1 to 1000, default 16)
-        #maxOutstandingConnects: 16
-        # the number of milliseconds to wait before a hello synchronization fails and closes the connection (30ms to 60000ms, default: 1000ms)
-        #connectTimeoutMs:       1000
     {{- if .Values.additionalConfigs.ctrl }}
     {{- .Values.additionalConfigs.ctrl | toYaml | nindent 6 }}
     {{- end }}
 
     healthChecks:
       boltCheck:
-        # How often to try entering a bolt read tx. Defaults to 30 seconds
         interval: 30s
-        # When to time out the check. Defaults to 20 seconds
         timeout: 20s
-        # How long to wait before starting the check. Defaults to 30 seconds
         initialDelay: 30s
     {{- if .Values.additionalConfigs.healthChecks }}
     {{- .Values.additionalConfigs.healthChecks | toYaml | nindent 6 }}
     {{- end }}
 
-    # By having an 'edge' section defined, the ziti-controller will attempt to parse the edge configuration. Removing this
-    # section, commenting out, or altering the name of the section will cause the edge to not run.
     edge:
-      # This section represents the configuration of the Edge API that is served over HTTPS
       api:
-        #(optional, default 90s) Alters how frequently heartbeat and last activity values are persisted
-        # activityUpdateInterval: 90s
-        #(optional, default 250) The number of API Sessions updated for last activity per transaction
-        # activityUpdateBatchSize: 250
-        # sessionTimeout - optional, default 30m
-        # The number of minutes before an Edge API session will time out. Timeouts are reset by
-        # API requests and connections that are maintained to Edge Routers
         sessionTimeout: 30m
-        # address - required
-        # The default address (host:port) to use for enrollment for the Client API. This value must match one of the addresses
-        # defined in this Controller.WebListener's bindPoints.
         address: {{ required "You must set .Values.clientApi.advertisedHost to a public DNS name or IP. Try adding --set clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
 
-      # This section is used to define option that are used during enrollment of Edge Routers, Ziti Edge Identities.
       enrollment:
-        # signingCert - required
-        # A Ziti Identity configuration section that specifically makes use of the cert and key fields to define
-        # a signing certificate from the PKI that the Ziti environment is using to sign certificates. The signingCert.cert
-        # will be added to the /.well-known CA store that is used to bootstrap trust with the Ziti Controller.
         signingCert:
           {{- if .Values.edgeSignerPki.enabled }}
           cert: {{ include "configMountDir" . }}/edge-signer/tls.crt
@@ -146,48 +143,21 @@ data:
           cert: {{ include "configMountDir" . }}/ctrl-plane-intermediate/tls.crt
           key:  {{ include "configMountDir" . }}/ctrl-plane-intermediate/tls.key
           {{- end }}
-        # edgeIdentity - optional
-        # A section for identity enrollment specific settings
         edgeIdentity:
-          # duration - optional, default 180m
-          # The length of time that a Ziti Edge Identity enrollment should remain valid. After
-          # this duration, the enrollment will expire and no longer be usable.
           duration: 180m
-        # edgeRouter - Optional
-        # A section for edge router enrollment specific settings.
         edgeRouter:
-          # duration - optional, default 180m
-          # The length of time that a Ziti Edge Router enrollment should remain valid. After
-          # this duration, the enrollment will expire and no longer be usable.
           duration: 180m
 
     {{- if .Values.additionalConfigs.edge }}
     {{- .Values.additionalConfigs.edge | toYaml | nindent 6 }}
     {{- end }}
 
-
-    # web
-    # Defines webListeners that will be hosted by the controller. Each webListener can host many APIs and be bound to many
-    # bind points.
     web:
-      # name - required
-      # Provides a name for this listener, used for logging output. Not required to be unique, but is highly suggested.
       - name: client
-        # bindPoints - required
-        # One or more bind points are required. A bind point specifies an interface (interface:port string) that defines
-        # where on the host machine the webListener will listen and the address (host:port) that should be used to
-        # publicly address the webListener(i.e. mydomain.com, localhost, 127.0.0.1). This public address may be used for
-        # incoming address resolution as well as used in responses in the API.
         bindPoints:
-          #interface - required
-          # A host:port string on which network interface to listen on. 0.0.0.0 will listen on all interfaces
           - interface: 0.0.0.0:{{ .Values.clientApi.containerPort }}
-            # address - required
-            # The public address that external incoming requests will be able to resolve. Used in request processing and
-            # response content that requires full host:port/path addresses.
             address: {{ required "You must set .Values.clientApi.advertisedHost to a Name/IP that is reachable by edge clients. Try adding --set clientApi.advertisedHost=edge.ziti.example.org to your Helm command" .Values.clientApi.advertisedHost }}:{{ .Values.clientApi.advertisedPort }}
         {{- if .Values.webBindingPki.enabled }}
-        # Allows the webListener to have a specific identity instead of defaulting to the ctrl plane 'identity' section.
         identity:
           cert:        {{ include "configMountDir" . }}/web-client-identity/tls.crt
           key:         {{ include "configMountDir" . }}/web-client-identity/tls.key
@@ -215,24 +185,9 @@ data:
           {{- end }}
         {{- end }}
         {{- end }}
-        # options - optional
-        # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
-        # used for all http servers started by the current webListener.
         options:
-          # idleTimeoutMs - optional, default 5000ms
-          # The maximum amount of idle time in milliseconds allowed for pipelined HTTP requests. Setting this too high
-          # can cause resources on the host to be consumed as clients remain connected and idle. Lowering this value
-          # will cause clients to reconnect on subsequent HTTPs requests.
           idleTimeout: 5000ms  #http timeouts, new
-          # readTimeoutMs - optional, default 5000ms
-          # The maximum amount of time in milliseconds http servers will wait to read the first incoming requests. A higher
-          # value risks consuming resources on the host with clients that are acting bad faith or suffering from high latency
-          # or packet loss. A lower value can risk losing connections to high latency/packet loss clients.
           readTimeout: 5000ms
-          # writeTimeoutMs - optional, default 100000ms
-          # The total maximum time in milliseconds that the http server will wait for a single requests to be received and
-          # responded too. A higher value can allow long-running requests to consume resources on the host. A lower value
-          # can risk ending requests before the server has a chance to respond.
           writeTimeout: 100000ms
           # minTLSVersion - optional, default TLS1.2
           # The minimum version of TSL to support
@@ -243,12 +198,6 @@ data:
         # apis - required
         # Allows one or more APIs to be bound to this webListener
         apis:
-          # binding - required
-          # Specifies an API to bind to this webListener. Built-in APIs are
-          #   - edge-management
-          #   - edge-client
-          #   - fabric
-          #   - health-checks
           - binding: edge-client
             options: { }
           - binding: edge-oidc
@@ -265,22 +214,10 @@ data:
           {{- end }}
 
     {{- if .Values.managementApi.service.enabled }}
-      # Provides a name for this listener, used for logging output. Not required to be unique, but is highly suggested.
       - name: management
-        # bindPoints - required
-        # One or more bind points are required. A bind point specifies an interface (interface:port string) that defines
-        # where on the host machine the webListener will listen and the address (host:port) that should be used to
-        # publicly address the webListener(i.e. mydomain.com, localhost, 127.0.0.1). This public address may be used for
-        # incoming address resolution as well as used in responses in the API.
         bindPoints:
-          #interface - required
-          # A host:port string on which network interface to listen on. 0.0.0.0 will listen on all interfaces
           - interface: 0.0.0.0:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.containerPort "context" .) }}
-            # address - required
-            # The public address that external incoming requests will be able to resolve. Used in request processing and
-            # response content that requires full host:port/path addresses.
             address: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) | default (printf "%s-mgmt.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
-            # Allows the webListener to have a specific identity instead of defaulting to the root 'identity' section.
         {{- if .Values.webBindingPki.enabled }}
         identity:
           cert:        {{ include "configMountDir" . }}/web-client-identity/tls.crt
@@ -309,23 +246,9 @@ data:
           {{- end }}
         {{- end }}
         {{- end }}
-        # Allows the specification of webListener level options - mainly dealing with HTTP/TLS settings. These options are
-        # used for all http servers started by the current webListener.
         options:
-          # idleTimeoutMs - optional, default 5000ms
-          # The maximum amount of idle time in milliseconds allowed for pipelined HTTP requests. Setting this too high
-          # can cause resources on the host to be consumed as clients remain connected and idle. Lowering this value
-          # will cause clients to reconnect on subsequent HTTPs requests.
           idleTimeout: 5000ms  #http timeouts, new
-          # readTimeoutMs - optional, default 5000ms
-          # The maximum amount of time in milliseconds http servers will wait to read the first incoming requests. A higher
-          # value risks consuming resources on the host with clients that are acting bad faith or suffering from high latency
-          # or packet loss. A lower value can risk losing connections to high latency/packet loss clients.
           readTimeout: 5000ms
-          # writeTimeoutMs - optional, default 100000ms
-          # The total maximum time in milliseconds that the http server will wait for a single requests to be received and
-          # responded too. A higher value can allow long-running requests to consume resources on the host. A lower value
-          # can risk ending requests before the server has a chance to respond.
           writeTimeout: 100000ms
           # minTLSVersion - optional, default TLS1.2
           # The minimum version of TSL to support
@@ -336,12 +259,6 @@ data:
         # apis - required
         # Allows one or more APIs to be bound to this webListener
         apis:
-          # binding - required
-          # Specifies an API to bind to this webListener. Built-in APIs are
-          #   - edge-management
-          #   - edge-client
-          #   - fabric
-          #   - health-checks
           - binding: edge-client
             options: { }
           - binding: edge-oidc
@@ -359,16 +276,9 @@ data:
     {{- end }}
 
     {{- if .Values.prometheus.service.enabled }}
-      # Binding for prometheus https://openziti.github.io/docs/core-concepts/metrics/prometheus
       - name: prometheus-metrics
         bindPoints:
-          #interface - required
-          # A host:port string on which network interface to listen on. 0.0.0.0 will listen on all interfaces
           - interface: 0.0.0.0:{{ .Values.prometheus.containerPort }}
-
-            # address - required
-            # The public address that external incoming requests will be able to resolve. Used in request processing and
-            # response content that requires full host:port/path addresses.
             address: {{ .Values.prometheus.advertisedHost | default (printf "%s-prometheus.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}:{{ .Values.prometheus.advertisedPort }}
         {{- if .Values.webBindingPki.enabled }}
         identity:
