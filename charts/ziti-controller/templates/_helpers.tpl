@@ -122,6 +122,43 @@ that are managed by cert-manager
 {{- end -}}
 
 {{/*
+Validate cluster mode.
+Returns one of: "standalone", "cluster-init", "cluster-join".
+
+Rules:
+- standalone: .Values.cluster.mode is "standalone"
+- cluster-join: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is set (non-empty)
+- cluster-init: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is empty
+*/}}
+{{- define "ziti-controller.clusterMode" -}}
+  {{- $mode := .Values.cluster.mode | trim | lower -}}
+  {{- if not (or (eq $mode "standalone") (eq $mode "cluster-init") (eq $mode "cluster-join")) -}}
+    {{- fail (printf "invalid cluster mode: %s; valid values are: standalone, cluster-init, cluster-join" $mode) -}}
+  {{- end -}}
+
+  {{- if eq $mode "standalone" -}}
+standalone
+  {{- else if eq $mode "cluster-init" -}}
+    {{- if or (eq .Values.cluster.trustDomain "") (eq .Values.cluster.nodeName "") -}}
+      {{- fail "cluster-init requires .Values.cluster.trustDomain and .Values.cluster.nodeName to be set" -}}
+    {{- end -}}
+cluster-init
+  {{- else -}}
+    {{- /* cluster-join */ -}}
+    {{- if or (eq .Values.cluster.trustDomain "") (eq .Values.cluster.nodeName "") -}}
+      {{- fail "cluster-join requires .Values.cluster.trustDomain and .Values.cluster.nodeName to be set" -}}
+    {{- end -}}
+    {{- if eq (len .Values.ctrlPlane.alternativeIssuer) 0 -}}
+      {{- fail "cluster-join requires .Values.ctrlPlane.alternativeIssuer to be set to the first node's ctrl plane root issuer in same namespace" -}}
+    {{- end -}}
+    {{- if eq (len .Values.cluster.endpoint) 0 -}}
+      {{- fail "cluster-join requires .Values.cluster.endpoint to be set to a reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)" -}}
+    {{- end -}}
+cluster-join
+  {{- end -}}
+{{- end -}}
+
+{{/*
 help the configmap template find the mount path of an alternative server
 certificate by looking up the secret name in the list of additional volumes
 */}}
@@ -161,11 +198,11 @@ else return the literal value
 
 {{/*
 Get the SPIFFE ID for a controller
-Usage: {{ include "ziti-controller.get-spiffe-id-uri" . }}
+Usage: {{ include "ziti-controller.get-spiffe-uri" . }}
 Returns: spiffe://{trustDomain}/controller/{nodeName}
 */}}
 {{- define "ziti-controller.get-spiffe-uri" -}}
-  {{- $trustDomain := required ".Values.trustDomain must be set" .Values.trustDomain -}}
-  {{- $nodeName := required ".Values.nodeName must be set" .Values.nodeName -}}
+  {{- $trustDomain := required ".Values.cluster.trustDomain must be set" .Values.cluster.trustDomain -}}
+  {{- $nodeName := required ".Values.cluster.nodeName must be set" .Values.cluster.nodeName -}}
   spiffe://{{ $trustDomain }}/controller/{{ $nodeName }}
 {{- end -}}
