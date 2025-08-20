@@ -2,8 +2,17 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# -- permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release)
-trustDomain: ""
+cluster:
+  # -- the cluster mode (default: standalone; options: cluster-init, cluster-join); if joining a cluster, you must also set .ctrlPlane.alternativeIssuer to the first node's ctrl plane root issuer in same namespace
+  mode: standalone
+  # -- the trust domain part of the SPIFFE ID (required if cluster mode is cluster-init or cluster-join)
+  trustDomain: ""
+  # -- the node name part of the SPIFFE ID (required if cluster mode is cluster-init or cluster-join)
+  nodeName: ""
+  # -- optional unless joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)
+  endpoint: ""
+  # -- TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose)
+  agentTcpAddr: "127.0.0.1:10001"
 
 clientApi:
   # -- cluster service target port on the container
@@ -117,7 +126,7 @@ ctrlPlane:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
-  # -- obtain the ctrl plane identity from an existing issuer instead of generating a new PKI
+  # -- obtain the ctrl plane identity from an existing issuer instead of generating a new PKI (example: "my-issuer" or {name: "my-issuer", kind: "Issuer", group: "cert-manager.io"})
   alternativeIssuer: {}
   traefikTcpRoute:
     # -- enable Traefik IngressRouteTCP
