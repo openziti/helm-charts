@@ -94,7 +94,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity
+  commonName: {{ default (printf "%s-ctrl-plane-identity" (include "ziti-controller.fullname" .)) .Values.nodeName }}
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
@@ -155,8 +155,10 @@ spec:
       {{- end }}
     {{- end }}
     {{- end }}
-  # uris:
-  #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
+  {{- if and (ne .Values.trustDomain "") (ne .Values.nodeName "") }}
+  uris:
+    - {{ include "ziti-controller.get-spiffe-uri" . }}
+  {{- end }}
   ipAddresses:
     - 127.0.0.1
     - "::1"
@@ -174,7 +176,7 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   isCA: false
-  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity
+  commonName: {{ default (printf "%s-ctrl-plane-client-identity" (include "ziti-controller.fullname" .)) .Values.nodeName }}
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
   privateKey:
     algorithm: ECDSA
@@ -185,6 +187,10 @@ spec:
     - digital signature
     - content commitment
     - key encipherment
+  {{- if and (ne .Values.trustDomain "") (ne .Values.nodeName "") }}
+  uris:
+    - {{ include "ziti-controller.get-spiffe-uri" . }}
+  {{- end }}
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
