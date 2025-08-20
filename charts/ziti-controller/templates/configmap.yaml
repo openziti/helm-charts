@@ -36,7 +36,7 @@ data:
       echo "INFO: initializing Ziti Cluster"
     fi
 
-    AGENT_ADDR="127.0.0.1:{{ .Values.agent.listenPort }}"
+    AGENT_ADDR="{{ .Values.cluster.agentTcpAddr }}"
 
     echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
     for i in $(seq 1 120); do
@@ -55,6 +55,37 @@ data:
     touch "${MARKER}"
     echo "INFO: Ziti cluster initialized"
 
+  ziti-cluster-join.bash: |-
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # set -o xtrace  # DEBUG
+
+    MARKER="{{ include "dataMountDir" . }}/cluster.joined"
+    if [[ -f "${MARKER}" ]]; then
+      echo "INFO: already joined cluster - marker file ${MARKER} exists"
+      exit 0
+    fi
+
+    AGENT_ADDR="{{ .Values.cluster.agentTcpAddr }}"
+
+    echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
+    for i in $(seq 1 120); do
+      if ziti agent cluster list --tcp-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
+        echo "INFO: CLI agent is responsive"
+        break
+      fi
+      sleep 2
+    done
+
+    # Determine endpoint to join: prefer explicit cluster.endpoint, else fall back to ctrlPlane advertise
+    ENDPOINT="{{ .Values.cluster.endpoint }}"
+    echo "INFO: running: ziti agent cluster add --tcp-addr ${AGENT_ADDR} tls:${ENDPOINT}"
+    ziti agent cluster add --tcp-addr "${AGENT_ADDR}" "tls:${ENDPOINT}"
+
+    # Mark as joined
+    touch "${MARKER}"
+    echo "INFO: Ziti cluster join completed"
+
   zitiLogin: |-
     #!/usr/bin/env bash
     ziti edge login "${ZITI_MGMT_API}" \
@@ -70,7 +101,7 @@ data:
 
     v: 3
 
-    {{- if and (ne .Values.trustDomain "") (ne .Values.nodeName "") }}
+    {{- if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
     cluster:
       dataDir:              {{ include "dataMountDir" . }}/raft
     {{- else }}

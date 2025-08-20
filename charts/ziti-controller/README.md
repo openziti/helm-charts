@@ -266,7 +266,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | additionalConfigs | object | `{"ctrl":{},"events":{},"healthChecks":{},"network":{},"web":{}}` | Append additional config blocks in specific top-level keys: edge, web, network, ctrl. If events are defined here, they replace the default events section entirely. |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
-| agent.listenPort | int | `10001` | TCP listen port for the controller CLI agent when running in clustered mode The agent binds to loopback 127.0.0.1. |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
 | ca.duration | string | `"87840h"` | Go time.Duration string format |
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
@@ -287,10 +286,15 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
 | clientApi.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
 | clientApi.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
+| cluster.agentTcpAddr | string | `"127.0.0.1:10001"` | TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose) |
+| cluster.endpoint | string | `""` | optional unless joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280) |
+| cluster.mode | string | `"standalone"` | the cluster mode (default: standalone; options: cluster-init, cluster-join); if joining a cluster, you must also set .ctrlPlane.alternativeIssuer to the first node's ctrl plane root issuer in same namespace |
+| cluster.nodeName | string | `""` | the node name part of the SPIFFE ID (required if cluster mode is cluster-init or cluster-join) |
+| cluster.trustDomain | string | `""` | the trust domain part of the SPIFFE ID (required if cluster mode is cluster-init or cluster-join) |
 | consoleAltIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console |
 | ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
-| ctrlPlane.alternativeIssuer | object | `{}` | obtain the ctrl plane identity from an existing issuer instead of generating a new PKI |
+| ctrlPlane.alternativeIssuer | object | `{}` | obtain the ctrl plane identity from an existing issuer instead of generating a new PKI (example: "my-issuer" or {name: "my-issuer", kind: "Issuer", group: "cert-manager.io"}) |
 | ctrlPlane.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | ctrlPlane.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses |
 | ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
@@ -367,8 +371,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | network.routerConnectChurnLimit | string | `"1m"` | Sets how often a new control channel connection can take over for a router with an existing control channel connection Defaults to 1 minute |
 | network.smart.rerouteCap | int | `4` | Defines the hard upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteCap` is set to `1`, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 1. |
 | network.smart.rerouteFraction | float | `0.02` | Defines the fractional upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 2 (2% of 100). |
-| noHelmHooks | string | `"false"` | if set to bool True or string "true", disable Helm hook Jobs and render the clustered init sidecar instead |
-| nodeName | string | `""` | the node name part of the SPIFFE ID (default: random, fixed for the life of the chart release) |
 | nodeSelector | object | `{}` | deployment template spec node selector |
 | persistence.VolumeName | string | `""` | PVC volume name |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
@@ -407,7 +409,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
 | spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| trustDomain | string | `""` | the trust domain part of the SPIFFE ID (default: random, fixed for the life of the chart release) |
 | useCustomAdminSecret | bool | `false` | allow for using a custom admin secret, which has to be created beforehand if enabled, the admin secret will not be generated by this Helm chart |
 | webBindingPki.altServerCerts | list | `[]` |  |
 | webBindingPki.alternativeIssuer | object | `{}` | obtain the web identity from an existing issuer instead of generating a new PKI |
