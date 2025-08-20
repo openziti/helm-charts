@@ -2,14 +2,14 @@
 
 This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](https://docs.openziti.io) on [Kubernetes](https://kubernetes.io/).
 
-These files are published from [a GitHub repo](https://github.com/openziti/helm-charts/#readme) as [a GitHub pages site here](https://docs.openziti.io/helm-charts/).
+These files are published from [a GitHub repo](https://github.com/openziti/helm-charts/#readme) as [a GitHub pages site here](https://openziti.io/helm-charts/).
 
 ## Use this Repo
 
 ### Subscribe
 
 ```console
-$ helm repo add openziti https://docs.openziti.io/helm-charts/
+$ helm repo add openziti https://openziti.io/helm-charts/
 "openziti" has been added to your repositories
 ```
 
@@ -62,4 +62,4 @@ cr index --owner openziti --git-repo helm-charts --index-path .
 1. Wait for GitHub bot to bump chart versions if necessary, i.e., if anything in the chart dir changed since latest tag and the chart version is already released.
 1. Merging to main runs GitHub Actions to package and index the charts and publish the new Helm repo index and READMEs to GitHub Pages.
 
-You may verify changes are present in the Helm index: <https://docs.openziti.io/helm-charts/index.yaml>.
+You may verify changes are present in the Helm index: <https://openziti.io/helm-charts/index.yaml>.
