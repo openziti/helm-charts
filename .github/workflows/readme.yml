@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - README.md
+      - .github/workflows/readme.yml
 
   workflow_dispatch:
 
