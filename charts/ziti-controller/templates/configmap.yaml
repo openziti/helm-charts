@@ -51,7 +51,70 @@ data:
     echo "INFO: running: ziti agent cluster init ${ZITI_ADMIN_USER} ***** ${ZITI_ADMIN_USER}"
     ziti agent cluster init --tcp-addr "${AGENT_ADDR}" "${ZITI_ADMIN_USER}" "${ZITI_ADMIN_PASSWORD}" "${ZITI_ADMIN_USER}"
 
+    # Verify credentials by attempting login
+    LOGIN_OK=0
+    for i in $(seq 1 120); do
+      if zitiLogin >/dev/null 2>&1; then
+        echo "INFO: ziti admin login succeeded"
+        LOGIN_OK=1
+        break
+      fi
+      sleep 2
+    done
+    if [[ ${LOGIN_OK} -ne 1 ]]; then
+      echo "ERROR: ziti admin login failed after timeout" >&2
+      exit 1
+    fi
+
     # Mark as initialized
+    touch "${MARKER}"
+    echo "INFO: Ziti cluster initialized"
+
+  ziti-cluster-migrate.bash: |-
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # set -o xtrace  # DEBUG
+
+    MARKER="{{ include "dataMountDir" . }}/cluster.initialized"
+    if [[ -f "${MARKER}" ]]; then
+      echo "INFO: cluster already initialized - marker file ${MARKER} exists"
+      exit 0
+    fi
+
+    AGENT_ADDR="{{ .Values.cluster.agentTcpAddr }}"
+
+    echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
+    AGENT_READY=0
+    for i in $(seq 1 120); do
+      if ziti agent cluster list --tcp-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
+        echo "INFO: CLI agent is responsive"
+        AGENT_READY=1
+        break
+      fi
+      sleep 2
+    done
+    if [[ ${AGENT_READY} -ne 1 ]]; then
+      echo "ERROR: controller agent did not become responsive within timeout" >&2
+      exit 1
+    fi
+
+    # Migration mode: admin user was migrated; verify login before marking initialized
+    echo "INFO: verifying migrated admin login"
+    LOGIN_OK=0
+    for i in $(seq 1 120); do
+      if zitiLogin >/dev/null 2>&1; then
+        echo "INFO: ziti admin login succeeded"
+        LOGIN_OK=1
+        break
+      fi
+      sleep 2
+    done
+    if [[ ${LOGIN_OK} -ne 1 ]]; then
+      echo "ERROR: ziti admin login failed after timeout" >&2
+      exit 1
+    fi
+
+    echo "INFO: marking cluster initialized (migration mode)"
     touch "${MARKER}"
     echo "INFO: Ziti cluster initialized"
 
@@ -101,9 +164,13 @@ data:
 
     v: 3
 
-    {{- if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
+    {{- $mode := include "ziti-controller.clusterMode" . }}
+    {{- if hasPrefix "cluster" $mode }}
     cluster:
       dataDir:              {{ include "dataMountDir" . }}/raft
+    {{- if eq $mode "cluster-migrate" }}
+    db:                     {{ include "dataMountDir" . }}/{{ .Values.dbFile }}
+    {{- end }}
     {{- else }}
     db:                     {{ include "dataMountDir" . }}/{{ .Values.dbFile }}
     trustDomain:            ${ZITI_TRUST_DOMAIN}

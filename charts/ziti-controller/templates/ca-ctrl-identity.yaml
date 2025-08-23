@@ -13,7 +13,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-cert
-  {{- if eq $mode "cluster-init" }}
+  {{- if or (eq $mode "cluster-init") (eq $mode "cluster-migrate") }}
   annotations:
     "helm.sh/resource-policy": keep
   {{- end }}
@@ -42,7 +42,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
-  {{- if eq $mode "cluster-init" }}
+  {{- if or (eq $mode "cluster-init") (eq $mode "cluster-migrate") }}
   annotations:
     "helm.sh/resource-policy": keep
   {{- end }}

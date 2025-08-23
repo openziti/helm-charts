@@ -1,15 +1,12 @@
-# Default values for ziti-controller.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
 cluster:
-  # -- the cluster mode (default: standalone; options: cluster-init, cluster-join); if joining a cluster, you must also set .ctrlPlane.alternativeIssuer to the first node's ctrl plane root issuer in same namespace
+  # -- the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .ctrlPlane.alternativeIssuer to the first node's ctrl plane root issuer in same namespace
   mode: standalone
-  # -- the trust domain part of the SPIFFE ID (required if cluster mode is cluster-init or cluster-join)
+  # -- the trust domain part of the SPIFFE ID (required for cluster modes)
   trustDomain: ""
-  # -- the node name part of the SPIFFE ID (required if cluster mode is cluster-init or cluster-join)
+  # -- the node name part of the SPIFFE ID (required for cluster modes)
   nodeName: ""
-  # -- optional unless joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)
+  # -- required only when joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)
   endpoint: ""
   # -- TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose)
   agentTcpAddr: "127.0.0.1:10001"
