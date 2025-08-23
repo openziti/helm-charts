@@ -123,17 +123,18 @@ that are managed by cert-manager
 
 {{/*
 Validate cluster mode.
-Returns one of: "standalone", "cluster-init", "cluster-join".
+Returns one of: "standalone", "cluster-init", "cluster-join", "cluster-migrate".
 
 Rules:
 - standalone: .Values.cluster.mode is "standalone"
 - cluster-join: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is set (non-empty)
 - cluster-init: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is empty
+- cluster-migrate: same requirements as cluster-init; .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is empty
 */}}
 {{- define "ziti-controller.clusterMode" -}}
   {{- $mode := .Values.cluster.mode | trim | lower -}}
-  {{- if not (or (eq $mode "standalone") (eq $mode "cluster-init") (eq $mode "cluster-join")) -}}
-    {{- fail (printf "invalid cluster mode: %s; valid values are: standalone, cluster-init, cluster-join" $mode) -}}
+  {{- if not (or (eq $mode "standalone") (eq $mode "cluster-init") (eq $mode "cluster-join") (eq $mode "cluster-migrate")) -}}
+    {{- fail (printf "invalid cluster mode: %s; valid values are: standalone, cluster-init, cluster-join, cluster-migrate" $mode) -}}
   {{- end -}}
 
   {{- if eq $mode "standalone" -}}
@@ -143,6 +144,11 @@ standalone
       {{- fail "cluster-init requires .Values.cluster.trustDomain and .Values.cluster.nodeName to be set" -}}
     {{- end -}}
 cluster-init
+  {{- else if eq $mode "cluster-migrate" -}}
+    {{- if or (eq .Values.cluster.trustDomain "") (eq .Values.cluster.nodeName "") -}}
+      {{- fail "cluster-migrate requires .Values.cluster.trustDomain and .Values.cluster.nodeName to be set" -}}
+    {{- end -}}
+cluster-migrate
   {{- else -}}
     {{- /* cluster-join */ -}}
     {{- if or (eq .Values.cluster.trustDomain "") (eq .Values.cluster.nodeName "") -}}
@@ -202,7 +208,40 @@ Usage: {{ include "ziti-controller.get-spiffe-uri" . }}
 Returns: spiffe://{trustDomain}/controller/{nodeName}
 */}}
 {{- define "ziti-controller.get-spiffe-uri" -}}
-  {{- $trustDomain := required ".Values.cluster.trustDomain must be set" .Values.cluster.trustDomain -}}
-  {{- $nodeName := required ".Values.cluster.nodeName must be set" .Values.cluster.nodeName -}}
-  spiffe://{{ $trustDomain }}/controller/{{ $nodeName }}
+{{- $trustDomain := include "ziti-controller.get-trust-domain" . -}}
+{{- $nodeName := required ".Values.cluster.nodeName must be set" .Values.cluster.nodeName -}}
+{{- $tdUri := printf "spiffe://%s" (trimPrefix "spiffe://" $trustDomain) -}}
+{{ $tdUri }}/controller/{{ $nodeName }}
+{{- end -}}
+
+{{/*
+Resolve the trust domain with precedence:
+1) .Values.cluster.trustDomain (new input, highest precedence)
+2) .Values.trustDomain (legacy input)
+3) Existing secret data {fullname}-trust-domain.data["trustDomain"] (base64-decoded)
+4) Generated random value: spiffe://<rand>
+
+Usage: {{ include "ziti-controller.get-trust-domain" . }}
+Returns: plain string trust domain (not base64-encoded)
+*/}}
+{{- define "ziti-controller.get-trust-domain" -}}
+  {{- $clusterTD := .Values.cluster.trustDomain | default "" -}}
+  {{- if ne $clusterTD "" -}}
+    {{- $clusterTD -}}
+  {{- else -}}
+    {{- $legacyTD := .Values.trustDomain | default "" -}}
+    {{- if ne $legacyTD "" -}}
+      {{- $legacyTD -}}
+    {{- else -}}
+      {{- $secretName := printf "%s-trust-domain" (include "ziti-controller.fullname" .) -}}
+      {{- $secretObj := (lookup "v1" "Secret" .Release.Namespace $secretName) | default dict -}}
+      {{- $secretData := (get $secretObj "data") | default dict -}}
+      {{- $fromSecret := (get $secretData "trustDomain") | default "" -}}
+      {{- if ne $fromSecret "" -}}
+        {{- $fromSecret | b64dec -}}
+      {{- else -}}
+        {{- printf "spiffe://%s" (randAlphaNum 32) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
