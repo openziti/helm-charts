@@ -5,16 +5,22 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-migrate
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
-    app.kubernetes.io/component: ziti-controller-migrate
 spec:
-  backoffLimit: 0
+  backoffLimit: 10
+  activeDeadlineSeconds: 1800 # 30 minutes max overall
+  podFailurePolicy:
+    rules:
+      - onExitCodes:
+          containerName: migrate-runner
+          operator: NotIn
+          values: [0] # retry on any non-zero exit code
+        action: Count
   template:
     metadata:
       annotations:
         configmap-checksum: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
         {{- include "ziti-controller.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: ziti-controller-migrate
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -88,12 +94,6 @@ spec:
           volumeMounts:
             - mountPath: {{ include "dataMountDir" . }}
               name: data
-            # - mountPath: {{ include "execMountDir" . }}/zitiLogin
-            #   name: ziti-controller-configmap
-            #   subPath: zitiLogin
-            # - mountPath: {{ .Values.image.homeDir }}/.bash_profile
-            #   name: ziti-controller-configmap
-            #   subPath: .bash_profile
             - mountPath: {{ include "configMountDir" . }}/ziti-controller.yaml
               name: ziti-controller-configmap
               subPath: ziti-controller.yaml
@@ -162,8 +162,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash","-c"]
           args:
-            - |
-              {{ include "execMountDir" . }}/ziti-cluster-migrate.bash
+            - {{ include "execMountDir" . }}/ziti-cluster-migrate.bash
           volumeMounts:
             - mountPath: {{ include "dataMountDir" . }}
               name: data
