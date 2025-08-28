@@ -1,20 +1,20 @@
----
-{{- $mode := include "ziti-controller.clusterMode" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "ziti-controller.fullname" . }}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
 spec:
-  replicas: {{ .Values.replicas }}
+  {{- if eq (include "ziti-controller.clusterMode" .) "cluster-migrate" }}
+  replicas: 0
+  {{- else }}
+  replicas: 1
+  {{- end }}
   strategy:
     type: Recreate
   selector:
     matchLabels:
       {{- include "ziti-controller.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: "ziti-controller"
   template:
     metadata:
       annotations:
@@ -24,7 +24,6 @@ spec:
       {{- end }}
       labels:
         {{- include "ziti-controller.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: "ziti-controller"
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -33,7 +32,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       dnsPolicy: {{ .Values.dnsPolicy }}
-      {{- if eq $mode "standalone" }}
+      {{- if eq (include "ziti-controller.clusterMode" .) "standalone" }}
       initContainers:
         - name: {{ .Chart.Name }}-init
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
@@ -151,10 +150,10 @@ spec:
             {{- range .Values.image.additionalArgs }}
             - {{ . | quote }}
             {{- end }}
-            {{- if hasPrefix "cluster" $mode }}
+            {{- if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
             - "--cli-agent-addr=tcp:{{ .Values.cluster.agentTcpAddr }}"
             - "--cli-agent-alias={{ .Values.cluster.nodeName }}"
-            {{- end }}
+          {{- end }}
 
           env:
             - name: ZITI_CTRL_PLANE_CA
@@ -167,7 +166,7 @@ spec:
               {{- else }}
               value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.clientApi.advertisedPort }}
               {{- end }}
-            {{- if or (eq $mode "standalone") (eq $mode "cluster-init") (eq $mode "cluster-migrate") }}
+            {{- if or (eq (include "ziti-controller.clusterMode" .) "standalone") (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
             - name: ZITI_ADMIN_USER
               valueFrom:
                 secretKeyRef:
@@ -187,7 +186,7 @@ spec:
                 {{- end }}
                   key: admin-password
             {{- end }}
-            {{- if (eq $mode "standalone") }}
+            {{- if (eq (include "ziti-controller.clusterMode" .) "standalone") }}
             - name: ZITI_TRUST_DOMAIN
               valueFrom:
                 secretKeyRef:
@@ -210,7 +209,7 @@ spec:
           volumeMounts:
             - mountPath: {{ include "dataMountDir" . }}
               name: data
-            {{- if or (eq $mode "standalone") (eq $mode "cluster-init") (eq $mode "cluster-migrate") }}
+            {{- if or (eq (include "ziti-controller.clusterMode" .) "standalone") (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
             - mountPath: {{ include "execMountDir" . }}/zitiLogin
               name: ziti-controller-configmap
               subPath: zitiLogin
@@ -279,7 +278,7 @@ spec:
                 {{- end }}
               {{- end }}
             {{- end }}
-        {{- if eq $mode "cluster-init" }}
+        {{- if eq (include "ziti-controller.clusterMode" .) "cluster-init" }}
         - name: cluster-init
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -325,7 +324,7 @@ spec:
               subPath: zitiLogin
             - mountPath: {{ include "dataMountDir" . }}
               name: data
-        {{- else if eq $mode "cluster-join" }}
+        {{- else if eq (include "ziti-controller.clusterMode" .) "cluster-join" }}
         - name: cluster-join
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -340,52 +339,6 @@ spec:
             - mountPath: {{ include "execMountDir" . }}/ziti-cluster-join.bash
               name: ziti-controller-configmap
               subPath: ziti-cluster-join.bash
-            - mountPath: {{ include "dataMountDir" . }}
-              name: data
-        {{- else if eq $mode "cluster-migrate" }}
-        - name: cluster-migrate
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/bin/bash","-c"]
-          args:
-            - |
-              {{ include "execMountDir" . }}/ziti-cluster-migrate.bash; sleep infinity
-          env:
-            - name: ZITI_CTRL_PLANE_CA
-              value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
-            - name: ZITI_MGMT_API
-              {{- if .Values.managementApi.service.enabled }}
-              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
-              {{- else }}
-              value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.clientApi.advertisedPort }}
-              {{- end }}
-            - name: ZITI_ADMIN_USER
-              valueFrom:
-                secretKeyRef:
-                {{- if .Values.useCustomAdminSecret }}
-                  name:  {{ .Values.customAdminSecretName }}
-                {{- else }}
-                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
-                {{- end }}
-                  key: admin-user
-            - name: ZITI_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                {{- if .Values.useCustomAdminSecret }}
-                  name:  {{ .Values.customAdminSecretName }}
-                {{- else }}
-                  name: {{ include "ziti-controller.fullname" . }}-admin-secret
-                {{- end }}
-                  key: admin-password
-            - name: HOME
-              value: {{ .Values.image.homeDir }}
-          volumeMounts:
-            - mountPath: {{ include "execMountDir" . }}/ziti-cluster-migrate.bash
-              name: ziti-controller-configmap
-              subPath: ziti-cluster-migrate.bash
-            - mountPath: {{ include "execMountDir" . }}/zitiLogin
-              name: ziti-controller-configmap
-              subPath: zitiLogin
             - mountPath: {{ include "dataMountDir" . }}
               name: data
         {{- end }}
@@ -512,3 +465,4 @@ spec:
             {{- end }}
           {{- end }}
         {{- end }}
+
