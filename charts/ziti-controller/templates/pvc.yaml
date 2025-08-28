@@ -6,7 +6,6 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
 {{- if .Values.persistence.annotations }}
   annotations:
 {{ toYaml .Values.persistence.annotations | trimSuffix "\n" | indent 4 }}

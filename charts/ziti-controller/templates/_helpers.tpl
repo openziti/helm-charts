@@ -49,6 +49,7 @@ Selector labels
 {{- define "ziti-controller.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "ziti-controller.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
 {{/*
