@@ -401,12 +401,6 @@ tolerations: []
 # -- deployment template spec affinity
 affinity: {}
 
-highAvailability:
-  # -- Ziti controller HA mode
-  mode: standalone
-  # -- Ziti controller HA swarm replicas
-  replicas: 1
-
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
