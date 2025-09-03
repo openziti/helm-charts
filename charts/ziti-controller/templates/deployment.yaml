@@ -378,8 +378,8 @@ spec:
               - key: ziti-cluster-join.bash
                 path: ziti-cluster-join.bash
                 mode: 0555
-              - key: ziti-cluster-migrate.bash
-                path: ziti-cluster-migrate.bash
+              - key: ziti-cluster-migrate-marker.bash
+                path: ziti-cluster-migrate-marker.bash
                 mode: 0555
               - key: ziti-controller.yaml
                 path: ziti-controller.yaml
