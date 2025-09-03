@@ -40,7 +40,7 @@ data:
 
     echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
     for i in $(seq 1 120); do
-      if ziti agent cluster list --tcp-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
+      if ziti agent cluster list --app-addr "tcp:${AGENT_ADDR}" >/dev/null 2>&1; then
         echo "INFO: CLI agent is responsive"
         break
       fi
@@ -49,7 +49,7 @@ data:
 
     # Perform cluster initialization (creates default admin identity)
     echo "INFO: running: ziti agent cluster init ${ZITI_ADMIN_USER} ***** ${ZITI_ADMIN_USER}"
-    ziti agent cluster init --tcp-addr "${AGENT_ADDR}" "${ZITI_ADMIN_USER}" "${ZITI_ADMIN_PASSWORD}" "${ZITI_ADMIN_USER}"
+    ziti agent cluster init --app-addr "tcp:${AGENT_ADDR}" "${ZITI_ADMIN_USER}" "${ZITI_ADMIN_PASSWORD}" "${ZITI_ADMIN_USER}"
 
     # Verify credentials by attempting login
     LOGIN_OK=0
@@ -102,7 +102,7 @@ data:
 
     echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
     for i in $(seq 1 120); do
-      if ziti agent cluster list --tcp-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
+      if ziti agent cluster list --app-addr "tcp:${AGENT_ADDR}" >/dev/null 2>&1; then
         echo "INFO: CLI agent is responsive"
         break
       fi
@@ -111,8 +111,8 @@ data:
 
     # Determine endpoint to join: prefer explicit cluster.endpoint, else fall back to ctrlPlane advertise
     ENDPOINT="{{ .Values.cluster.endpoint }}"
-    echo "INFO: running: ziti agent cluster add --tcp-addr ${AGENT_ADDR} tls:${ENDPOINT}"
-    ziti agent cluster add --tcp-addr "${AGENT_ADDR}" "tls:${ENDPOINT}"
+    echo "INFO: running: ziti agent cluster add --app-addr tcp:${AGENT_ADDR} tls:${ENDPOINT}"
+    ziti agent cluster add --app-addr "tcp:${AGENT_ADDR}" "tls:${ENDPOINT}"
 
     # Mark as joined
     touch "${MARKER}"
