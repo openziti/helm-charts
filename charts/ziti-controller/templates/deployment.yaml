@@ -137,15 +137,17 @@ spec:
           - name: prometheus
             containerPort: {{ .Values.prometheus.containerPort }}
           {{- end }}
+          {{- if or (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") (eq (include "ziti-controller.clusterMode" .) "cluster-init") }}
           readinessProbe:
             exec:
               command:
                 - /bin/sh
                 - -c
-                - test -f {{ include "dataMountDir" . }}/cluster.initialized
+                - test -f {{ include "ziti-controller.clusterMarkerFile" . }}
             initialDelaySeconds: 2
             periodSeconds: 5
             failureThreshold: 12
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{ if .Values.image.command }}
