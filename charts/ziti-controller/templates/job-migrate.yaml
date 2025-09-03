@@ -35,21 +35,15 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{ if .Values.image.command }}
           command:
           {{- range .Values.image.command }}
             - {{ . | quote }}
           {{- end }}
-          {{ end }}
           args:
-            {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
-            {{- range .Values.image.additionalArgs }}
+          {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+          {{- range .Values.image.additionalArgs }}
             - {{ . | quote }}
-            {{- end }}
-            # {{- if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
-            # - "--cli-agent-addr=tcp:{{ .Values.cluster.agentTcpAddr }}"
-            # - "--cli-agent-alias={{ .Values.cluster.nodeName }}"
-            # {{- end }}
+          {{- end }}
           env:
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
