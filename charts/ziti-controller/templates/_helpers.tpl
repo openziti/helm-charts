@@ -246,3 +246,26 @@ Returns: plain string trust domain (not base64-encoded)
     {{- end -}}
   {{- end -}}
 {{- end -}}
+
+{{/*
+Resolve the cluster marker file path based on cluster mode.
+Returns the absolute path under dataMountDir.
+
+Mappings (cluster modes only):
+- cluster-init      -> <dataMountDir>/cluster.initialized
+- cluster-migrate   -> <dataMountDir>/cluster.initialized
+- cluster-join      -> <dataMountDir>/cluster.joined
+
+Usage: {{ include "ziti-controller.clusterMarkerFile" . }}
+*/}}
+{{- define "ziti-controller.clusterMarkerFile" -}}
+  {{- $mode := include "ziti-controller.clusterMode" . -}}
+  {{- $dir := include "dataMountDir" . -}}
+  {{- if eq $mode "cluster-join" -}}
+{{- printf "%s/cluster.joined" $dir -}}
+  {{- else if hasPrefix "cluster" $mode }}
+{{- printf "%s/cluster.initialized" $dir -}}
+  {{- else }}
+{{- printf "%s/standalone.initialized" $dir -}}
+  {{- end }}
+{{- end }}

@@ -28,7 +28,7 @@ data:
     set -euo pipefail
     # set -o xtrace  # DEBUG
 
-    MARKER="{{ include "dataMountDir" . }}/cluster.initialized"
+    MARKER="{{ include "ziti-controller.clusterMarkerFile" . }}"
     if [[ -f "${MARKER}" ]]; then
       echo "INFO: cluster already initialized - marker file ${MARKER} exists"
       exit 0
@@ -75,7 +75,7 @@ data:
     set -euo pipefail
     # set -o xtrace  # DEBUG
 
-    MARKER="{{ include "dataMountDir" . }}/cluster.initialized"
+    MARKER="{{ include "ziti-controller.clusterMarkerFile" . }}"
     if [[ -f "${MARKER}" ]]; then
       echo "INFO: cluster already initialized - marker file ${MARKER} exists"
       exit 0
@@ -92,7 +92,7 @@ data:
     set -euo pipefail
     # set -o xtrace  # DEBUG
 
-    MARKER="{{ include "dataMountDir" . }}/cluster.joined"
+    MARKER="{{ include "ziti-controller.clusterMarkerFile" . }}"
     if [[ -f "${MARKER}" ]]; then
       echo "INFO: already joined cluster - marker file ${MARKER} exists"
       exit 0
