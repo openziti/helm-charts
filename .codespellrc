@@ -1,0 +1,4 @@
+[codespell]
+ignore-words-list = NotIn
+# Optionally add paths to skip, e.g. generated artifacts
+# skip = .git, dist, build, node_modules
