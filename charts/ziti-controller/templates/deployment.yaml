@@ -137,6 +137,15 @@ spec:
           - name: prometheus
             containerPort: {{ .Values.prometheus.containerPort }}
           {{- end }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - test -f {{ include "dataMountDir" . }}/cluster.initialized
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 12
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{ if .Values.image.command }}
@@ -198,7 +207,7 @@ spec:
             - name: {{ $key | quote }}
               value: {{ $val | quote }}
             {{- end }}
-            # Add additional secrets as environment variables
+            # Add additional schecrets as environment variables
             {{- range .Values.envSecrets }}
             - name: {{ .name | quote }}
               valueFrom:
