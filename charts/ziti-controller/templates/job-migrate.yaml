@@ -55,25 +55,6 @@ spec:
               {{- else }}
               value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.clientApi.advertisedPort }}
               {{- end }}
-            # - name: ZITI_ADMIN_USER
-            #   valueFrom:
-            #     secretKeyRef:
-            #     {{- if .Values.useCustomAdminSecret }}
-            #       name:  {{ .Values.customAdminSecretName }}
-            #     {{- else }}
-            #       name: {{ include "ziti-controller.fullname" . }}-admin-secret
-            #     {{- end }}
-            #       key: admin-user
-            # - name: ZITI_ADMIN_PASSWORD
-            #   valueFrom:
-            #     secretKeyRef:
-            #     {{- if .Values.useCustomAdminSecret }}
-            #       name:  {{ .Values.customAdminSecretName }}
-            #     {{- else }}
-            #       name: {{ include "ziti-controller.fullname" . }}-admin-secret
-            #     {{- end }}
-            #       key: admin-password
-            # Additional env
             {{- range $key, $val := .Values.env }}
             - name: {{ $key | quote }}
               value: {{ $val | quote }}
