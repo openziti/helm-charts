@@ -36,11 +36,11 @@ data:
       echo "INFO: initializing Ziti Cluster"
     fi
 
-    AGENT_ADDR="{{ .Values.cluster.agentTcpAddr }}"
+    AGENT_ADDR="{{ .Values.cluster.agentAppAddr }}"
 
     echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
     for i in $(seq 1 120); do
-      if ziti agent cluster list --app-addr "tcp:${AGENT_ADDR}" >/dev/null 2>&1; then
+      if ziti agent cluster list --app-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
         echo "INFO: CLI agent is responsive"
         break
       fi
@@ -49,7 +49,7 @@ data:
 
     # Perform cluster initialization (creates default admin identity)
     echo "INFO: running: ziti agent cluster init ${ZITI_ADMIN_USER} ***** ${ZITI_ADMIN_USER}"
-    ziti agent cluster init --app-addr "tcp:${AGENT_ADDR}" "${ZITI_ADMIN_USER}" "${ZITI_ADMIN_PASSWORD}" "${ZITI_ADMIN_USER}"
+    ziti agent cluster init --app-addr "${AGENT_ADDR}" "${ZITI_ADMIN_USER}" "${ZITI_ADMIN_PASSWORD}" "${ZITI_ADMIN_USER}"
 
     # Verify credentials by attempting login
     LOGIN_OK=0
@@ -98,11 +98,11 @@ data:
       exit 0
     fi
 
-    AGENT_ADDR="{{ .Values.cluster.agentTcpAddr }}"
+    AGENT_ADDR="{{ .Values.cluster.agentAppAddr }}"
 
     echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
     for i in $(seq 1 120); do
-      if ziti agent cluster list --app-addr "tcp:${AGENT_ADDR}" >/dev/null 2>&1; then
+      if ziti agent cluster list --app-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
         echo "INFO: CLI agent is responsive"
         break
       fi
@@ -124,6 +124,65 @@ data:
       --username "${ZITI_ADMIN_USER}" \
       --password "${ZITI_ADMIN_PASSWORD}" \
       --ca "${ZITI_CTRL_PLANE_CA}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}"
+
+  ziti-ready.bash: |-
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # set -o xtrace # DEBUG
+
+    MODE="{{ include "ziti-controller.clusterMode" . }}"
+    DATA_DIR="{{ include "dataMountDir" . }}"
+    CONFIG_DIR="{{ include "configMountDir" . }}"
+
+    # 1) For cluster modes, ensure the cluster marker exists
+    if [[ "${MODE}" =~ cluster-(migrate|init) ]]; then
+      MARKER="{{ include "ziti-controller.clusterMarkerFile" . }}"
+      if [[ ! -f "${MARKER}" ]]; then
+        echo "not ready: cluster marker missing: ${MARKER}" >&2
+        exit 1
+      fi
+    fi
+
+    # 2) Check agent responsiveness when in cluster modes
+    if [[ "${MODE}" == cluster-* ]]; then
+      AGENT_ADDR="{{ .Values.cluster.agentAppAddr }}"
+      if ! ziti agent cluster list --app-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
+        echo "not ready: CLI agent not responsive at ${AGENT_ADDR}" >&2
+        exit 1
+      fi
+    fi
+
+    # 3) Check TLS handshakes on enabled listeners (no cert verify, just handshake)
+    # 3a) Client API
+    HOST_CLIENT="{{ required "You must set .Values.clientApi.advertisedHost" .Values.clientApi.advertisedHost }}"
+    PORT_CLIENT="{{ .Values.clientApi.containerPort }}"
+    if ! echo | openssl s_client -connect "127.0.0.1:${PORT_CLIENT}" -servername "${HOST_CLIENT}" -alpn http/1.1 -ign_eof >/dev/null 2>&1; then
+      echo "not ready: client API TLS handshake failed on 127.0.0.1:${PORT_CLIENT}" >&2
+      exit 1
+    fi
+
+    # 3b) Ctrl Plane (if enabled)
+    {{- if .Values.ctrlPlane.service.enabled }}
+    PORT_CTRL="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.containerPort "context" .) }}"
+    HOST_CTRL="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) }}"
+    if ! echo | openssl s_client -connect "127.0.0.1:${PORT_CTRL}" -servername "${HOST_CTRL}" -alpn ziti-ctrl -ign_eof >/dev/null 2>&1; then
+      echo "not ready: ctrl plane TLS handshake failed on 127.0.0.1:${PORT_CTRL}" >&2
+      exit 1
+    fi
+    {{- end }}
+
+    # 3c) Management API (if enabled)
+    {{- if .Values.managementApi.service.enabled }}
+    PORT_MGMT="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.containerPort "context" .) }}"
+    HOST_MGMT="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) | default (printf "%s-mgmt.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}"
+    if ! echo | openssl s_client -connect "127.0.0.1:${PORT_MGMT}" -servername "${HOST_MGMT}" -alpn http/1.1 -ign_eof >/dev/null 2>&1; then
+      echo "not ready: mgmt API TLS handshake failed on 127.0.0.1:${PORT_MGMT}" >&2
+      exit 1
+    fi
+    {{- end }}
+
+    echo "ready: all readiness checks passed"
+    exit 0
 
   .bash_profile: |-
     # customize ziggy's profile for login shells here
