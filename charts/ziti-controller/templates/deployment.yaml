@@ -141,11 +141,12 @@ spec:
           readinessProbe:
             exec:
               command:
-                - /bin/sh
+                - /bin/bash
                 - -c
-                - test -f {{ include "ziti-controller.clusterMarkerFile" . }}
+                - {{ include "execMountDir" . }}/ziti-ready.bash
             initialDelaySeconds: 2
             periodSeconds: 5
+            successThreshold: 2
             failureThreshold: 12
           {{- end }}
           resources:
@@ -162,7 +163,7 @@ spec:
             - {{ . | quote }}
             {{- end }}
             {{- if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
-            - "--cli-agent-addr=tcp:{{ .Values.cluster.agentTcpAddr }}"
+            - "--cli-agent-addr={{ .Values.cluster.agentAppAddr }}"
             - "--cli-agent-alias={{ .Values.cluster.nodeName }}"
           {{- end }}
 
@@ -271,6 +272,10 @@ spec:
             - mountPath: {{ .Values.fabric.events.mountDir }}
               name: fabric-events
             {{- end }}
+            # readiness script
+            - mountPath: {{ include "execMountDir" . }}/ziti-ready.bash
+              name: ziti-controller-configmap
+              subPath: ziti-ready.bash
             {{- if .Values.spireAgent.enabled }}
             - mountPath: {{ .Values.spireAgent.spireSocketMnt }}
               name: spire-agent-socket
@@ -391,6 +396,9 @@ spec:
                 mode: 0555
               - key: ziti-cluster-migrate.bash
                 path: ziti-cluster-migrate.bash
+                mode: 0555
+              - key: ziti-ready.bash
+                path: ziti-ready.bash
                 mode: 0555
               - key: ziti-controller.yaml
                 path: ziti-controller.yaml

@@ -9,7 +9,7 @@ cluster:
   # -- required only when joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)
   endpoint: ""
   # -- TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose)
-  agentTcpAddr: "127.0.0.1:10001"
+  agentAppAddr: "tcp:127.0.0.1:10001"
 
 clientApi:
   # -- cluster service target port on the container
