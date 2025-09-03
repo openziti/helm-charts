@@ -86,6 +86,9 @@ data:
     echo "INFO: marking cluster initialized (migration mode via Job success)"
     touch "${MARKER}"
     echo "INFO: Ziti cluster initialized"
+    while true; do
+      sleep 3600
+    done
 
   ziti-cluster-join.bash: |-
     #!/usr/bin/env bash
