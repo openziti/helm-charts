@@ -290,7 +290,6 @@ identity:
 | forwarder.rateLimitedWorkerCount | int | `64` |  |
 | forwarder.xgressDialQueueLength | int | `1000` |  |
 | forwarder.xgressDialWorkerCount | int | `128` |  |
-| ha.enabled | bool | `false` | must be enabled if multiple controllers |
 | hostNetwork | bool | `false` | Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace. i.e. egress gateway |
 | identity.altServerCerts | list | `[]` |  |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |

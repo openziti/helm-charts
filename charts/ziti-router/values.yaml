@@ -1,8 +1,4 @@
 
-ha:
-  # -- must be enabled if multiple controllers
-  enabled: false
-
 ctrl:
   # -- required control plane endpoint, e.g., ctrl.ziti.example.com:443
   endpoint: ""
