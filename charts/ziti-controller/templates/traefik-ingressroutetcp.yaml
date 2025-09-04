@@ -40,7 +40,7 @@ spec:
 # disabled by default and shares a TLS listener and SNI with the client API
 ---
 {{- if .Values.managementApi.traefikTcpRoute.enabled }}
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-mgmt
@@ -80,7 +80,7 @@ spec:
 # this is disabled by default and shares a TLS listener and SNI with the client API
 ---
 {{- if .Values.ctrlPlane.traefikTcpRoute.enabled }}
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl
