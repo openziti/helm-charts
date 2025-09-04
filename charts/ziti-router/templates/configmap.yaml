@@ -43,9 +43,6 @@ data:
       {{- end }}
     {{- end }}
 
-    ha:
-      enabled: {{ .Values.ha.enabled }}
-
     ctrl:
       # router control plane API (:6262)
       endpoint:    tls:{{ required "You must set .Values.ctrl.endpoint to the control plane advertised address. Try adding --set ctrl.endpoint=ziti-controller.example.com:6262 to your Helm command" .Values.ctrl.endpoint }}
