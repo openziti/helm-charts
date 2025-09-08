@@ -111,8 +111,8 @@ data:
 
     # Determine endpoint to join: prefer explicit cluster.endpoint, else fall back to ctrlPlane advertise
     ENDPOINT="{{ .Values.cluster.endpoint }}"
-    echo "INFO: running: ziti agent cluster add --app-addr tcp:${AGENT_ADDR} tls:${ENDPOINT}"
-    ziti agent cluster add --app-addr "tcp:${AGENT_ADDR}" "tls:${ENDPOINT}"
+    echo "INFO: running: ziti agent cluster add --app-addr ${AGENT_ADDR} tls:${ENDPOINT}"
+    ziti agent cluster add --app-addr "${AGENT_ADDR}" "tls:${ENDPOINT}"
 
     # Mark as joined
     touch "${MARKER}"
