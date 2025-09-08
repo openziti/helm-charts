@@ -171,7 +171,7 @@ spec:
     {{- end }}
   {{- if hasPrefix "cluster" $mode }}
   uris:
-    - {{ include "ziti-controller.get-spiffe-uri" . }}
+    - {{ include "ziti-controller.getSpiffeUri" . }}
   {{- end }}
   ipAddresses:
     - 127.0.0.1
@@ -203,7 +203,7 @@ spec:
     - key encipherment
   {{- if hasPrefix "cluster" $mode }}
   uris:
-    - {{ include "ziti-controller.get-spiffe-uri" . }}
+    - {{ include "ziti-controller.getSpiffeUri" . }}
   {{- end }}
   issuerRef:
     kind: Issuer
