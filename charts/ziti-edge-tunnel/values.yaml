@@ -10,6 +10,12 @@ image:
   args: []  # list(string): additional args passed to the container command
   command: []  # list(string): override entrypoint command (optional)
 
+migrateJobImage:
+  registry: docker.io
+  repository: portainer/kubectl-shell
+  pullPolicy: IfNotPresent
+  tag: ""
+
 # -- JSON of an enrolled identity to write in the PVC
 zitiIdentity: ""
 # -- JWT to enroll a new identity and write in the PVC
