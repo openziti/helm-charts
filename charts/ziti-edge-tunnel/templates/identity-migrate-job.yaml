@@ -1,3 +1,4 @@
+{{- if not .Values.secret.existingSecretName }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -27,3 +28,4 @@ spec:
           configMap:
             name: {{ include "ziti-edge-tunnel.fullname" . }}-identity-migrate
             defaultMode: 0755
+{{- end }}
