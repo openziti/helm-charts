@@ -67,9 +67,14 @@ spec:
     size: 256
     rotationPolicy: Always
   issuerRef:
-    {{- if ne (len .Values.edgeSignerPki.alternativeIssuer) 0 }}
-      {{- with .Values.edgeSignerPki.alternativeIssuer }}
-        {{- toYaml . | nindent 4 }}
+    {{- $alt := .Values.edgeSignerPki.alternativeIssuer -}}
+    {{- if and $alt (ne (len $alt) 0) }}
+      {{- if typeIs "string" $alt }}
+      name: {{ $alt | quote }}
+      kind: Issuer
+      group: cert-manager.io
+      {{- else }}
+        {{- toYaml $alt | nindent 4 }}
       {{- end }}
     {{- else }}
     kind: Issuer
