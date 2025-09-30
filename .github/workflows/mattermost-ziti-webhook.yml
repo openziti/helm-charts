@@ -20,17 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     name: Ziti Mattermost Action - Py
     steps:
-    - uses: openziti/ziti-mattermost-action-py@main
-      if: ${{ env.ZHOOK_URL != null }}
+    - uses: openziti/ziti-mattermost-action-py@v1
+      if: ${{ env.ZHOOK_URL_DEV_NOTIFICATIONS != null }}
       env:
-          ZHOOK_URL: ${{ secrets.ZHOOK_URL }}
+          ZHOOK_URL: ${{ secrets.ZHOOK_URL_DEV_NOTIFICATIONS }}
       with:
         # Identity JSON containing key to access a Ziti network
         zitiId: ${{ secrets.ZITI_MATTERMOST_IDENTITY }}
 
         # URL to post the payload. Note that the `zitiId` must provide access to a service 
         # intercepting `my-mattermost-ziti-server`
-        webhookUrl: ${{ secrets.ZHOOK_URL }}
+        webhookUrl: ${{ secrets.ZHOOK_URL_DEV_NOTIFICATIONS }}
 
         eventJson: ${{ toJson(github.event) }}
         senderUsername: "GitHubZ"

@@ -42,6 +42,7 @@ helm upgrade \
     --set ctrl.endpoint=ctrl.ziti.example.com:443 \
     --set edge.advertisedHost=router1.ziti.example.com
 ```
+
 ### Ingress TLS Passthrough
 
 All router TLS listeners must terminate TLS, so it's essential that Ingress resources use TLS passthrough.
