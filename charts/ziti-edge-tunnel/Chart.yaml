@@ -1,15 +1,15 @@
 apiVersion: v2
 appVersion: 1.5.12
 description: Dial OpenZiti services with a tunneler daemonset
-kubeVersion: '>= 1.20.0-0'
+kubeVersion: ">= 1.20.0-0"
 name: ziti-edge-tunnel
 type: application
-version: 1.2.0
+version: 1.2.1
 icon: https://openziti.io/img/ziti-logo-dark.svg
 home: https://openziti.io
 sources:
-- https://github.com/openziti/ziti-tunnel-sdk-c
+  - https://github.com/openziti/ziti-tunnel-sdk-c
 keywords:
-- openziti
-- coredns
-- node-local-dns
+  - openziti
+  - coredns
+  - node-local-dns
