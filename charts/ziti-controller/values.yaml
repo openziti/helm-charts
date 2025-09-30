@@ -20,7 +20,7 @@ clientApi:
     # -- create a cluster service for the deployment
     enabled: true
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
-    type: ClusterIP # this is the only service that really needs to be exposed
+    type: LoadBalancer # this is the only service that really needs to be exposed
   ingress:
     # -- create a TLS-passthrough ingress for the client API's ClusterIP service
     enabled: false
