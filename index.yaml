@@ -2065,6 +2065,25 @@ entries:
     version: 0.1.2
   ziti-edge-tunnel:
   - apiVersion: v2
+    appVersion: 1.7.13
+    created: "2025-09-30T20:34:57.21442816Z"
+    description: Dial OpenZiti services with a tunneler daemonset
+    digest: 404c6ed9e398f03eb88e21fa9f426ae3a011348ff752382a68e86353cb4219f5
+    home: https://netfoundry.io/docs/openziti/
+    icon: https://openziti.io/img/ziti-logo-dark.svg
+    keywords:
+    - openziti
+    - coredns
+    - node-local-dns
+    kubeVersion: '>= 1.20.0-0'
+    name: ziti-edge-tunnel
+    sources:
+    - https://github.com/openziti/ziti-tunnel-sdk-c
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-edge-tunnel-1.3.0/ziti-edge-tunnel-1.3.0.tgz
+    version: 1.3.0
+  - apiVersion: v2
     appVersion: 1.5.12
     created: "2025-05-15T14:01:53.885606045Z"
     description: Dial OpenZiti services with a tunneler daemonset
@@ -3328,4 +3347,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2025-09-24T20:33:16.76553111Z"
+generated: "2025-09-30T20:34:57.215068986Z"
