@@ -79,7 +79,7 @@ spec:
               subPath: ziti-controller.yaml
             - mountPath: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
               name: ziti-controller-ctrl-plane-cas
-              readOnly: true
+              readOnly: {{ .Values.ctrlPlaneCasBundle.enabled }}
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
               name: cert-ctrl-plane-identity
               readOnly: true
@@ -90,7 +90,8 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
               readOnly: true
-            {{- else }}
+            {{- end }}
+            {{- if or (not .Values.edgeSignerPki.enabled) (not .Values.ctrlPlaneCasBundle.enabled) }}
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-intermediate/
               name: cert-ctrl-plane-intermediate
               readOnly: true
@@ -102,6 +103,11 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/web-client-identity/
               name: cert-web-client-identity
               readOnly: true
+            {{- if not .Values.ctrlPlaneCasBundle.enabled }}
+            - mountPath: {{ include "configMountDir" . }}/web-intermediate-identity/
+              name: cert-web-intermediate-identity
+              readOnly: true
+          {{- end }}       
               {{- if .Values.managementApi.service.enabled }}
             - mountPath: {{ include "configMountDir" . }}/web-mgmt-api/
               name: cert-mgmt-api
@@ -148,7 +154,6 @@ spec:
             {{- range .Values.image.additionalArgs }}
             - {{ . | quote }}
             {{- end }}
-
           env:
             - name: ZITI_CTRL_PLANE_CA
               value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
@@ -295,10 +300,15 @@ spec:
               - key: zitiLogin
                 path: zitiLogin
                 mode: 0555
+        {{- if .Values.ctrlPlaneCasBundle.enabled }}
         - name: ziti-controller-ctrl-plane-cas
           configMap:
             name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
             defaultMode: 0444
+        {{- else }}
+        - name: ziti-controller-ctrl-plane-cas
+          emptyDir: {}
+        {{- end }}
         - name: cert-ctrl-plane-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
@@ -309,7 +319,8 @@ spec:
         - name: cert-edge-signer
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
-        {{- else }}
+        {{- end }}
+        {{- if or (not .Values.edgeSignerPki.enabled) (not .Values.ctrlPlaneCasBundle.enabled) }}
         - name: cert-ctrl-plane-intermediate
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
@@ -321,6 +332,11 @@ spec:
         - name: cert-web-client-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-web-client-identity-secret
+          {{- if not .Values.ctrlPlaneCasBundle.enabled }}
+        - name: cert-web-intermediate-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
+          {{- end }}
           {{- if .Values.managementApi.service.enabled }}
         - name: cert-mgmt-api
           secret:
