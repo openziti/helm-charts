@@ -327,7 +327,7 @@ image:
 dbFile: ctrl.db
 
 ctrlPlaneCasBundle:
-  enabled: false
+  enabled: true
   # -- namespaces where trust-manager will create the Bundle resource containing
   # Ziti's trusted CA certs (default: empty means all namespaces)
   namespaceSelector: {}
