@@ -5,11 +5,11 @@
 
 Dial OpenZiti services with a tunneler daemonset
 
-**Homepage:** <https://openziti.io>
+**Homepage:** https://openziti.io
 
 ## Source Code
 
-* <https://github.com/openziti/ziti-tunnel-sdk-c>
+* https://github.com/openziti/ziti-tunnel-sdk-c
 
 ## Requirements
 
