@@ -1,0 +1,10 @@
+{{/*
+Validation: Ensure required identity configuration is provided for new installations
+*/}}
+{{- if not .Values.secret.existingSecretName }}
+  {{- if .Release.IsInstall }}
+    {{- if not (or .Values.zitiIdentity .Values.zitiEnrollToken) }}
+      {{- fail "ERROR: For new installations without an existing secret, you must supply either 'zitiIdentity' (enrolled identity JSON) or 'zitiEnrollToken' (JWT for enrollment). Use --set-file zitiIdentity=<file> or --set-file zitiEnrollToken=<file>" }}
+    {{- end }}
+  {{- end }}
+{{- end }}
