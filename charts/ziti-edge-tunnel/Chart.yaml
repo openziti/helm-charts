@@ -6,7 +6,6 @@ name: ziti-edge-tunnel
 type: application
 version: 1.3.0
 icon: https://openziti.io/img/ziti-logo-dark.svg
-home: https://netfoundry.io/docs/openziti/
 sources:
 - https://github.com/openziti/ziti-tunnel-sdk-c
 keywords:

@@ -5,8 +5,6 @@
 
 Dial OpenZiti services with a tunneler daemonset
 
-**Homepage:** <https://netfoundry.io/docs/openziti/>
-
 ## Source Code
 
 * <https://github.com/openziti/ziti-tunnel-sdk-c>
