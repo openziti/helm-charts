@@ -226,24 +226,35 @@ tunnel:
   # the user space bpf program path. bpf kernel space program is expected to be loaded prior or during
   # router deployment, e.g. bpfman agent, hostpath, etc
   diverterPath:
-  # -- list of Ziti services for which K8s services are to be created by this deployment, default is one cluster service port per Ziti service
+  # -- optional list of Ziti service:port mappings to publish via the K8s service named <release>-proxy-default, unless .k8sService names
+  # another service to map to the Ziti service. If list is empty, then no TCP load balancer is provisioned and
+  # <release>-proxy-default resolves to the pod IP, and all Ziti services with proxy.v1 configs that are diabable by the
+  # router's identity can be reached on their respective reverse-proxy ports at the headless service address.
   proxyServices: []
     #  # -- name of the Openziti service to forward data to
     #- zitiService: my_ziti_service
-    #  # -- name suffix when not using the "default" proxy tunnel service, see above: "additionalK8sServices"
+    #  # -- name suffix when not using the "default" proxy tunnel service, see "additionalK8sServices" to define
+    #  parameters for each additional k8s service
     #  k8sService: my_k8s_suffix
     #  # -- port the kubernetes service uses as listen port
     #  advertisedPort: 80
     #  # -- override the container port (default: advertisedPort)
     #  containerPort: 8443
-  # -- if tunnel mode is "proxy", create the a cluster service named `{{ release }}-proxy-default` listening on each "advertisedPort" defined in "proxyServices"
+  # -- if tunnel mode is "proxy", create the a cluster service named `{{ release }}-proxy-default` listening on each
+  # "advertisedPort" defined in "proxyServices" or as a headless service on all TCP and UDP ports on the pod IP if no
+  # Ziti services are specified, i.e., dynamic reverse-proxy mode where all dialable services with config type proxy.v1
+  # are bound to their respective ports and protocols on the pod IP
   proxyDefaultK8sService:
     enabled: true
     type: ClusterIP
-  # -- if tunnel mode is "proxy", create a separate cluster service for each Ziti service listed in "proxyServices" which k8sService == name
+  # -- this is a list of additional K8s service configurations to provision and map to a Ziti service if tunnel mode is
+  # "proxy"; for each Ziti service in "proxyServices", where .k8sService != "default" and for which an item in
+  # proxyAdditionalK8sService[].name == .k8sService in proxyServices
   proxyAdditionalK8sServices: []
-    #- name: myservice
-    #  type: ClusterIP
+    #- zitiService: myservice
+    #  type: LoadBalancer
+    #  annotations:
+    #    metallb.universe.tf/loadBalancerIPs: 192.168.1.100
 
 # websocket related config
 websocket:
@@ -481,7 +492,7 @@ readinessProbe:
   timeoutSeconds: 5
   # -- minimum consecutive successes for the probe to be considered successful
   successThreshold: 1
-  # -- Number of consecutive probe failures before k8s marks the check as failed
+  # -- Number of consecutive probe failures before K8s marks the check as failed
   failureThreshold: 5
 
 # -- deployment container liveness probe config
@@ -498,5 +509,5 @@ livenessProbe:
   timeoutSeconds: 5
   # -- minimum consecutive successes for the probe to be considered successful
   successThreshold: 1
-  # -- Number of consecutive probe failures before k8s marks the check as failed
+  # -- Number of consecutive probe failures before K8s marks the check as failed
   failureThreshold: 5
