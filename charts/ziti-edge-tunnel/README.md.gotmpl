@@ -24,9 +24,15 @@ For multinode kubernetes installations, where your cluster DNS could run on a di
 
 ## How this Chart Works
 
-This chart deploys a pod running `ziti-edge-tunnel`, [the OpenZiti Linux tunneler](https://docs.openziti.io/docs/reference/tunnelers/linux/), in transparent proxy mode with DNS nameserver. The chart uses container image `docker.io/openziti/ziti-edge-tunnel` which runs `ziti-edge-tunnel run`.
+This chart deploys a DaemonSet running [the OpenZiti Linux tunneler](https://docs.openziti.io/docs/reference/tunnelers/linux/), in transparent node-level proxy with DNS nameserver. The chart uses container image `docker.io/openziti/ziti-edge-tunnel` which runs `ziti-edge-tunnel run`.
 
-The enrolled Ziti identity JSON is persisted in a volume, and the chart will migrate the identity from a secret to the volume if the legacy secret exists.
+### Identity Storage Options
+
+The chart supports two approaches for persisting the tunneler's Ziti identity:
+
+1. **PersistentVolumeClaim (Default)**: Identity is stored in a volume, allowing the tunneler to autonomously renew its certificate.
+
+2. **Existing Secret**: Identity is mounted from a pre-created Kubernetes secret (read-only). This approach requires manual certificate management since the tunneler cannot write updates.
 
 ## Installation
 
@@ -34,36 +40,105 @@ The enrolled Ziti identity JSON is persisted in a volume, and the chart will mig
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-After adding the charts repo to Helm then you may enroll the identity and install the chart. You may supply a Ziti identity JSON file when you install the chart. This approach enables you to use any option available to the `ziti-edge-tunnel enroll` command.
+#### Identity Storage (Preferred) - Identity in PVC from Enrollment Token
+
+Provide the enrollment token as a JWT. The identity will be enrolled on first run and stored in a PVC, allowing autonomous certificate renewal. This is preferred for security because only the one-time enrollment token must be orchestrated, and the private key is generated in-place during first-run enrollment.
+
+```console
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set-file zitiEnrollToken=/tmp/k8s-tunneler.jwt
+```
+
+#### Identity Storage Option - Pre-Enrolled Identity in PVC
+
+Alternatively, you may supply a pre-enrolled identity as JSON. The identity will be stored in a PVC, allowing autonomous certificate renewal.
 
 ```console
 ziti-edge-tunnel enroll --jwt /tmp/k8s-tunneler.jwt --identity /tmp/k8s-tunneler.json
 helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set-file zitiIdentity=/tmp/k8s-tunneler.json
 ```
 
-Alternatively, you may supply the JWT directly to the chart. In this case, a private key will be generated on first run and the identity will be enrolled.
+#### Identity Storage Option - Existing Secret
 
-```console
-helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set-file zitiEnrollToken=/tmp/k8s-tunneler.jwt
-```
-
-### Installation using a existing secret
-
-**Warning:** this approach does not allow the tunneler to autonomously renew its identity certificate, so you must renew the identity certificate out of band and supply it as an existing secret.
+**⚠️ Warning:** This approach disables autonomous certificate renewal. You must manually manage certificate updates, private key rolling, etc.
 
 Create the secret:
 
 ```console
-kubectl create secret generic k8s-tunneler-identity --from-file=persisted-identity=k8s-tunneler.json
+kubectl create secret generic k8s-tunneler-identity --from-file=zitiIdentity=k8s-tunneler.json
 ```
 
-Deploy the Helm chart, referring to the existing secret:
+Deploy with the existing secret:
 
 ```console
 helm install ziti-edge-tunnel openziti/ziti-edge-tunnel --set secret.existingSecretName=k8s-tunneler-identity
 ```
 
-If desired, change the key name `persisted-identity` with `--set secret.keyName=myKeyName`.
+You may specify another Kubernetes Secret resource data key name if your existing secret does not store the identity under the key `persisted-identity`:
+
+```console
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel \
+  --set secret.existingSecretName=k8s-tunneler-identity \
+  --set secret.keyName=myKeyName
+```
+
+### PVC Configuration (Options 1 & 2 only)
+
+When using PVC storage (Options 1 & 2), you can configure the PersistentVolumeClaim settings. The chart uses ReadWriteMany access mode by default for DaemonSet compatibility:
+
+```console
+# Configure access mode (ReadWriteMany is default for multi-node DaemonSets)
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel \
+  --set-file zitiIdentity=/tmp/k8s-tunneler.json \
+  --set pvc.accessMode=ReadWriteOnce
+
+# Configure storage class (uses cluster default if not set)
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel \
+  --set-file zitiIdentity=/tmp/k8s-tunneler.json \
+  --set pvc.storageClass=nfs
+
+# Configure storage size (default is 2Gi)
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel \
+  --set-file zitiIdentity=/tmp/k8s-tunneler.json \
+  --set pvc.storageSize=5Gi
+
+# Combine multiple PVC settings
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel \
+  --set-file zitiIdentity=/tmp/k8s-tunneler.json \
+  --set pvc.accessMode=ReadWriteMany \
+  --set pvc.storageClass=nfs \
+  --set pvc.storageSize=1Gi
+```
+
+**Important:** For DaemonSets running on multiple nodes, your storage class must support `ReadWriteMany` access mode. If your cluster doesn't support RWX volumes, use Option 3 (existing secret) instead.
+
+### System Integration
+
+#### D-Bus Socket Configuration
+
+The tunneler can integrate with systemd-resolved via D-Bus to configure the node's system resolver automatically. This is enabled by default.
+
+**⚠️ Important:** If systemd-resolved integration is disabled, you must manually configure the node's resolver to query the tunneler's nameserver first for proper DNS interception.
+
+```console
+# Disable D-Bus integration (if causing issues)
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel \
+  --set-file zitiIdentity=/tmp/k8s-tunneler.json \
+  --set systemDBus.enabled=false
+
+# Use different D-Bus socket path (if default doesn't exist)
+helm install ziti-edge-tunnel openziti/ziti-edge-tunnel \
+  --set-file zitiIdentity=/tmp/k8s-tunneler.json \
+  --set systemDBus.systemDBusSocketMnt=/run/dbus/system_bus_socket
+```
+
+**Common D-Bus socket paths:**
+- `/var/run/dbus/system_bus_socket` (default, most distributions)
+- `/run/dbus/system_bus_socket` (systemd-based systems)
+- `/var/lib/dbus/system_bus_socket` (some older systems)
+
+**Troubleshooting:** If you see `hostPath type check failed: ... is not a socket file`, either:
+1. Verify the correct D-Bus socket path on your nodes: `ls -la /var/run/dbus/`
+2. Disable D-Bus integration with `--set systemDBus.enabled=false`
 
 ### Configure CoreDNS
 
