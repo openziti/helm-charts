@@ -15,11 +15,22 @@ zitiIdentity: ""
 # -- JWT to enroll a new identity and write in the PVC
 zitiEnrollToken: ""
 
+# PVC configuration for identity storage
+pvc:
+  # -- Access mode for the identity PVC (ReadWriteMany recommended for DaemonSets)
+  accessMode: ReadWriteMany
+  # -- Storage class for the identity PVC (uses cluster default if empty)
+  storageClass: ""
+  # -- Storage size for the identity PVC
+  storageSize: 2Gi
+
 dnsPolicy: ClusterFirstWithHostNet
 
-secret: {}
-  # existingSecretName: ""  # string: Use an existing secret name (if set, disables PVC)
-  # keyName: persisted-identity  # string: key in the secret (default: persisted-identity)
+secret:
+  # -- Use an existing secret name (if set, disables PVC and certificate auto-renewal)
+  existingSecretName: ""
+  # -- Key name in the secret containing the identity JSON encoding
+  keyName: "persisted-identity"
 
 imagePullSecrets: []  # list(string)
 nameOverride: ""  # string
@@ -86,9 +97,9 @@ tolerations: []
 affinity: {}
 
 systemDBus:
-  # -- enable D-Bus socket connection
+  # -- Enable D-Bus socket connection for systemd-resolved integration
   enabled: true
-  # -- file path of the System D-Bus socket mount
+  # -- Host path to the system D-Bus socket (varies by distribution)
   systemDBusSocketMnt: /var/run/dbus/system_bus_socket
 
 spireAgent:

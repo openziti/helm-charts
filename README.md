@@ -62,4 +62,4 @@ cr index --owner openziti --git-repo helm-charts --index-path .
 1. Wait for GitHub bot to bump chart versions if necessary, i.e., if anything in the chart dir changed since latest tag and the chart version is already released.
 1. Merging to main runs GitHub Actions to package and index the charts and publish the new Helm repo index and READMEs to GitHub Pages.
 
-You may verify changes are present in the Helm index: <https://docs.openziti.io/helm-charts/index.yaml>.
+You may verify changes are present in [the Helm index](https://docs.openziti.io/helm-charts/index.yaml).
