@@ -331,7 +331,7 @@ spec:
     {{- if or (not .k8sService) (eq .k8sService "default") }}
     - port: {{ .advertisedPort }}
       targetPort: {{ .containerPort }}
-      protocol: TCP
+      protocol: {{ .protocol | default "TCP" | upper }}
       name: {{ regexReplaceAll "\\W+" .zitiService "-" }}
       {{- if eq $type "NodePort" }}
       nodePort: {{ .advertisedPort }}
@@ -399,7 +399,7 @@ spec:
     {{- if and .k8sService (eq .k8sService $k8s_service) }}
     - port: {{ .advertisedPort }}
       targetPort: {{ .containerPort }}
-      protocol: TCP
+      protocol: {{ .protocol | default "TCP" | upper }}
       name: {{ regexReplaceAll "\\W+" .zitiService "-" }}
       {{- if eq $type "NodePort" }}
       nodePort: {{ .advertisedPort }}

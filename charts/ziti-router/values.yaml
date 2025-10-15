@@ -240,6 +240,8 @@ tunnel:
     #  advertisedPort: 80
     #  # -- override the container port (default: advertisedPort)
     #  containerPort: 8443
+    #  # -- protocol for the service (tcp or udp, defaults to tcp if omitted)
+    #  protocol: tcp
   # -- if tunnel mode is "proxy", create the a cluster service named `{{ release }}-proxy-default` listening on each
   # "advertisedPort" defined in "proxyServices" or as a headless service on all TCP and UDP ports on the pod IP if no
   # Ziti services are specified, i.e., dynamic reverse-proxy mode where all dialable services with config type proxy.v1
