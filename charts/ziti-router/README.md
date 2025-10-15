@@ -134,7 +134,7 @@ tunnel:
   mode: proxy
 ```
 
-Alternatively, you may override the port specified in the `proxy.v1` config to bind specific Ziti services to specific ports (TCP only) on the default proxy service. This provisions a ClusterIP load balancer with address: `<release>-proxy-default.<namespace>.svc`.
+Alternatively, you may override the port specified in the `proxy.v1` config to bind specific Ziti services to specific ports on the default proxy service. This provisions a ClusterIP load balancer with address: `<release>-proxy-default.<namespace>.svc`.
 
 ```yaml
 tunnel:
@@ -143,10 +143,13 @@ tunnel:
     - zitiService: my-ziti-service.svc
       containerPort: 10443
       advertisedPort: 443
+      protocol: tcp  # Optional: tcp or udp, defaults to tcp if omitted
     - zitiService: my-other-service.svc
       containerPort: 10022
       advertisedPort: 22
 ```
+
+The `protocol` field is optional and defaults to `tcp`. You can specify `udp` for UDP services. The protocol determines both the router's listener type and the Kubernetes service port protocol.
 
 Finally, it is also possible to provision separate cluster services for certain Ziti services, optionally overriding any TCP ports configured in a `proxy.v1`. The `name` in `proxyAdditionalK8sServices` must match a `k8sService` in `proxyServices` to map its advertised port on the additional service to the appropriate container port.
 
