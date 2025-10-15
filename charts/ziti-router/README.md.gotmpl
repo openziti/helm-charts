@@ -160,6 +160,17 @@ tunnel:
 
 The `protocol` field is optional and defaults to `tcp`. You can specify `udp` for UDP services. The protocol determines both the router's listener type and the Kubernetes service port protocol.
 
+#### Proxy Mode Examples
+
+See the [examples directory](./examples/) for complete proxy mode configuration scenarios:
+
+- **[scenario-1-dynamic.yaml](./examples/scenario-1-dynamic.yaml)** - Dynamic proxy mode with headless service (no static port mappings)
+- **[scenario-2-single-default.yaml](./examples/scenario-2-single-default.yaml)** - Single service on default ClusterIP service
+- **[scenario-3-two-default.yaml](./examples/scenario-3-two-default.yaml)** - Two services on the same default ClusterIP service
+- **[scenario-4-mixed-one-each.yaml](./examples/scenario-4-mixed-one-each.yaml)** - Mixed: one service on default, one on additional service
+- **[scenario-5-one-additional-only.yaml](./examples/scenario-5-one-additional-only.yaml)** - Single service on additional service (default disabled)
+- **[scenario-6-one-explicit-one-implicit-default.yaml](./examples/scenario-6-one-explicit-one-implicit-default.yaml)** - Explicit vs implicit default service mapping
+
 Finally, it is also possible to provision separate cluster services for certain Ziti services, optionally overriding any TCP ports configured in a `proxy.v1`. The `name` in `proxyAdditionalK8sServices` must match a `k8sService` in `proxyServices` to map its advertised port on the additional service to the appropriate container port.
 
 ```yaml
