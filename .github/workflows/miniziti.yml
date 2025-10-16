@@ -45,7 +45,7 @@ jobs:
         with:
           uri: https://github.com/openziti/ziti/releases/download/v1.4.3/ziti-linux-amd64-1.4.3.tar.gz
           name: ziti
-          version: 1.4.3
+          version: 1.7.0
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
@@ -166,7 +166,16 @@ jobs:
           miniziti kubectl get ingresses -A
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=-1
           miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=-1
+          miniziti kubectl logs --selector app.kubernetes.io/name=httpbin --tail=-1
           cat /tmp/miniziti-client.log ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt
+          
+          # Login to Ziti and check service policies and terminators
+          miniziti login
+          ziti edge policy-advisor services --quiet httpbin-service
+          ziti edge list terminators
+          ziti edge list identities
+          ziti edge list service-policies
+          
           miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok-bootstrap --tail=-1
           miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok --tail=-1
           miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-bootstrap-frontend --tail=-1
