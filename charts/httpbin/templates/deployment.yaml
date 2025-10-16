@@ -36,9 +36,6 @@ spec:
           ports: []  # no ports because server listens only on Ziti overlay
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          envFrom:
-            - secretRef:
-                name: {{ include "httpbin.fullname" . }}-identity
           env:
             - name: ENABLE_ZITI
               value: "true"
