@@ -161,24 +161,119 @@ jobs:
         run: |
           set +e
           set -x
+          
+          echo "=========================================="
+          echo "Kubernetes Resources Overview"
+          echo "=========================================="
           miniziti kubectl get pods -A
           miniziti kubectl get services -A
           miniziti kubectl get ingresses -A
-          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/name=httpbin --tail=-1
-          cat /tmp/miniziti-client.log ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt
+          miniziti kubectl get secrets -n ${ZITI_NAMESPACE}
           
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Pod Details"
+          echo "=========================================="
+          miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o wide
+          miniziti kubectl describe pod -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Identity Secret Contents"
+          echo "=========================================="
+          miniziti kubectl get secret -n ${ZITI_NAMESPACE} miniziti-httpbin-identity -o jsonpath='{.data}' | jq -r 'keys'
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Pod Environment Variables"
+          echo "=========================================="
+          HTTPBIN_POD=$(miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$HTTPBIN_POD" ]]; then
+            miniziti kubectl exec -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" -- env | grep -E 'ZITI|ENABLE' || true
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Post-Install Hook Job Status"
+          echo "=========================================="
+          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install
+          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install || true
+          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install --tail=-1 || true
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Post-Upgrade Hook Job Status"
+          echo "=========================================="
+          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade || true
+          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade || true
+          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade --tail=-1 || true
+          
+          echo ""
+          echo "=========================================="
+          echo "Ziti Controller Logs (last 100 lines)"
+          echo "=========================================="
+          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=100
+          
+          echo ""
+          echo "=========================================="
+          echo "Ziti Router Logs (last 100 lines)"
+          echo "=========================================="
+          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=100
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Pod Logs (FULL - Time Separated)"
+          echo "=========================================="
+          sleep 2  # Give logs time to settle
+          miniziti kubectl logs --selector app.kubernetes.io/name=httpbin --tail=-1
+          
+          echo ""
+          echo "=========================================="
+          echo "Miniziti Client Proxy Logs"
+          echo "=========================================="
+          cat /tmp/miniziti-client.log
+          
+          echo ""
+          echo "=========================================="
+          echo "JWT Files"
+          echo "=========================================="
+          cat ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt || true
+          
+          echo ""
+          echo "=========================================="
+          echo "Ziti Network Configuration"
+          echo "=========================================="
           # Login to Ziti and check service policies and terminators
           miniziti login
+          
+          echo ""
+          echo "--- Service Policy Advisor ---"
           ziti edge policy-advisor services --quiet httpbin-service
+          
+          echo ""
+          echo "--- Terminators ---"
           ziti edge list terminators
+          
+          echo ""
+          echo "--- Identities ---"
           ziti edge list identities
+          
+          echo ""
+          echo "--- Service Policies ---"
           ziti edge list service-policies
           
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok-bootstrap --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-bootstrap-frontend --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-frontend --tail=-1
-          miniziti kubectl -n zrok logs job/zrok-test-job
+          echo ""
+          echo "--- Services ---"
+          ziti edge list services
+          
+          echo ""
+          echo "=========================================="
+          echo "Zrok Logs"
+          echo "=========================================="
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok-bootstrap --tail=-1 || true
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok --tail=-1 || true
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-bootstrap-frontend --tail=-1 || true
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-frontend --tail=-1 || true
+          miniziti kubectl -n zrok logs job/zrok-test-job || true
+          
           exit 0
