@@ -101,3 +101,6 @@ zitiEnrollment:
 initScriptFile:   ziti-init.bash
 # -- exec by Helm post-delete hook
 deleteIdentityScriptFile: delete-identity.bash
+
+# -- Enable debug logging for Ziti SDK (sets ZITI_SDK_DEBUG=1)
+debug: false

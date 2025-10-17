@@ -43,6 +43,10 @@ spec:
               value: {{ required "You must specify the Ziti service name. Try adding --set zitiServiceName=\"my httpbin service\" to your Helm command." .Values.zitiServiceName }}
             - name: ZITI_IDENTITY
               value: /etc/ziti/id.json
+            {{- if .Values.debug }}
+            - name: ZITI_SDK_DEBUG
+              value: "1"
+            {{- end }}
           volumeMounts:
             - name: ziti-identity
               mountPath: /etc/ziti/id.json
