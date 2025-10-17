@@ -53,8 +53,8 @@ jobs:
       - name: install miniziti
         uses: supplypike/setup-bin@v5
         with:
-          # uri: https://get.openziti.io/miniziti.bash
-          uri: https://raw.githubusercontent.com/openziti/ziti/add-k8s-quickstart-overrides/quickstart/kubernetes/miniziti.bash
+          uri: https://get.openziti.io/miniziti.bash
+          # uri: https://raw.githubusercontent.com/openziti/ziti/<testing ref>/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
 
@@ -234,10 +234,6 @@ jobs:
           mkdir -p testvalues
           cat > testvalues/httpbin.yaml <<EOF
           debug: true
-          EOF
-          cat > testvalues/ziti-controller.yaml <<EOF
-          image:
-            tag: 1.7.0
           EOF
 
       - name: Upgrade miniziti with charts from this branch
