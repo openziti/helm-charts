@@ -33,6 +33,7 @@ helm install httpbinz openziti/httpbin \
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| debug | bool | `false` | Enable debug logging for Ziti SDK (sets ZITI_SDK_DEBUG=1) |
 | deleteIdentityScriptFile | string | `"delete-identity.bash"` | exec by Helm post-delete hook |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
