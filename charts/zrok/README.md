@@ -174,7 +174,7 @@ zrok   nginx   api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
 | frontend.service.advertisedPort | int | `80` | The port to advertise for the zrok frontend service |
 | frontend.service.containerPort | int | `8080` | The port to expose on the zrok frontend container |
 | frontend.service.type | string | `"ClusterIP"` | The service type to use for the zrok frontend |
-| frontend.specVersion | int | `3` |  |
+| frontend.specVersion | int | `4` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"openziti/zrok"` |  |
