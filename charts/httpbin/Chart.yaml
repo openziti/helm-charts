@@ -3,4 +3,4 @@ appVersion: 2.18.3-ziti
 description: Run the Ziti fork of go-httpbin
 name: httpbin
 type: application
-version: 0.1.14
+version: 0.2.0
