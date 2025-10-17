@@ -177,6 +177,58 @@ jobs:
             echo "WARNING: No httpbin pod found"
           fi
 
+      - name: Install the zrok chart from the latest release
+        shell: bash
+        env:
+          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+          ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
+          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+        run: |
+          helm upgrade \
+            --install \
+            --namespace zrok --create-namespace \
+            --values ./charts/zrok/values-ingress-nginx.yaml \
+            --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
+            --set "ziti.password=${ZITI_PWD}" \
+            --set "dnsZone=${ZROK_DNS_ZONE}" \
+            --set "controller.ingress.hosts[0]=zrok.${ZROK_DNS_ZONE}" \
+            --set "test.enabled=false" \
+            zrok openziti/zrok
+
+      - name: Capture zrok controller and frontend logs (before upgrade)
+        shell: bash
+        run: |
+          echo "=========================================="
+          echo "Zrok Controller Logs (Before Upgrade)"
+          echo "=========================================="
+          
+          # Wait for zrok pods to initialize
+          echo "Waiting 10 seconds for zrok to initialize..."
+          sleep 10
+          
+          # Get zrok controller logs
+          ZROK_CTRL_POD=$(miniziti kubectl get pods -n zrok -l app.kubernetes.io/name=zrok-controller -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$ZROK_CTRL_POD" ]]; then
+            echo "Zrok controller pod: $ZROK_CTRL_POD"
+            miniziti kubectl logs -n zrok "$ZROK_CTRL_POD" --tail=50 || echo "Failed to get zrok controller logs"
+          else
+            echo "WARNING: No zrok controller pod found"
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "Zrok Frontend Logs (Before Upgrade)"
+          echo "=========================================="
+          
+          # Get zrok frontend logs
+          ZROK_FRONTEND_POD=$(miniziti kubectl get pods -n zrok -l app.kubernetes.io/name=zrok-frontend -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$ZROK_FRONTEND_POD" ]]; then
+            echo "Zrok frontend pod: $ZROK_FRONTEND_POD"
+            miniziti kubectl logs -n zrok "$ZROK_FRONTEND_POD" --tail=50 || echo "Failed to get zrok frontend logs"
+          else
+            echo "WARNING: No zrok frontend pod found"
+          fi
+
       - name: Create test values directory
         run: |
           mkdir -p testvalues
@@ -274,29 +326,11 @@ jobs:
             exit 1
           fi
 
-      - name: Install the zrok chart from the latest release
-        shell: bash
-        env:
-          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
-          ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
-          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
-        run: |
-          helm upgrade \
-            --install \
-            --namespace zrok --create-namespace \
-            --values ./charts/zrok/values-ingress-nginx.yaml \
-            --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
-            --set "ziti.password=${ZITI_PWD}" \
-            --set "dnsZone=${ZROK_DNS_ZONE}" \
-            --set "controller.ingress.hosts[0]=zrok.${ZROK_DNS_ZONE}" \
-            --set "test.enabled=false" \
-            zrok openziti/zrok
-
       - name: Upgrade the zrok chart from the current branch and run the test job
         shell: bash
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
-          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
           ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
           helm upgrade \
