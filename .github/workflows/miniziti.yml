@@ -64,6 +64,18 @@ jobs:
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
+      - name: Capture hook logs from initial deployment
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        shell: bash
+        run: |
+          set +e  # Don't fail if hooks already deleted
+          echo "=========================================="
+          echo "HTTPBin Post-Install Hook (Initial Deploy)"
+          echo "=========================================="
+          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install
+          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install
+          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install --tail=-1
+
       - name: Create test values directory
         run: |
           mkdir -p testvalues
@@ -75,6 +87,17 @@ jobs:
         run: miniziti start --no-hosts --verbose --charts ./charts --values-dir ./testvalues
         env:
           MINIZITI_TIMEOUT_SECS: 300
+
+      - name: Capture hook logs from upgrade
+        shell: bash
+        run: |
+          set +e  # Don't fail if hooks already deleted
+          echo "=========================================="
+          echo "HTTPBin Post-Upgrade Hook (Branch Deploy)"
+          echo "=========================================="
+          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade
+          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade
+          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade --tail=-1
 
       - name: Verify the Console is Available
         shell: bash
@@ -267,24 +290,19 @@ jobs:
           echo "=========================================="
           HTTPBIN_POD=$(miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o jsonpath='{.items[0].metadata.name}')
           if [[ -n "$HTTPBIN_POD" ]]; then
-            miniziti kubectl exec -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" -- env | grep -E 'ZITI|ENABLE' || true
+            # Use kubectl to get env vars from pod spec (distroless image doesn't have grep)
+            echo "Environment variables from pod spec:"
+            miniziti kubectl get pod -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" -o jsonpath='{range .spec.containers[0].env[*]}{.name}{"="}{.value}{"\n"}{end}'
           fi
           
           echo ""
           echo "=========================================="
-          echo "HTTPBin Post-Install Hook Job Status"
+          echo "NOTE: Hook logs captured in earlier steps"
+          echo "  - Post-install hook: after initial deployment"
+          echo "  - Post-upgrade hook: after branch upgrade"
+          echo "  Hooks are deleted after completion, so they"
+          echo "  must be captured immediately after each deploy."
           echo "=========================================="
-          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install
-          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install || true
-          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install --tail=-1 || true
-          
-          echo ""
-          echo "=========================================="
-          echo "HTTPBin Post-Upgrade Hook Job Status"
-          echo "=========================================="
-          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade || true
-          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade || true
-          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade --tail=-1 || true
           
           echo ""
           echo "=========================================="
