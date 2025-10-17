@@ -176,6 +176,10 @@ jobs:
           cat > testvalues/httpbin.yaml <<EOF
           debug: true
           EOF
+          cat > testvalues/ziti-controller.yaml <<EOF
+          image:
+            tag: 1.7.0
+          EOF
 
       - name: Upgrade miniziti with charts from this branch
         run: miniziti start --no-hosts --verbose --charts ./charts --values-dir ./testvalues
