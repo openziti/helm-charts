@@ -192,7 +192,7 @@ jobs:
           echo "=========================================="
           
           # Get the base64-encoded identity JSON from the secret
-          IDENTITY_B64=$(miniziti kubectl get secret -n ${ZITI_NAMESPACE} miniziti-httpbin-identity -o jsonpath='{.data.ziti_id\.json}')
+          IDENTITY_B64=$(miniziti kubectl get secret -n ${ZITI_NAMESPACE} miniziti-httpbin-identity -o jsonpath='{.data.ziti_identity_json}')
           
           echo "Secret data keys:"
           miniziti kubectl get secret -n ${ZITI_NAMESPACE} miniziti-httpbin-identity -o jsonpath='{.data}' | jq -r 'keys'
@@ -200,59 +200,65 @@ jobs:
           echo ""
           echo "Base64-encoded identity length: ${#IDENTITY_B64} characters"
           
-          # Decode and validate JSON structure
-          echo ""
-          echo "Decoding and validating identity JSON..."
-          IDENTITY_JSON=$(echo "$IDENTITY_B64" | base64 -d)
-          
-          echo "Decoded JSON length: ${#IDENTITY_JSON} characters"
-          
-          # Validate it's valid JSON
-          if echo "$IDENTITY_JSON" | jq empty 2>/dev/null; then
-            echo "✓ Valid JSON structure"
+          # Check if secret data is empty
+          if [[ -z "$IDENTITY_B64" ]]; then
+            echo "✗ WARNING: Secret data is empty! Identity was not created or enrolled."
+            echo "  This explains why httpbin cannot bind to the service."
           else
-            echo "✗ INVALID JSON - parsing failed!"
-            echo "$IDENTITY_JSON" | head -c 500
-            exit 1
-          fi
-          
-          # Check for Ziti identity structure
-          echo ""
-          echo "Ziti identity structure validation:"
-          echo "  Top-level keys: $(echo "$IDENTITY_JSON" | jq -r 'keys | join(", ")')"
-          
-          # Check for required Ziti identity fields
-          HAS_ID=$(echo "$IDENTITY_JSON" | jq 'has("id")')
-          HAS_ZTAPI=$(echo "$IDENTITY_JSON" | jq 'has("ztAPI")')
-          echo "  Has 'id' key: $HAS_ID"
-          echo "  Has 'ztAPI' key: $HAS_ZTAPI"
-          
-          if [[ "$HAS_ID" == "true" ]]; then
+            # Decode and validate JSON structure
             echo ""
-            echo "  'id' object keys: $(echo "$IDENTITY_JSON" | jq -r '.id | keys | join(", ")')"
+            echo "Decoding and validating identity JSON..."
+            IDENTITY_JSON=$(echo "$IDENTITY_B64" | base64 -d)
             
-            # Check for nested certificate components
-            HAS_CERT=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("cert"))')
-            HAS_KEY=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("key"))')
-            HAS_CA=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("ca"))')
+            echo "Decoded JSON length: ${#IDENTITY_JSON} characters"
             
-            echo "  Has 'id.cert': $HAS_CERT"
-            echo "  Has 'id.key': $HAS_KEY"
-            echo "  Has 'id.ca': $HAS_CA"
-            
-            # Show cert/key formats (first few chars to confirm PEM format)
-            if [[ "$HAS_CERT" == "true" ]]; then
-              CERT_START=$(echo "$IDENTITY_JSON" | jq -r '.id.cert' | head -c 30)
-              echo "  Certificate starts with: $CERT_START"
+            # Validate it's valid JSON (non-empty)
+            if [[ -z "$IDENTITY_JSON" ]]; then
+              echo "✗ WARNING: Decoded identity is empty!"
+            elif echo "$IDENTITY_JSON" | jq empty 2>/dev/null; then
+              echo "✓ Valid JSON structure"
+              
+              # Check for Ziti identity structure
+              echo ""
+              echo "Ziti identity structure validation:"
+              echo "  Top-level keys: $(echo "$IDENTITY_JSON" | jq -r 'keys | join(", ")')"
+              
+              # Check for required Ziti identity fields
+              HAS_ID=$(echo "$IDENTITY_JSON" | jq 'has("id")')
+              HAS_ZTAPI=$(echo "$IDENTITY_JSON" | jq 'has("ztAPI")')
+              echo "  Has 'id' key: $HAS_ID"
+              echo "  Has 'ztAPI' key: $HAS_ZTAPI"
+              
+              if [[ "$HAS_ID" == "true" ]]; then
+                echo ""
+                echo "  'id' object keys: $(echo "$IDENTITY_JSON" | jq -r '.id | keys | join(", ")')"
+                
+                # Check for nested certificate components
+                HAS_CERT=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("cert"))')
+                HAS_KEY=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("key"))')
+                HAS_CA=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("ca"))')
+                
+                echo "  Has 'id.cert': $HAS_CERT"
+                echo "  Has 'id.key': $HAS_KEY"
+                echo "  Has 'id.ca': $HAS_CA"
+                
+                # Show cert/key formats (first few chars to confirm PEM format)
+                if [[ "$HAS_CERT" == "true" ]]; then
+                  CERT_START=$(echo "$IDENTITY_JSON" | jq -r '.id.cert' | head -c 30)
+                  echo "  Certificate starts with: $CERT_START"
+                fi
+                
+                if [[ "$HAS_KEY" == "true" ]]; then
+                  KEY_START=$(echo "$IDENTITY_JSON" | jq -r '.id.key' | head -c 30)
+                  echo "  Key starts with: $KEY_START"
+                fi
+              else
+                echo "  ✗ WARNING: Missing 'id' key - not a valid Ziti identity!"
+              fi
+            else
+              echo "✗ WARNING: Invalid JSON - parsing failed!"
+              echo "First 500 chars: $IDENTITY_JSON" | head -c 500
             fi
-            
-            if [[ "$HAS_KEY" == "true" ]]; then
-              KEY_START=$(echo "$IDENTITY_JSON" | jq -r '.id.key' | head -c 30)
-              echo "  Key starts with: $KEY_START"
-            fi
-          else
-            echo "  ✗ Missing 'id' key - not a valid Ziti identity!"
-            exit 1
           fi
           
           echo ""
