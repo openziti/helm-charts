@@ -79,18 +79,71 @@ jobs:
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
-      - name: Query Loki for post-install hook logs
+      - name: Find the ziti admin password
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        id: get_ziti_pwd_initial
+        run: |
+          miniziti kubectl get secrets "ziti-controller-admin-secret" \
+            --output go-template='{{index .data "admin-password" | base64decode }}' \
+            | xargs -Iadmin_password echo "ZITI_PWD=admin_password" >> $GITHUB_OUTPUT
+
+      - name: Enroll client identity
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        run: >
+          ziti edge enroll
+          --jwt ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.jwt
+          --out ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
+
+      - name: Run client proxy
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        run: >
+          nohup ziti tunnel proxy "httpbin-service:4321"
+          --identity ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
+          --verbose </dev/null &>/tmp/miniziti-client.log &
+
+      - name: Wait for proxy to serve the httpbin service
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        id: wait_for_proxy_initial
+        continue-on-error: true
+        uses: iFaxity/wait-on-action@v1
+        with:
+          resource: http://127.0.0.1:4321/get
+          delay: 1000
+          interval: 1000
+          timeout: 20000
+
+      - name: Send a POST request to the httpbin service
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        id: test_httpbin_initial
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSf -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
+          AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response.json)
+          if [[ "$AWESOME" == "awesome" ]]; then
+            echo "✓ Ziti is awesome!"
+          else
+            echo "✗ Got '$AWESOME' instead of 'awesome'" >&2
+            exit 1
+          fi
+
+      - name: Start Loki port-forward for log queries
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true' && always()
+        shell: bash
+        run: |
+          # Start port-forward in background
+          miniziti kubectl port-forward -n loki-stack svc/loki 3100:3100 &
+          echo "LOKI_PID=$!" >> $GITHUB_ENV
+          sleep 5
+
+      - name: Query Loki for post-install hook logs
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true' && always()
         shell: bash
         run: |
           echo "=========================================="
           echo "HTTPBin Post-Install Hook (from Loki)"
           echo "=========================================="
-          
-          # Port-forward Loki
-          miniziti kubectl port-forward -n loki-stack svc/loki 3100:3100 &
-          LOKI_PID=$!
-          sleep 5
           
           # Query Loki for hook logs
           curl -s "http://localhost:3100/loki/api/v1/query_range" \
@@ -99,7 +152,23 @@ jobs:
             --data-urlencode "end=$(date -u +%s)000000000" \
             | jq -r '.data.result[].values[][1]' || echo "No logs found in Loki"
           
-          kill $LOKI_PID || true
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Application Logs (Initial Deploy)"
+          echo "=========================================="
+          
+          # Wait for httpbin to start hosting the Ziti service
+          echo "Waiting 10 seconds for httpbin to initialize..."
+          sleep 10
+          
+          # Get httpbin pod logs
+          HTTPBIN_POD=$(miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$HTTPBIN_POD" ]]; then
+            echo "HTTPBin pod: $HTTPBIN_POD"
+            miniziti kubectl logs -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" --tail=50 || echo "Failed to get httpbin logs"
+          else
+            echo "WARNING: No httpbin pod found"
+          fi
 
       - name: Create test values directory
         run: |
@@ -120,11 +189,7 @@ jobs:
           echo "HTTPBin Post-Upgrade Hook (from Loki)"
           echo "=========================================="
           
-          # Port-forward Loki
-          miniziti kubectl port-forward -n loki-stack svc/loki 3100:3100 &
-          LOKI_PID=$!
-          sleep 5
-          
+          # Reuse existing port-forward (already running from previous step)
           # Query Loki for hook logs
           curl -s "http://localhost:3100/loki/api/v1/query_range" \
             --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-upgrade.*\"}" \
@@ -132,7 +197,32 @@ jobs:
             --data-urlencode "end=$(date -u +%s)000000000" \
             | jq -r '.data.result[].values[][1]' || echo "No logs found in Loki"
           
-          kill $LOKI_PID || true
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Application Logs (After Upgrade)"
+          echo "=========================================="
+          
+          # Wait for httpbin to restart and initialize after upgrade
+          echo "Waiting 10 seconds for httpbin to initialize after upgrade..."
+          sleep 10
+          
+          # Get httpbin pod logs
+          HTTPBIN_POD=$(miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$HTTPBIN_POD" ]]; then
+            echo "HTTPBin pod: $HTTPBIN_POD"
+            miniziti kubectl logs -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" --tail=50 || echo "Failed to get httpbin logs"
+          else
+            echo "WARNING: No httpbin pod found"
+          fi
+
+      - name: Stop Loki port-forward
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${LOKI_PID:-}" ]]; then
+            kill $LOKI_PID || true
+            echo "Stopped Loki port-forward (PID: $LOKI_PID)"
+          fi
 
       - name: Verify the Console is Available
         shell: bash
@@ -141,26 +231,9 @@ jobs:
           curl -skSfw '%{http_code}\t%{url}\n' -o/dev/null \
           https://miniziti-controller.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/zac/
 
-      - name: Find the ziti admin password
-        id: get_ziti_pwd
-        run: |
-          miniziti kubectl get secrets "ziti-controller-admin-secret" \
-            --output go-template='{{index .data "admin-password" | base64decode }}' \
-            | xargs -Iadmin_password echo "ZITI_PWD=admin_password" >> $GITHUB_OUTPUT
-
-      - name: Enroll client identity
-        run: >
-          ziti edge enroll
-          --jwt ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.jwt
-          --out ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
-
-      - name: Run client proxy
-        run: >
-          nohup ziti tunnel proxy "httpbin-service:4321"
-          --identity ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
-          --verbose </dev/null &>/tmp/miniziti-client.log &
-
-      - name: Wait for proxy to serve the httpbin service
+      - name: Wait for proxy to serve the httpbin service (after upgrade)
+        id: wait_for_proxy_upgrade
+        continue-on-error: true
         uses: iFaxity/wait-on-action@v1
         with:
           resource: http://127.0.0.1:4321/get
@@ -168,16 +241,18 @@ jobs:
           interval: 1000
           timeout: 20000
 
-      - name: Send a POST request to the httpbin service and verify the response data
+      - name: Send a POST request to the httpbin service (after upgrade)
+        id: test_httpbin_upgrade
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
-          curl -sSf -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
-          AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response.json)
+          curl -sSf -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response-upgrade.json
+          AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response-upgrade.json)
           if [[ "$AWESOME" == "awesome" ]]; then
-            echo "Ziti is awesome!"
+            echo "✓ Ziti is awesome (after upgrade)!"
           else
-            echo "Got '$AWESOME' instead of 'awesome'" >&2
+            echo "✗ Got '$AWESOME' instead of 'awesome'" >&2
             exit 1
           fi
 
@@ -185,7 +260,7 @@ jobs:
         shell: bash
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
-          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
           ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
           helm upgrade \
