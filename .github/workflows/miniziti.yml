@@ -146,11 +146,18 @@ jobs:
           echo "=========================================="
           
           # Query Loki for hook logs
-          curl -s "http://localhost:3100/loki/api/v1/query_range" \
+          RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
             --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-install.*\"}" \
             --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
-            --data-urlencode "end=$(date -u +%s)000000000" \
-            | jq -r '.data.result[].values[][1]' || echo "No logs found in Loki"
+            --data-urlencode "end=$(date -u +%s)000000000")
+          
+          echo "DEBUG: Loki response:"
+          echo "$RESPONSE" | jq '.' || echo "Failed to parse JSON: $RESPONSE"
+          
+          # Extract log lines
+          echo ""
+          echo "Log lines:"
+          echo "$RESPONSE" | jq -r '.data.result[].values[][1]' 2>/dev/null || echo "No logs found or failed to parse"
           
           echo ""
           echo "=========================================="
@@ -195,11 +202,18 @@ jobs:
           
           # Reuse existing port-forward (already running from previous step)
           # Query Loki for hook logs
-          curl -s "http://localhost:3100/loki/api/v1/query_range" \
+          RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
             --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-upgrade.*\"}" \
             --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
-            --data-urlencode "end=$(date -u +%s)000000000" \
-            | jq -r '.data.result[].values[][1]' || echo "No logs found in Loki"
+            --data-urlencode "end=$(date -u +%s)000000000")
+          
+          echo "DEBUG: Loki response:"
+          echo "$RESPONSE" | jq '.' || echo "Failed to parse JSON: $RESPONSE"
+          
+          # Extract log lines
+          echo ""
+          echo "Log lines:"
+          echo "$RESPONSE" | jq -r '.data.result[].values[][1]' 2>/dev/null || echo "No logs found or failed to parse"
           
           echo ""
           echo "=========================================="
