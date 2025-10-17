@@ -33,6 +33,7 @@ helm install httpbinz openziti/httpbin \
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| debug | bool | `false` | Enable debug logging for Ziti SDK (sets ZITI_SDK_DEBUG=1) |
 | deleteIdentityScriptFile | string | `"delete-identity.bash"` | exec by Helm post-delete hook |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
@@ -61,8 +62,8 @@ helm install httpbinz openziti/httpbin \
 | serviceAccount.name | string | `""` |  |
 | tolerations | list | `[]` |  |
 | zitiEnrollment | string | `nil` | Ziti one-time enrollment token as JWT, you can send this or the enrolled identity in 'zitiIdentity' |
-| zitiIdentity | string | `nil` | Enrolled Ziti identity as JSON, you can set this value or the enrollment token in 'zitiEnrollment' |
 | zitiIdentity | string | `nil` | Ziti identity contents as JSON |
+| zitiIdentity | string | `nil` | Enrolled Ziti identity as JSON, you can set this value or the enrollment token in 'zitiEnrollment' |
 | zitiIdentityBase64 | string | `nil` | Ziti identity JSON as base64 encoding |
 | zitiImage.pullPolicy | string | `"IfNotPresent"` | when to pull the container image |
 | zitiImage.repository | string | `"docker.io/openziti/ziti-cli"` | container image for running life cycle hooks to manage the Ziti identity |
