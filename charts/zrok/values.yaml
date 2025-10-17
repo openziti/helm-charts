@@ -189,7 +189,7 @@ controller:
   extraConfig: {}
 
 frontend:
-  specVersion: 3
+  specVersion: 4
   service:
     # -- The service type to use for the zrok frontend
     type: ClusterIP

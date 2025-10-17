@@ -129,10 +129,14 @@ data:
             dnsSvcIpRange: {{ .Values.tunnel.dnsSvcIpRange }}
             {{- end }}
             lanIf: {{ .Values.tunnel.lanIf }}
-          {{- else if eq .Values.tunnel.mode "proxy" }}
+          {{- else if and (eq .Values.tunnel.mode "proxy") (gt (len .Values.tunnel.proxyServices) 0) }}
             services:
             {{- range .Values.tunnel.proxyServices }}
+              {{- if .protocol }}
+              - "{{ .zitiService }}:{{ .containerPort | default .advertisedPort }}:{{ .protocol }}"
+              {{- else }}
               - "{{ .zitiService }}:{{ .containerPort | default .advertisedPort }}"
+              {{- end }}
             {{- end }}
           {{- end }}
     {{- end }}

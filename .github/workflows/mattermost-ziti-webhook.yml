@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Ziti Mattermost Action - Py
     steps:
-    - uses: openziti/ziti-mattermost-action-py@v1
+    - uses: openziti/ziti-mattermost-action-py@debug-py-action
       if: ${{ env.ZHOOK_URL_DEV_NOTIFICATIONS != null }}
       env:
           ZHOOK_URL: ${{ secrets.ZHOOK_URL_DEV_NOTIFICATIONS }}

@@ -16,8 +16,12 @@ data:
     set -o pipefail
     set -o xtrace
 
+    echo "DEBUG: HELM_UPGRADE=${HELM_UPGRADE:-unset}"
+    echo "DEBUG: Checking for existing secret {{ include "httpbin.fullname" . }}-identity"
+
     if kubectl -n {{ .Release.Namespace }} get secret \
       {{ include "httpbin.fullname" . }}-identity &>/dev/null; then
+      echo "DEBUG: Secret exists"
       if [[ ${HELM_UPGRADE:-} == true ]]; then
         echo 'INFO: no-op because secret exists and is Helm upgrade'
         # exit without error so Helm will delete the post-upgrade hook Job
@@ -28,19 +32,42 @@ data:
         exit 1
       fi
     else
+      echo "DEBUG: Secret does not exist, proceeding with enrollment"
       echo "INFO: identity secret does not exist, attempting enrollment"
+    fi
+
+    echo "DEBUG: Checking enrollment JWT file"
+    if [[ -f /etc/ziti/id.jwt ]]; then
+      echo "DEBUG: JWT file exists, size: $(wc -c < /etc/ziti/id.jwt) bytes"
+      echo "DEBUG: JWT file first 50 chars: $(head -c 50 /etc/ziti/id.jwt)"
+    else
+      echo "ERROR: JWT file /etc/ziti/id.jwt does not exist" >&2
+      exit 1
     fi
 
     mkdir -v /tmp/ziti
 
+    echo "DEBUG: Starting enrollment"
     ziti edge enroll \
       --jwt /etc/ziti/id.jwt \
       --out /tmp/ziti/id.json \
       --verbose
 
+    echo "DEBUG: Enrollment complete, checking output"
+    if [[ -f /tmp/ziti/id.json ]]; then
+      echo "DEBUG: Identity JSON created, size: $(wc -c < /tmp/ziti/id.json) bytes"
+      echo "DEBUG: Identity JSON structure: $(jq -r 'keys | join(", ")' /tmp/ziti/id.json 2>/dev/null || echo 'failed to parse JSON')"
+    else
+      echo "ERROR: Identity JSON was not created" >&2
+      exit 1
+    fi
+
+    echo "DEBUG: Creating Kubernetes secret"
     kubectl -n {{ .Release.Namespace }} create secret generic \
       {{ include "httpbin.fullname" . }}-identity \
       --from-file=ziti_identity_json=/tmp/ziti/id.json
+
+    echo "DEBUG: Init script completed successfully"
 
   {{ .Values.deleteIdentityScriptFile }}: |-
     #!/usr/bin/env bash
@@ -53,11 +80,9 @@ data:
       {{ include "httpbin.fullname" . }}-identity &>/dev/null; then
       kubectl -n {{ .Release.Namespace }} delete secret \
         {{ include "httpbin.fullname" . }}-identity
-      echo "INFO: Finished cleaning up identity. Job will self-destruct in 20s."
-      sleep 20
+      echo "INFO: Finished cleaning up identity."
     else
-      echo "INFO: no-op because identity secret does not exist. Job will self-destruct in 20s."
-      sleep 20
+      echo "INFO: no-op because identity secret does not exist."
       exit 0
     fi
 {{- end -}}
