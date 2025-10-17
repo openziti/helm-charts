@@ -70,8 +70,8 @@ jobs:
             --set grafana.enabled=false \
             --wait --timeout 180s
           
-          # Wait for Loki to be ready
-          miniziti kubectl wait deployments -n loki-stack loki --for condition=Available=True --timeout 120s
+          # Wait for Loki StatefulSet to be ready
+          miniziti kubectl wait statefulsets -n loki-stack loki --for jsonpath='{.status.readyReplicas}'=1 --timeout 120s
 
       - name: Run miniziti with latest release charts
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
