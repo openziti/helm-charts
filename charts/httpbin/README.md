@@ -2,7 +2,7 @@
 
 # httpbin
 
-![Version: 0.1.13](https://img.shields.io/badge/Version-0.1.13-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.18.3-ziti](https://img.shields.io/badge/AppVersion-2.18.3--ziti-informational?style=flat-square)
 
 Run the Ziti fork of go-httpbin
 
@@ -33,6 +33,7 @@ helm install httpbinz openziti/httpbin \
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| debug | bool | `false` | Enable debug logging for Ziti SDK (sets ZITI_SDK_DEBUG=1) |
 | deleteIdentityScriptFile | string | `"delete-identity.bash"` | exec by Helm post-delete hook |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
@@ -61,7 +62,6 @@ helm install httpbinz openziti/httpbin \
 | serviceAccount.name | string | `""` |  |
 | tolerations | list | `[]` |  |
 | zitiEnrollment | string | `nil` | Ziti one-time enrollment token as JWT, you can send this or the enrolled identity in 'zitiIdentity' |
-| zitiIdentity | string | `nil` | Enrolled Ziti identity as JSON, you can set this value or the enrollment token in 'zitiEnrollment' |
 | zitiIdentity | string | `nil` | Ziti identity contents as JSON |
 | zitiIdentityBase64 | string | `nil` | Ziti identity JSON as base64 encoding |
 | zitiImage.pullPolicy | string | `"IfNotPresent"` | when to pull the container image |

@@ -27,12 +27,13 @@ jobs:
           - v1.31.10
     env:
       ZITI_NAMESPACE: miniziti
+      ZITI_CLI_VERSION: 1.7.0
     steps:
       - name: Checkout workspace
         uses: actions/checkout@v4
 
       - name: Start minikube
-        uses: medyagh/setup-minikube@v0.0.18
+        uses: medyagh/setup-minikube@v0.0.20
         with:
           start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ matrix.kubernetes-version }}
 
@@ -41,20 +42,36 @@ jobs:
         run: echo "minikube_ip=$(minikube --profile ${ZITI_NAMESPACE} ip)" >> $GITHUB_OUTPUT
 
       - name: install ziti cli
-        uses: supplypike/setup-bin@v4
+        uses: supplypike/setup-bin@v5
         with:
-          uri: https://github.com/openziti/ziti/releases/download/v1.4.3/ziti-linux-amd64-1.4.3.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/v${{ env.ZITI_CLI_VERSION }}/ziti-linux-amd64-${{ env.ZITI_CLI_VERSION }}.tar.gz
           name: ziti
-          version: 1.4.3
+          version: ${{ env.ZITI_CLI_VERSION }}
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
       - name: install miniziti
-        uses: supplypike/setup-bin@v4
+        uses: supplypike/setup-bin@v5
         with:
           uri: https://get.openziti.io/miniziti.bash
+          # uri: https://raw.githubusercontent.com/openziti/ziti/<testing ref>/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
+
+      - name: Install Loki for log aggregation
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+          helm upgrade --install loki grafana/loki-stack \
+            --namespace loki-stack \
+            --create-namespace \
+            --set loki.auth_enabled=false \
+            --set promtail.enabled=true \
+            --set grafana.enabled=false \
+            --wait --timeout 180s
+          
+          # Wait for Loki StatefulSet to be ready
+          miniziti kubectl wait statefulsets -n loki-stack loki --for jsonpath='{.status.readyReplicas}'=1 --timeout 120s
 
       - name: Run miniziti with latest release charts
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
@@ -62,38 +79,32 @@ jobs:
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
-      - name: Upgrade miniziti with charts from this branch
-        run: miniziti start --no-hosts --verbose --charts ./charts
-        env:
-          MINIZITI_TIMEOUT_SECS: 300
-
-      - name: Verify the Console is Available
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -skSfw '%{http_code}\t%{url}\n' -o/dev/null \
-          https://miniziti-controller.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/zac/
-
       - name: Find the ziti admin password
-        id: get_ziti_pwd
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        id: get_ziti_pwd_initial
         run: |
           miniziti kubectl get secrets "ziti-controller-admin-secret" \
             --output go-template='{{index .data "admin-password" | base64decode }}' \
             | xargs -Iadmin_password echo "ZITI_PWD=admin_password" >> $GITHUB_OUTPUT
 
       - name: Enroll client identity
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
         run: >
           ziti edge enroll
           --jwt ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.jwt
           --out ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
 
       - name: Run client proxy
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
         run: >
           nohup ziti tunnel proxy "httpbin-service:4321"
           --identity ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
           --verbose </dev/null &>/tmp/miniziti-client.log &
 
       - name: Wait for proxy to serve the httpbin service
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        id: wait_for_proxy_initial
+        continue-on-error: true
         uses: iFaxity/wait-on-action@v1
         with:
           resource: http://127.0.0.1:4321/get
@@ -101,24 +112,76 @@ jobs:
           interval: 1000
           timeout: 20000
 
-      - name: Send a POST request to the httpbin service and verify the response data
+      - name: Send a POST request to the httpbin service
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        id: test_httpbin_initial
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
           curl -sSf -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response.json
           AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response.json)
           if [[ "$AWESOME" == "awesome" ]]; then
-            echo "Ziti is awesome!"
+            echo "✓ Ziti is awesome!"
           else
-            echo "Got '$AWESOME' instead of 'awesome'" >&2
+            echo "✗ Got '$AWESOME' instead of 'awesome'" >&2
             exit 1
+          fi
+
+      - name: Start Loki port-forward for log queries
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true' && always()
+        shell: bash
+        run: |
+          # Start port-forward in background
+          miniziti kubectl port-forward -n loki-stack svc/loki 3100:3100 &
+          echo "LOKI_PID=$!" >> $GITHUB_ENV
+          sleep 5
+
+      - name: Query Loki for post-install hook logs
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true' && always()
+        shell: bash
+        run: |
+          echo "=========================================="
+          echo "HTTPBin Post-Install Hook (from Loki)"
+          echo "=========================================="
+          
+          # Query Loki for hook logs
+          RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-install.*\"}" \
+            --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
+            --data-urlencode "end=$(date -u +%s)000000000")
+          
+          echo "DEBUG: Loki response:"
+          echo "$RESPONSE" | jq '.' || echo "Failed to parse JSON: $RESPONSE"
+          
+          # Extract log lines
+          echo ""
+          echo "Log lines:"
+          echo "$RESPONSE" | jq -r '.data.result[].values[][1]' 2>/dev/null || echo "No logs found or failed to parse"
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Application Logs (Initial Deploy)"
+          echo "=========================================="
+          
+          # Wait for httpbin to start hosting the Ziti service
+          echo "Waiting 10 seconds for httpbin to initialize..."
+          sleep 10
+          
+          # Get httpbin pod logs
+          HTTPBIN_POD=$(miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$HTTPBIN_POD" ]]; then
+            echo "HTTPBin pod: $HTTPBIN_POD"
+            miniziti kubectl logs -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" --tail=50 || echo "Failed to get httpbin logs"
+          else
+            echo "WARNING: No httpbin pod found"
           fi
 
       - name: Install the zrok chart from the latest release
         shell: bash
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
-          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
           ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
           helm upgrade \
@@ -132,11 +195,138 @@ jobs:
             --set "test.enabled=false" \
             zrok openziti/zrok
 
+      - name: Capture zrok controller and frontend logs (before upgrade)
+        shell: bash
+        run: |
+          echo "=========================================="
+          echo "Zrok Controller Logs (Before Upgrade)"
+          echo "=========================================="
+          
+          # Wait for zrok pods to initialize
+          echo "Waiting 10 seconds for zrok to initialize..."
+          sleep 10
+          
+          # Get zrok controller logs
+          ZROK_CTRL_POD=$(miniziti kubectl get pods -n zrok -l app.kubernetes.io/name=zrok-controller -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$ZROK_CTRL_POD" ]]; then
+            echo "Zrok controller pod: $ZROK_CTRL_POD"
+            miniziti kubectl logs -n zrok "$ZROK_CTRL_POD" --tail=50 || echo "Failed to get zrok controller logs"
+          else
+            echo "WARNING: No zrok controller pod found"
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "Zrok Frontend Logs (Before Upgrade)"
+          echo "=========================================="
+          
+          # Get zrok frontend logs
+          ZROK_FRONTEND_POD=$(miniziti kubectl get pods -n zrok -l app.kubernetes.io/name=zrok-frontend -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$ZROK_FRONTEND_POD" ]]; then
+            echo "Zrok frontend pod: $ZROK_FRONTEND_POD"
+            miniziti kubectl logs -n zrok "$ZROK_FRONTEND_POD" --tail=50 || echo "Failed to get zrok frontend logs"
+          else
+            echo "WARNING: No zrok frontend pod found"
+          fi
+
+      - name: Create test values directory
+        run: |
+          mkdir -p testvalues
+          cat > testvalues/httpbin.yaml <<EOF
+          debug: true
+          EOF
+
+      - name: Upgrade miniziti with charts from this branch
+        run: miniziti start --no-hosts --verbose --charts ./charts --values-dir ./testvalues
+        env:
+          MINIZITI_TIMEOUT_SECS: 300
+
+      - name: Query Loki for post-upgrade hook logs
+        shell: bash
+        run: |
+          echo "=========================================="
+          echo "HTTPBin Post-Upgrade Hook (from Loki)"
+          echo "=========================================="
+          
+          # Reuse existing port-forward (already running from previous step)
+          # Query Loki for hook logs
+          RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-upgrade.*\"}" \
+            --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
+            --data-urlencode "end=$(date -u +%s)000000000")
+          
+          echo "DEBUG: Loki response:"
+          echo "$RESPONSE" | jq '.' || echo "Failed to parse JSON: $RESPONSE"
+          
+          # Extract log lines
+          echo ""
+          echo "Log lines:"
+          echo "$RESPONSE" | jq -r '.data.result[].values[][1]' 2>/dev/null || echo "No logs found or failed to parse"
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Application Logs (After Upgrade)"
+          echo "=========================================="
+          
+          # Wait for httpbin to restart and initialize after upgrade
+          echo "Waiting 10 seconds for httpbin to initialize after upgrade..."
+          sleep 10
+          
+          # Get httpbin pod logs
+          HTTPBIN_POD=$(miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$HTTPBIN_POD" ]]; then
+            echo "HTTPBin pod: $HTTPBIN_POD"
+            miniziti kubectl logs -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" --tail=50 || echo "Failed to get httpbin logs"
+          else
+            echo "WARNING: No httpbin pod found"
+          fi
+
+      - name: Stop Loki port-forward
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${LOKI_PID:-}" ]]; then
+            kill $LOKI_PID || true
+            echo "Stopped Loki port-forward (PID: $LOKI_PID)"
+          fi
+
+      - name: Verify the Console is Available
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -skSfw '%{http_code}\t%{url}\n' -o/dev/null \
+          https://miniziti-controller.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/zac/
+
+      - name: Wait for proxy to serve the httpbin service (after upgrade)
+        id: wait_for_proxy_upgrade
+        continue-on-error: true
+        uses: iFaxity/wait-on-action@v1
+        with:
+          resource: http://127.0.0.1:4321/get
+          delay: 1000
+          interval: 1000
+          timeout: 20000
+
+      - name: Send a POST request to the httpbin service (after upgrade)
+        id: test_httpbin_upgrade
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSf -XPOST -F ziti=awesome http://127.0.0.1:4321/post > /tmp/httpbin-response-upgrade.json
+          AWESOME=$(jq -r '.form.ziti[0]' /tmp/httpbin-response-upgrade.json)
+          if [[ "$AWESOME" == "awesome" ]]; then
+            echo "✓ Ziti is awesome (after upgrade)!"
+          else
+            echo "✗ Got '$AWESOME' instead of 'awesome'" >&2
+            exit 1
+          fi
+
       - name: Upgrade the zrok chart from the current branch and run the test job
         shell: bash
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
-          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
           ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
         run: |
           helm upgrade \
@@ -161,15 +351,183 @@ jobs:
         run: |
           set +e
           set -x
+          
+          echo "=========================================="
+          echo "Kubernetes Resources Overview"
+          echo "=========================================="
           miniziti kubectl get pods -A
           miniziti kubectl get services -A
           miniziti kubectl get ingresses -A
-          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=-1
-          cat /tmp/miniziti-client.log ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok-bootstrap --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-bootstrap-frontend --tail=-1
-          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-frontend --tail=-1
-          miniziti kubectl -n zrok logs job/zrok-test-job
+          miniziti kubectl get secrets -n ${ZITI_NAMESPACE}
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Pod Details"
+          echo "=========================================="
+          miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o wide
+          miniziti kubectl describe pod -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Identity Secret Analysis"
+          echo "=========================================="
+          
+          # Get the base64-encoded identity JSON from the secret
+          IDENTITY_B64=$(miniziti kubectl get secret -n ${ZITI_NAMESPACE} miniziti-httpbin-identity -o jsonpath='{.data.ziti_identity_json}')
+          
+          echo "Secret data keys:"
+          miniziti kubectl get secret -n ${ZITI_NAMESPACE} miniziti-httpbin-identity -o jsonpath='{.data}' | jq -r 'keys'
+          
+          echo ""
+          echo "Base64-encoded identity length: ${#IDENTITY_B64} characters"
+          
+          # Check if secret data is empty
+          if [[ -z "$IDENTITY_B64" ]]; then
+            echo "✗ WARNING: Secret data is empty! Identity was not created or enrolled."
+            echo "  This explains why httpbin cannot bind to the service."
+          else
+            # Decode and validate JSON structure
+            echo ""
+            echo "Decoding and validating identity JSON..."
+            IDENTITY_JSON=$(echo "$IDENTITY_B64" | base64 -d)
+            
+            echo "Decoded JSON length: ${#IDENTITY_JSON} characters"
+            
+            # Validate it's valid JSON (non-empty)
+            if [[ -z "$IDENTITY_JSON" ]]; then
+              echo "✗ WARNING: Decoded identity is empty!"
+            elif echo "$IDENTITY_JSON" | jq empty 2>/dev/null; then
+              echo "✓ Valid JSON structure"
+              
+              # Check for Ziti identity structure
+              echo ""
+              echo "Ziti identity structure validation:"
+              echo "  Top-level keys: $(echo "$IDENTITY_JSON" | jq -r 'keys | join(", ")')"
+              
+              # Check for required Ziti identity fields
+              HAS_ID=$(echo "$IDENTITY_JSON" | jq 'has("id")')
+              HAS_ZTAPI=$(echo "$IDENTITY_JSON" | jq 'has("ztAPI")')
+              echo "  Has 'id' key: $HAS_ID"
+              echo "  Has 'ztAPI' key: $HAS_ZTAPI"
+              
+              if [[ "$HAS_ID" == "true" ]]; then
+                echo ""
+                echo "  'id' object keys: $(echo "$IDENTITY_JSON" | jq -r '.id | keys | join(", ")')"
+                
+                # Check for nested certificate components
+                HAS_CERT=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("cert"))')
+                HAS_KEY=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("key"))')
+                HAS_CA=$(echo "$IDENTITY_JSON" | jq 'has("id") and (.id | has("ca"))')
+                
+                echo "  Has 'id.cert': $HAS_CERT"
+                echo "  Has 'id.key': $HAS_KEY"
+                echo "  Has 'id.ca': $HAS_CA"
+                
+                # Show cert/key formats (first few chars to confirm PEM format)
+                if [[ "$HAS_CERT" == "true" ]]; then
+                  CERT_START=$(echo "$IDENTITY_JSON" | jq -r '.id.cert' | head -c 30)
+                  echo "  Certificate starts with: $CERT_START"
+                fi
+                
+                if [[ "$HAS_KEY" == "true" ]]; then
+                  KEY_START=$(echo "$IDENTITY_JSON" | jq -r '.id.key' | head -c 30)
+                  echo "  Key starts with: $KEY_START"
+                fi
+              else
+                echo "  ✗ WARNING: Missing 'id' key - not a valid Ziti identity!"
+              fi
+            else
+              echo "✗ WARNING: Invalid JSON - parsing failed!"
+              echo "First 500 chars: $IDENTITY_JSON" | head -c 500
+            fi
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Pod Environment Variables"
+          echo "=========================================="
+          HTTPBIN_POD=$(miniziti kubectl get pods -n ${ZITI_NAMESPACE} -l app.kubernetes.io/name=httpbin -o jsonpath='{.items[0].metadata.name}')
+          if [[ -n "$HTTPBIN_POD" ]]; then
+            # Use kubectl to get env vars from pod spec (distroless image doesn't have grep)
+            echo "Environment variables from pod spec:"
+            miniziti kubectl get pod -n ${ZITI_NAMESPACE} "$HTTPBIN_POD" -o jsonpath='{range .spec.containers[0].env[*]}{.name}{"="}{.value}{"\n"}{end}'
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "NOTE: Hook logs captured in earlier steps"
+          echo "  - Post-install hook: after initial deployment"
+          echo "  - Post-upgrade hook: after branch upgrade"
+          echo "  Hooks are deleted after completion, so they"
+          echo "  must be captured immediately after each deploy."
+          echo "=========================================="
+          
+          echo ""
+          echo "=========================================="
+          echo "Ziti Controller Logs (last 100 lines)"
+          echo "=========================================="
+          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-controller --tail=100
+          
+          echo ""
+          echo "=========================================="
+          echo "Ziti Router Logs (last 100 lines)"
+          echo "=========================================="
+          miniziti kubectl logs --selector app.kubernetes.io/component=ziti-router --tail=100
+          
+          echo ""
+          echo "=========================================="
+          echo "HTTPBin Pod Logs (FULL - Time Separated)"
+          echo "=========================================="
+          sleep 2  # Give logs time to settle
+          miniziti kubectl logs --selector app.kubernetes.io/name=httpbin --tail=-1
+          
+          echo ""
+          echo "=========================================="
+          echo "Miniziti Client Proxy Logs"
+          echo "=========================================="
+          cat /tmp/miniziti-client.log
+          
+          echo ""
+          echo "=========================================="
+          echo "JWT Files"
+          echo "=========================================="
+          cat ~/.local/state/miniziti/profiles/miniziti/identities/*.jwt || true
+          
+          echo ""
+          echo "=========================================="
+          echo "Ziti Network Configuration"
+          echo "=========================================="
+          # Login to Ziti and check service policies and terminators
+          miniziti login
+          
+          echo ""
+          echo "--- Service Policy Advisor ---"
+          ziti edge policy-advisor services --quiet httpbin-service
+          
+          echo ""
+          echo "--- Terminators ---"
+          ziti edge list terminators
+          
+          echo ""
+          echo "--- Identities ---"
+          ziti edge list identities
+          
+          echo ""
+          echo "--- Service Policies ---"
+          ziti edge list service-policies
+          
+          echo ""
+          echo "--- Services ---"
+          ziti edge list services
+          
+          echo ""
+          echo "=========================================="
+          echo "Zrok Logs"
+          echo "=========================================="
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok-bootstrap --tail=-1 || true
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-controller -n zrok -c zrok --tail=-1 || true
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-bootstrap-frontend --tail=-1 || true
+          miniziti kubectl logs --selector app.kubernetes.io/name=zrok-frontend -n zrok -c zrok-frontend --tail=-1 || true
+          miniziti kubectl -n zrok logs job/zrok-test-job || true
+          
           exit 0

@@ -44,6 +44,7 @@ spec:
           env:
             - name: ZITI_IDENTITY_BASENAME
               value: {{ include "ziti-edge-tunnel.fullname" . }}-identity
+            {{- if not .Values.secret.existingSecretName }}
             {{- if .Values.zitiIdentity }}
             - name: ZITI_IDENTITY_JSON
               value: {{ .Values.zitiIdentity | quote }}
@@ -51,6 +52,7 @@ spec:
             {{- if .Values.zitiEnrollToken }}
             - name: ZITI_ENROLL_TOKEN
               value: {{ .Values.zitiEnrollToken }}
+            {{- end }}
             {{- end }}
             - name: ZITI_LOG
               value: {{ .Values.log.zitiLevel | default 3 | quote }}
@@ -101,7 +103,7 @@ spec:
             secretName: {{ .Values.secret.existingSecretName }}
             defaultMode: 0444
             items:
-            - key: {{ .Values.secret.keyName | default "persisted-identity" | quote }}
+            - key: {{ .Values.secret.keyName | quote }}
               path: {{ include "ziti-edge-tunnel.fullname" . }}-identity.json
         {{- else }}
         - name: persisted-identity

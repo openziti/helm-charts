@@ -3,7 +3,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}
+  name: {{ include "ziti-controller.fullname" . }}-client
   namespace: {{ .Release.Namespace }}
   labels:
 {{- toYaml .Values.clientApi.traefikTcpRoute.labels | nindent 4 }}
@@ -40,10 +40,10 @@ spec:
 # disabled by default and shares a TLS listener and SNI with the client API
 ---
 {{- if .Values.managementApi.traefikTcpRoute.enabled }}
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}
+  name: {{ include "ziti-controller.fullname" . }}-mgmt
   namespace: {{ .Release.Namespace }}
   labels:
 {{- toYaml .Values.managementApi.traefikTcpRoute.labels | nindent 4 }}
@@ -80,10 +80,10 @@ spec:
 # this is disabled by default and shares a TLS listener and SNI with the client API
 ---
 {{- if .Values.ctrlPlane.traefikTcpRoute.enabled }}
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}
+  name: {{ include "ziti-controller.fullname" . }}-ctrl
   namespace: {{ .Release.Namespace }}
   labels:
 {{- toYaml .Values.ctrlPlane.traefikTcpRoute.labels | nindent 4 }}

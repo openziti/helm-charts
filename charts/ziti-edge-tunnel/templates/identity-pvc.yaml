@@ -1,10 +1,16 @@
+{{- if not .Values.secret.existingSecretName }}
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ include "ziti-edge-tunnel.fullname" . }}-identity-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - {{ .Values.pvc.accessMode }}
+  {{- if .Values.pvc.storageClass }}
+  storageClassName: {{ .Values.pvc.storageClass }}
+  {{- end }}
   resources:
     requests:
-      storage: 2Gi
+      storage: {{ .Values.pvc.storageSize }}
+{{- end }}

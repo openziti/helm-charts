@@ -137,6 +137,16 @@ spec:
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: {{ include "ziti-router.name" . }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
