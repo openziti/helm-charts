@@ -27,6 +27,7 @@ jobs:
           - v1.31.10
     env:
       ZITI_NAMESPACE: miniziti
+      ZITI_CLI_VERSION: 1.7.0
     steps:
       - name: Checkout workspace
         uses: actions/checkout@v4
@@ -43,9 +44,9 @@ jobs:
       - name: install ziti cli
         uses: supplypike/setup-bin@v4
         with:
-          uri: https://github.com/openziti/ziti/releases/download/v1.4.3/ziti-linux-amd64-1.4.3.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/v${{ env.ZITI_CLI_VERSION }}/ziti-linux-amd64-${{ env.ZITI_CLI_VERSION }}.tar.gz
           name: ziti
-          version: 1.7.0
+          version: ${{ env.ZITI_CLI_VERSION }}
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
