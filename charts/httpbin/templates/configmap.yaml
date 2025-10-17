@@ -80,11 +80,9 @@ data:
       {{ include "httpbin.fullname" . }}-identity &>/dev/null; then
       kubectl -n {{ .Release.Namespace }} delete secret \
         {{ include "httpbin.fullname" . }}-identity
-      echo "INFO: Finished cleaning up identity. Job will self-destruct in 20s."
-      sleep 20
+      echo "INFO: Finished cleaning up identity."
     else
-      echo "INFO: no-op because identity secret does not exist. Job will self-destruct in 20s."
-      sleep 20
+      echo "INFO: no-op because identity secret does not exist."
       exit 0
     fi
 {{- end -}}

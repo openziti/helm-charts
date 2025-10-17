@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start minikube
-        uses: medyagh/setup-minikube@v0.0.18
+        uses: medyagh/setup-minikube@v0.0.20
         with:
           start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ matrix.kubernetes-version }}
 
@@ -42,7 +42,7 @@ jobs:
         run: echo "minikube_ip=$(minikube --profile ${ZITI_NAMESPACE} ip)" >> $GITHUB_OUTPUT
 
       - name: install ziti cli
-        uses: supplypike/setup-bin@v4
+        uses: supplypike/setup-bin@v5
         with:
           uri: https://github.com/openziti/ziti/releases/download/v${{ env.ZITI_CLI_VERSION }}/ziti-linux-amd64-${{ env.ZITI_CLI_VERSION }}.tar.gz
           name: ziti
@@ -51,12 +51,27 @@ jobs:
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
       - name: install miniziti
-        uses: supplypike/setup-bin@v4
+        uses: supplypike/setup-bin@v5
         with:
           # uri: https://get.openziti.io/miniziti.bash
           uri: https://raw.githubusercontent.com/openziti/ziti/add-k8s-quickstart-overrides/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
+
+      - name: Install Loki for log aggregation
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+          helm upgrade --install loki grafana/loki-stack \
+            --namespace loki-stack \
+            --create-namespace \
+            --set loki.auth_enabled=false \
+            --set promtail.enabled=true \
+            --set grafana.enabled=false \
+            --wait --timeout 180s
+          
+          # Wait for Loki to be ready
+          miniziti kubectl wait deployments -n loki-stack loki --for condition=Available=True --timeout 120s
 
       - name: Run miniziti with latest release charts
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
@@ -64,17 +79,27 @@ jobs:
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
-      - name: Capture hook logs from initial deployment
+      - name: Query Loki for post-install hook logs
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
         shell: bash
         run: |
-          set +e  # Don't fail if hooks already deleted
           echo "=========================================="
-          echo "HTTPBin Post-Install Hook (Initial Deploy)"
+          echo "HTTPBin Post-Install Hook (from Loki)"
           echo "=========================================="
-          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install
-          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install
-          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-install --tail=-1
+          
+          # Port-forward Loki
+          miniziti kubectl port-forward -n loki-stack svc/loki 3100:3100 &
+          LOKI_PID=$!
+          sleep 5
+          
+          # Query Loki for hook logs
+          curl -s "http://localhost:3100/loki/api/v1/query_range" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-install.*\"}" \
+            --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
+            --data-urlencode "end=$(date -u +%s)000000000" \
+            | jq -r '.data.result[].values[][1]' || echo "No logs found in Loki"
+          
+          kill $LOKI_PID || true
 
       - name: Create test values directory
         run: |
@@ -88,16 +113,26 @@ jobs:
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
-      - name: Capture hook logs from upgrade
+      - name: Query Loki for post-upgrade hook logs
         shell: bash
         run: |
-          set +e  # Don't fail if hooks already deleted
           echo "=========================================="
-          echo "HTTPBin Post-Upgrade Hook (Branch Deploy)"
+          echo "HTTPBin Post-Upgrade Hook (from Loki)"
           echo "=========================================="
-          miniziti kubectl get jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade
-          miniziti kubectl describe jobs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade
-          miniziti kubectl logs -n ${ZITI_NAMESPACE} -l helm.sh/hook=post-upgrade --tail=-1
+          
+          # Port-forward Loki
+          miniziti kubectl port-forward -n loki-stack svc/loki 3100:3100 &
+          LOKI_PID=$!
+          sleep 5
+          
+          # Query Loki for hook logs
+          curl -s "http://localhost:3100/loki/api/v1/query_range" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-upgrade.*\"}" \
+            --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
+            --data-urlencode "end=$(date -u +%s)000000000" \
+            | jq -r '.data.result[].values[][1]' || echo "No logs found in Loki"
+          
+          kill $LOKI_PID || true
 
       - name: Verify the Console is Available
         shell: bash

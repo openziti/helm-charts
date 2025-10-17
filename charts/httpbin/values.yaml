@@ -4,8 +4,12 @@
 
 replicaCount: 1
 
+# -- Ziti one-time enrollment token as JWT, you can send this or the enrolled identity in 'zitiIdentity'
+zitiEnrollment:
+
 # -- Ziti identity contents as JSON
 zitiIdentity:
+
 # -- Ziti identity JSON as base64 encoding
 zitiIdentityBase64:
 
@@ -90,12 +94,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-# -- Enrolled Ziti identity as JSON, you can set this value or the enrollment token in 'zitiEnrollment'
-zitiIdentity:
-
-# -- Ziti one-time enrollment token as JWT, you can send this or the enrolled identity in 'zitiIdentity'
-zitiEnrollment:
 
 # -- exec by Helm post-install hook
 initScriptFile:   ziti-init.bash
