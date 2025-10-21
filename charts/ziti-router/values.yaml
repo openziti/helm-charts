@@ -226,9 +226,9 @@ tunnel:
   # the user space bpf program path. bpf kernel space program is expected to be loaded prior or during
   # router deployment, e.g. bpfman agent, hostpath, etc
   diverterPath:
-  # -- optional list of Ziti service:port mappings to publish via the K8s service named <release>-proxy-default, unless .k8sService names
-  # another service to map to the Ziti service. If list is empty, then no TCP load balancer is provisioned and
-  # <release>-proxy-default resolves to the pod IP, and all Ziti services with proxy.v1 configs that are diabable by the
+  # -- optional list of Ziti service:port mappings to publish via the K8s service named `<release>-proxy-default`, unless .k8sService names
+  # another service to map to the Ziti service. If the list is empty, then no TCP load balancer is provisioned and
+  # `<release>-proxy-default` resolves to the pod IP, and all Ziti services with proxy.v1 configs that are dialable by the
   # router's identity can be reached on their respective reverse-proxy ports at the headless service address.
   proxyServices: []
     #  # -- name of the Openziti service to forward data to
