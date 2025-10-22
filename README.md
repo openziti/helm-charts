@@ -2,14 +2,14 @@
 
 This is a repository of [Helm](https://helm.sh/) charts for use with [OpenZiti](https://docs.openziti.io) on [Kubernetes](https://kubernetes.io/).
 
-These files are published from [a GitHub repo](https://github.com/openziti/helm-charts/#readme) as [a GitHub pages site here](https://docs.openziti.io/helm-charts/).
+These files are published from [a GitHub repo](https://github.com/openziti/helm-charts/#readme) as [a GitHub pages site here](https://openziti.io/helm-charts/).
 
 ## Use this Repo
 
 ### Subscribe
 
 ```console
-$ helm repo add openziti https://docs.openziti.io/helm-charts/
+$ helm repo add openziti https://openziti.io/helm-charts/
 "openziti" has been added to your repositories
 ```
 
