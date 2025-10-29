@@ -28,7 +28,8 @@ spec:
       dnsPolicy: {{ .Values.dnsPolicy }}
       initContainers:
         - name: chown-identity-dir
-          image: busybox:latest
+          image: busybox
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["sh", "-c", "chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }} {{ include "ziti-host.identityMountPath" . }}"]
           volumeMounts:
             - name: persisted-identity
