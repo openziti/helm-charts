@@ -26,14 +26,20 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       dnsPolicy: {{ .Values.dnsPolicy }}
+      {{- if not .Values.secret.existingSecretName }}
       initContainers:
         - name: chown-identity-dir
           image: busybox
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["sh", "-c", "chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }} {{ include "ziti-host.identityMountPath" . }}"]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+          command: ["sh", "-c", "chown -Rc {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }} {{ include "ziti-host.identityMountPath" . }}"]
           volumeMounts:
             - name: persisted-identity
               mountPath: {{ include "ziti-host.identityMountPath" . }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
