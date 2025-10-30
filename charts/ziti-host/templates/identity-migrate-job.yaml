@@ -20,7 +20,7 @@ spec:
               mountPath: {{ include "ziti-host.identityMountPath" . }}
       containers:
         - name: migrate-identity
-          image: bitnami/kubectl
+          image: portainer/kubectl-shell
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "/scripts/migrate.sh"]
           securityContext:
