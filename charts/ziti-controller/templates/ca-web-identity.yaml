@@ -66,9 +66,14 @@ spec:
     size: 256
     rotationPolicy: Always
   issuerRef:
-    {{- if .Values.webBindingPki.alternativeIssuer }}
-      {{- with .Values.webBindingPki.alternativeIssuer }}
-        {{- toYaml . | nindent 4 }}
+    {{- $alt := .Values.webBindingPki.alternativeIssuer -}}
+    {{- if and $alt (ne (len $alt) 0) }}
+      {{- if typeIs "string" $alt }}
+      name: {{ $alt | quote }}
+      kind: Issuer
+      group: cert-manager.io
+      {{- else }}
+        {{- toYaml $alt | nindent 4 }}
       {{- end }}
     {{- else }}
     kind: Issuer
