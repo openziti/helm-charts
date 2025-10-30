@@ -2447,6 +2447,17 @@ entries:
     version: 0.0.2
   ziti-host:
   - apiVersion: v2
+    appVersion: 1.7.19
+    created: "2025-10-30T15:45:35.016625195Z"
+    description: Reverse proxy cluster services with an OpenZiti tunneler pod
+    digest: 07b9ded72f9d0c88dd137e05b28201e37fa13b2d82e22831cb730486a3830fe1
+    kubeVersion: '>= 1.20.0-0'
+    name: ziti-host
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-host-1.2.1/ziti-host-1.2.1.tgz
+    version: 1.2.1
+  - apiVersion: v2
     appVersion: 1.7.18
     created: "2025-10-29T14:43:09.604285533Z"
     description: Reverse proxy cluster services with an OpenZiti tunneler pod
@@ -3398,4 +3409,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2025-10-29T14:43:09.83714827Z"
+generated: "2025-10-30T15:45:35.017090756Z"
