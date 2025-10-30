@@ -12,14 +12,16 @@ spec:
       serviceAccountName: default
       initContainers:
         - name: chown-identity-dir
-          image: busybox:latest
+          image: busybox
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["sh", "-c", "chown -R {{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }} {{ include "ziti-host.identityMountPath" . }}"]
           volumeMounts:
             - name: identity-pvc
               mountPath: {{ include "ziti-host.identityMountPath" . }}
       containers:
         - name: migrate-identity
-          image: bitnami/kubectl:latest
+          image: bitnami/kubectl
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "/scripts/migrate.sh"]
           securityContext:
             runAsUser: {{ .Values.podSecurityContext.runAsUser }}
