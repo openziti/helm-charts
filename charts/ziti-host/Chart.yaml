@@ -1,7 +1,7 @@
 apiVersion: v2
-appVersion: 1.7.18
+appVersion: 1.7.19
 description: Reverse proxy cluster services with an OpenZiti tunneler pod
 kubeVersion: '>= 1.20.0-0'
 name: ziti-host
 type: application
-version: 1.2.0
+version: 1.2.1
