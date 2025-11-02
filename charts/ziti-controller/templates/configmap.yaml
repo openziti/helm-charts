@@ -10,6 +10,22 @@ data:
     #!/usr/bin/env bash
     set -euo pipefail
 
+  {{- if not .Values.ctrlPlaneCasBundle.enabled }}
+    echo "Building CAs bundle"
+    set -x
+    cat {{ include "configMountDir" . }}/ctrl-plane-intermediate/ca.crt >> {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
+    
+    {{- if (eq .Values.edgeSignerPki.enabled true) }}
+    cat {{ include "configMountDir" . }}/edge-signer/ca.crt >> {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
+    {{- end }}
+
+    {{- if (eq .Values.webBindingPki.enabled true) }}
+    cat {{ include "configMountDir" . }}/web-identity/ca.crt >> {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
+    cat {{ include "configMountDir" . }}/web-intermediate-identity/ca.crt >> {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}/{{ include "ziti-controller.ctrlPlaneCasFile" . }}
+    {{- end }}
+    set +x
+  {{- end }}
+
     if [[ -s "{{ include "dataMountDir" . }}/{{ .Values.dbFile }}" ]]; then
       echo "INFO: noop because BoltDB exists in {{ include "dataMountDir" . }}/{{ .Values.dbFile }}"
       exit 0
