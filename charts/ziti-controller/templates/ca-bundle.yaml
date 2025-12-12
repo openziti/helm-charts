@@ -1,5 +1,5 @@
 {{- /* Only render the Bundle if configMapName is empty (we're creating our own, not using an external one) */ -}}
-{{- if eq .Values.ctrlPlaneCasBundle.configMapName "" }}
+{{- if not .Values.ctrlPlaneCasBundle.configMapName }}
 ---
 # Trust bundle containing all CA certificates needed for the Ziti network.
 # With the unified PKI, all certificates chain to the edge-root CA via the edge-signer intermediate.
