@@ -262,13 +262,8 @@ data:
 
       enrollment:
         signingCert:
-          {{- if .Values.edgeSignerPki.enabled }}
           cert: {{ include "configMountDir" . }}/edge-signer/tls.crt
           key:  {{ include "configMountDir" . }}/edge-signer/tls.key
-          {{- else }}
-          cert: {{ include "configMountDir" . }}/ctrl-plane-intermediate/tls.crt
-          key:  {{ include "configMountDir" . }}/ctrl-plane-intermediate/tls.key
-          {{- end }}
         edgeIdentity:
           duration: 180m
         edgeRouter:

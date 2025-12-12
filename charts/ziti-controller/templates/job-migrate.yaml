@@ -81,15 +81,9 @@ spec:
             - mountPath: {{ include "configMountDir" . }}/ctrl-plane-client-identity/
               name: cert-ctrl-plane-client-identity
               readOnly: true
-            {{- if (eq .Values.edgeSignerPki.enabled true) }}
             - mountPath: {{ include "configMountDir" . }}/edge-signer/
               name: cert-edge-signer
               readOnly: true
-            {{- else }}
-            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-intermediate/
-              name: cert-ctrl-plane-intermediate
-              readOnly: true
-            {{- end }}
             {{- if (eq .Values.webBindingPki.enabled true) }}
             - mountPath: {{ include "configMountDir" . }}/web-identity/
               name: cert-web-identity
@@ -175,7 +169,7 @@ spec:
                 mode: 0555
         - name: ziti-controller-ctrl-plane-cas
           configMap:
-            name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
+            name: {{ include "ziti-controller.ctrlPlaneCasConfigMapName" . }}
             defaultMode: 0444
         - name: cert-ctrl-plane-identity
           secret:
@@ -183,15 +177,9 @@ spec:
         - name: cert-ctrl-plane-client-identity
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
-        {{- if (eq .Values.edgeSignerPki.enabled true) }}
         - name: cert-edge-signer
           secret:
             secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
-        {{- else }}
-        - name: cert-ctrl-plane-intermediate
-          secret:
-            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
-        {{- end }}
         {{- if (eq .Values.webBindingPki.enabled true) }}
         - name: cert-web-identity
           secret:
