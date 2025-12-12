@@ -98,6 +98,18 @@ Filename of the ctrl plane trust bundle
 ctrl-plane-cas.crt
 {{- end }}
 
+{{/*
+Name of the ConfigMap containing the ctrl plane trust bundle.
+For cluster-join nodes, this should be set to the first node's ConfigMap name.
+*/}}
+{{- define "ziti-controller.ctrlPlaneCasConfigMapName" -}}
+{{- if .Values.ctrlPlaneCasBundle.configMapName -}}
+{{ .Values.ctrlPlaneCasBundle.configMapName }}
+{{- else -}}
+{{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
+{{- end -}}
+{{- end }}
+
 {{- define "ziti-controller.console" -}}
     {{- if ne (len .Values.consoleAltIngress) 0 -}}
 https://{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.consoleAltIngress.host "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.consoleAltIngress.port "context" .) }}/zac/
