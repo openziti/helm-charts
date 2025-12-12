@@ -168,8 +168,8 @@ cluster-migrate
     {{- if or (eq $trustDomain "") (eq .Values.cluster.nodeName "") -}}
       {{- fail "cluster-join requires .Values.cluster.trustDomain and .Values.cluster.nodeName to be set" -}}
     {{- end -}}
-    {{- if eq (len .Values.ctrlPlane.alternativeIssuer) 0 -}}
-      {{- fail "cluster-join requires .Values.ctrlPlane.alternativeIssuer to be set to the first node's ctrl plane root issuer in same namespace" -}}
+    {{- if eq (len .Values.edgeSignerPki.alternativeIssuer) 0 -}}
+      {{- fail "cluster-join requires .Values.edgeSignerPki.alternativeIssuer to be set to the first node's ctrl plane root issuer in same namespace" -}}
     {{- end -}}
     {{- if eq (len .Values.cluster.endpoint) 0 -}}
       {{- fail "cluster-join requires .Values.cluster.endpoint to be set to a reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)" -}}
