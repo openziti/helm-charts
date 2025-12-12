@@ -2,21 +2,28 @@
 # CA to issue the controller's control plane identity. This CA issues the server certificate that is presented by the 
 # controller to routers and other controllers. The same server certificate is reused as a default identity if an 
 # alternative identity is not configured for a particular server TLS binding, e.g., web binding for the client API.
+#
+# DEPRECATION NOTICE: The separate ctrl-plane root CA is deprecated. All certificates are now issued
+# from the edge-signer-issuer. The ctrl-plane-root-cert and ctrl-plane-root-issuer resources below
+# are orphaned (helm.sh/resource-policy: keep) to preserve existing private keys for rollback purposes.
+# These resources will be removed in a future chart release.
 ######
 
 {{- $mode := include "ziti-controller.clusterMode" . -}}
-# generate a root CA if no alternative issuer is configured for the controller's
-# control plane PKI
+
+# DEPRECATED: ctrl-plane root CA resources are orphaned and no longer used.
+# They are preserved with "helm.sh/resource-policy: keep" to allow rollback if needed.
+# These will be removed in a future chart release.
 {{- if eq (len .Values.ctrlPlane.alternativeIssuer) 0 }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-cert
-  {{- if or (eq $mode "cluster-init") (eq $mode "cluster-migrate") }}
   annotations:
     "helm.sh/resource-policy": keep
-  {{- end }}
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -42,10 +49,10 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
-  {{- if or (eq $mode "cluster-init") (eq $mode "cluster-migrate") }}
   annotations:
     "helm.sh/resource-policy": keep
-  {{- end }}
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -60,6 +67,10 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/resource-policy": keep
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
@@ -96,6 +107,10 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/resource-policy": keep
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
@@ -178,7 +193,7 @@ spec:
     - "::1"
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
 
 ---
 # the controller's client certificate
@@ -207,4 +222,4 @@ spec:
   {{- end }}
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
