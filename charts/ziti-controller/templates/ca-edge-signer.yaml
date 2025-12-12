@@ -6,7 +6,6 @@
 # certificate must be appended to the trust bundle that is configured for the
 # router control plane's identity in .identity.ca
 ######
-{{- if (eq .Values.edgeSignerPki.enabled true) }}
 {{- if eq (len .Values.edgeSignerPki.alternativeIssuer) 0 }}
 ---
 apiVersion: cert-manager.io/v1
@@ -118,5 +117,4 @@ spec:
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
-{{- end }}
 {{- end }}
