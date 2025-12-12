@@ -1,6 +1,6 @@
 apiVersion: v2
-appVersion: 1.7.2
+appVersion: 1.8.0-pre3
 description: Host an OpenZiti controller in Kubernetes
 name: ziti-controller
 type: application
-version: 2.1.1
+version: 3.0.0-pre1
