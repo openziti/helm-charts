@@ -23,7 +23,7 @@ metadata:
   annotations:
     "helm.sh/resource-policy": keep
     "openziti.io/deprecated": "true"
-    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -52,7 +52,7 @@ metadata:
   annotations:
     "helm.sh/resource-policy": keep
     "openziti.io/deprecated": "true"
-    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -70,7 +70,7 @@ metadata:
   annotations:
     "helm.sh/resource-policy": keep
     "openziti.io/deprecated": "true"
-    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
@@ -110,7 +110,7 @@ metadata:
   annotations:
     "helm.sh/resource-policy": keep
     "openziti.io/deprecated": "true"
-    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm. It will be removed in a future release."
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
