@@ -140,9 +140,9 @@ Returns one of: "standalone", "cluster-init", "cluster-join", "cluster-migrate".
 
 Rules:
 - standalone: .Values.cluster.mode is "standalone"
-- cluster-join: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is set (non-empty)
-- cluster-init: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is empty
-- cluster-migrate: same requirements as cluster-init; .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.ctrlPlane.alternativeIssuer is empty
+- cluster-join: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.edgeSignerPki.alternativeIssuer is set (non-empty)
+- cluster-init: .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.edgeSignerPki.alternativeIssuer is empty
+- cluster-migrate: same requirements as cluster-init; .Values.cluster.nodeName is set AND .Values.cluster.trustDomain is set AND .Values.edgeSignerPki.alternativeIssuer is empty
 */}}
 {{- define "ziti-controller.clusterMode" -}}
   {{- $mode := .Values.cluster.mode | trim | lower -}}

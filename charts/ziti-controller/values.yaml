@@ -3,7 +3,7 @@
 # fullnameOverride: ""
 
 cluster:
-  # -- the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .ctrlPlane.alternativeIssuer to the first node's ctrl plane root issuer in same namespace
+  # -- the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .edgeSignerPki.alternativeIssuer to the first node's edge-root issuer in same namespace
   mode: standalone
   # -- the trust domain part of the SPIFFE ID (required for cluster modes)
   trustDomain: ""
