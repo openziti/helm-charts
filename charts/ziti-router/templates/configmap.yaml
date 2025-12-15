@@ -44,8 +44,11 @@ data:
     {{- end }}
 
     ctrl:
-      # router control plane API (:6262)
-      endpoint:    tls:{{ required "You must set .Values.ctrl.endpoint to the control plane advertised address. Try adding --set ctrl.endpoint=ziti-controller.example.com:6262 to your Helm command" .Values.ctrl.endpoint }}
+      endpointsFile: {{ .Values.ctrl.endpointsFile }}
+    {{- if .Values.ctrl.endpoint }}
+      # override the endpoint from the enrollment token (ctrl1.ziti.example.com:6262)
+      endpoint:    tls:{{ .Values.ctrl.endpoint }}
+    {{- end }}
 
     {{- if .Values.proxy }}
     proxy:
