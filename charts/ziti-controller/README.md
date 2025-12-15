@@ -288,7 +288,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
 | cluster.agentAppAddr | string | `"tcp:127.0.0.1:10001"` | TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose) |
 | cluster.endpoint | string | `""` | required only when joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280) |
-| cluster.mode | string | `"standalone"` | the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .ctrlPlane.alternativeIssuer to the first node's ctrl plane root issuer in same namespace |
+| cluster.mode | string | `"standalone"` | the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .edgeSignerPki.alternativeIssuer to the first node's edge-root issuer in same namespace |
 | cluster.nodeName | string | `""` | the node name part of the SPIFFE ID (required for cluster modes) |
 | cluster.trustDomain | string | `""` | the trust domain part of the SPIFFE ID (required for cluster modes) |
 | consoleAltIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console |
