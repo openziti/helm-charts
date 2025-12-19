@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 3.0.0-pre1](https://img.shields.io/badge/Version-3.0.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.8.0-pre3](https://img.shields.io/badge/AppVersion-1.8.0--pre3-informational?style=flat-square)
+![Version: 3.0.0-pre1](https://img.shields.io/badge/Version-3.0.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.8.0-pre4](https://img.shields.io/badge/AppVersion-1.8.0--pre4-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
