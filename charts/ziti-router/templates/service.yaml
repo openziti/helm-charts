@@ -278,7 +278,7 @@ spec:
 {{- end }}
 
 {{- if and .Values.tunnel.mode (eq .Values.tunnel.mode "proxy") .Values.tunnel.proxyDefaultK8sService.enabled (gt (len .Values.tunnel.proxyServices) 0) }}
-{{- /* Static proxy service - regular service with defined ports for static services */ -}}
+{{- /* Static proxy service - regular service with defined ports for static services */}}
 ---
 apiVersion: v1
 kind: Service
