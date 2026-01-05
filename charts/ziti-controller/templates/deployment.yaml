@@ -328,6 +328,9 @@ spec:
               subPath: zitiLogin
             - mountPath: {{ include "dataMountDir" . }}
               name: data
+            - mountPath: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
+              name: ziti-controller-ctrl-plane-cas
+              readOnly: true
         {{- else if eq (include "ziti-controller.clusterMode" .) "cluster-join" }}
         - name: cluster-join
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
