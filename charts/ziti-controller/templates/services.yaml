@@ -45,8 +45,10 @@ spec:
   externalIPs:
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.ctrlPlane.service.publishNotReadyAddresses }}
-  publishNotReadyAddresses: {{ . }}
+  {{- if hasKey .Values.ctrlPlane.service "publishNotReadyAddresses" }}
+  publishNotReadyAddresses: {{ .Values.ctrlPlane.service.publishNotReadyAddresses }}
+  {{- else if or (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
+  publishNotReadyAddresses: true
   {{- end }}
   ports:
     - port: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedPort "context" .) }}
@@ -58,7 +60,6 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
 {{- if .Values.clientApi.service.enabled }}
@@ -109,8 +110,10 @@ spec:
   externalIPs:
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.clientApi.service.publishNotReadyAddresses }}
-  publishNotReadyAddresses: {{ . }}
+  {{- if hasKey .Values.clientApi.service "publishNotReadyAddresses" }}
+  publishNotReadyAddresses: {{ .Values.clientApi.service.publishNotReadyAddresses }}
+  {{- else if or (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
+  publishNotReadyAddresses: true
   {{- end }}
   ports:
     - port: {{ .Values.clientApi.advertisedPort }}
@@ -122,7 +125,6 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
 {{- if .Values.managementApi.service.enabled }}
@@ -170,8 +172,10 @@ spec:
   externalIPs:
   {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.managementApi.service.publishNotReadyAddresses }}
-  publishNotReadyAddresses: {{ . }}
+  {{- if hasKey .Values.managementApi.service "publishNotReadyAddresses" }}
+  publishNotReadyAddresses: {{ .Values.managementApi.service.publishNotReadyAddresses }}
+  {{- else if or (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
+  publishNotReadyAddresses: true
   {{- end }}
   ports:
     - port: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
@@ -183,7 +187,6 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
 {{- end }}
 
 {{- if .Values.prometheus.service.enabled }}
@@ -244,5 +247,4 @@ spec:
       {{- end }}
   selector:
     {{- include "ziti-controller.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
 {{- end }}

@@ -39,7 +39,6 @@ helm upgrade \
   "ziti-router-123456789" \
   openziti/ziti-router \
     --set-file enrollmentJwt=/tmp/router1.jwt \
-    --set ctrl.endpoint=ctrl.ziti.example.com:443 \
     --set edge.advertisedHost=router1.ziti.example.com
 ```
 
@@ -116,7 +115,6 @@ helm upgrade \
   "ziti-router-1" \
   openziti/ziti-router \
     --set-file enrollmentJwt=/tmp/router1.jwt \
-    --set ctrl.endpoint=ctrl.ziti.example.com:443 \
     --set linkListeners.transport.enabled=false
 ```
 

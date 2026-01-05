@@ -1,34 +1,19 @@
+{{- /* Only render the Bundle if configMapName is empty (we're creating our own, not using an external one) */ -}}
+{{- if not .Values.ctrlPlaneCasBundle.configMapName }}
 ---
+# Trust bundle containing all CA certificates needed for the Ziti network.
+# With the unified PKI, all certificates chain to the edge-root CA via the edge-signer intermediate.
+# This Bundle is only rendered once per cluster (during init), not for joining nodes.
 apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
 spec:
   sources:
-    # this secret holds the ctrl plane intermediate issuer cert whose issuer is
-    # the ctrl plane root CA, or alternative issuer, if configured
-    - secret:
-        name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
-        key: ca.crt
-    {{- if (eq .Values.edgeSignerPki.enabled true) }}
-    # this secret holds the edge signer intermediate CA's cert whose issuer is
-    # the edge signer root CA
+    # Edge signer intermediate CA - issues all certificates in the unified PKI
     - secret:
         name: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
         key: ca.crt
-    {{- end }}
-    {{- if (eq .Values.webBindingPki.enabled true) }}
-    # this secret holds the web identity's server cert whose issuer is the web
-    # intermediate CA
-    - secret:
-        name: {{ include "ziti-controller.fullname" . }}-web-identity-secret
-        key: ca.crt
-    # this secret holds the web intermediate CA's certificate whose issuer is
-    # the web root CA
-    - secret:
-        name: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
-        key: ca.crt
-    {{- end }}
   target:
     configMap:
       key: {{ include "ziti-controller.ctrlPlaneCasFile" . }}
@@ -36,3 +21,4 @@ spec:
     namespaceSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+{{- end }}

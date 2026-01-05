@@ -30,7 +30,6 @@ helm upgrade \
   "ziti-router-123456789" \
   openziti/ziti-router \
     --set-file enrollmentJwt=/tmp/router1.jwt \
-    --set ctrl.endpoint=ctrl.ziti.example.com:443 \
     --set edge.advertisedHost=router1.ziti.example.com
 ```
 
@@ -107,7 +106,6 @@ helm upgrade \
   "ziti-router-1" \
   openziti/ziti-router \
     --set-file enrollmentJwt=/tmp/router1.jwt \
-    --set ctrl.endpoint=ctrl.ziti.example.com:443 \
     --set linkListeners.transport.enabled=false
 ```
 
@@ -288,7 +286,8 @@ identity:
 | csr.sans.ip | list | `[]` | additional IP SANs |
 | csr.sans.noDefaults | bool | `false` | if true, disable computing default SANs from the advertisedHost, etc. |
 | csr.sans.uri | list | `[]` | additional URI SANs |
-| ctrl.endpoint | string | `""` | required control plane endpoint, e.g., ctrl.ziti.example.com:443 |
+| ctrl.endpoint | string | `""` | optionally override the endpoint(s) from the enrollment token, e.g., ctrl.ziti.example.com:443 |
+| ctrl.endpointsFile | string | `"endpoints.yml"` |  |
 | dnsConfig | object | `{}` | it allows to override dns options when dnsPolicy is set to None. |
 | dnsPolicy | string | `"ClusterFirstWithHostNet"` |  |
 | edge.additionalListeners | list | `[]` | additional edge listeners have the same shape as the default edge listener, except they're enabled if defined, and you must specify a unique name for each additional edge listener. The name distinguishes their respective cluster services. This is useful for BrowZer clients that require a trusted certificate for the edge WebSocket and advertisedHost must resolve to a public IP that presents a trusted certificate, e.g., an Ingress with TLS termination. |
