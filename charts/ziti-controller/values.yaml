@@ -268,7 +268,7 @@ edgeSignerPki:
 # but the web-root-cert and web-root-issuer resources are orphaned.
 webBindingPki:
   # -- enable web binding PKI (certificates issued from edge-signer-issuer)
-  enabled: true
+  enabled: false
   altServerCerts: []
     #  # -- request an alternative server certificate from a cert-manager issuer
     #  mode: certManager
