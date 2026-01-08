@@ -67,7 +67,7 @@ Create the name of the service account to use
 A directory included in the init and run containers' executable search path
 */}}
 {{- define "execMountDir" -}}
-/usr/local/bin  
+/usr/local/bin
 {{- end }}
 
 {{/* 
