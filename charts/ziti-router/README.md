@@ -71,8 +71,8 @@ Create a Helm chart values file for this router chart.
 # router-values.yml
 ctrl:
   endpoint: ziti-controller-ctrl.ziti-controller.svc:1280
-advertisedHost: router1.ziti.example.com
 edge:
+  advertisedHost: router1.ziti.example.com
   advertisedPort: 443
   service:
     type: ClusterIP
