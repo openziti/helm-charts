@@ -146,8 +146,14 @@ data:
     # 2) Check agent responsiveness when in cluster modes
     if [[ "${MODE}" == cluster-* ]]; then
       AGENT_ADDR="{{ .Values.cluster.agentAppAddr }}"
-      if ! ziti agent cluster list --app-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
-        echo "not ready: CLI agent not responsive at ${AGENT_ADDR}" >&2
+      if [[ -z "${AGENT_ADDR}" ]]; then
+        echo "not ready: CLI agent not responsive at <empty agentAppAddr>" >&2
+        exit 1
+      fi
+
+      agent_err="$(ziti agent cluster list --app-addr "${AGENT_ADDR}" 2>&1 >/dev/null || true)"
+      if [[ -n "${agent_err}" ]]; then
+        echo "not ready: CLI agent not responsive at ${AGENT_ADDR}; error: ${agent_err}" >&2
         exit 1
       fi
     fi
