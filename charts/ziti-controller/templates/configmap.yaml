@@ -334,10 +334,12 @@ data:
             options: { }
           - binding: fabric
             options: { }
+          {{- if .Values.console.enabled }}
           - binding: zac
             options:
               location: /ziti-console
               indexFile: index.html
+          {{- end }}
           {{- end }}
 
     {{- if .Values.managementApi.service.enabled }}
@@ -396,10 +398,12 @@ data:
             options: { }
           - binding: health-checks
             options: { }
+          {{- if .Values.console.enabled }}
           - binding: zac
             options:
               location: /ziti-console
               indexFile: index.html
+          {{- end }}
     {{- end }}
 
     {{- if .Values.prometheus.service.enabled }}

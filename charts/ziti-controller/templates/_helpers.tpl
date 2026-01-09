@@ -111,8 +111,8 @@ For cluster-join nodes, this should be set to the first node's ConfigMap name.
 {{- end }}
 
 {{- define "ziti-controller.console" -}}
-    {{- if ne (len .Values.consoleAltIngress) 0 -}}
-https://{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.consoleAltIngress.host "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.consoleAltIngress.port "context" .) }}/zac/
+    {{- if ne (len .Values.console.altIngress) 0 -}}
+https://{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.console.altIngress.host "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.console.altIngress.port "context" .) }}/zac/
     {{- else if .Values.managementApi.service.enabled -}}
 https://{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}/zac/
     {{- else -}}

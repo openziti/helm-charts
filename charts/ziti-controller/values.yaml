@@ -132,10 +132,14 @@ ctrlPlane:
     # -- IngressRouteTCP labels
     labels: {}
 
-# -- override the address printed in Helm release notes if you configured an alternative DNS SAN for the console
-consoleAltIngress: {}
-  # host: ""
-  # port: 443
+console:
+  # -- enable the Ziti Admin Console (ZAC) at URL path "/zac" on the same port as the management API (default: true)
+  enabled: true
+  # -- override the address printed in Helm release notes if you configured an alternative DNS SAN for the console, i.e.
+  # {"host": "console.ziti.example.com", "port": 443}
+  altIngress: {}
+    # host: ""
+    # port: 443
 
 # -- set name to value in containers' environment
 env: {}

@@ -291,7 +291,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | cluster.mode | string | `"standalone"` | the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .edgeSignerPki.alternativeIssuer to the first node's edge-root issuer in same namespace |
 | cluster.nodeName | string | `""` | the node name part of the SPIFFE ID (required for cluster modes) |
 | cluster.trustDomain | string | `""` | the trust domain part of the SPIFFE ID (required for cluster modes) |
-| consoleAltIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console |
+| console.altIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console, i.e. {"host": "console.ziti.example.com", "port": 443} |
+| console.enabled | bool | `true` | enable the Ziti Admin Console (ZAC) at URL path "/zac" on the same port as the management API (default: true) |
 | ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
 | ctrlPlane.alternativeIssuer | object | `{}` | DEPRECATED: The ctrl-plane root CA is deprecated. The ctrl-plane identity is now issued by edge-signer-issuer. This option is preserved for backward compatibility but the ctrl-plane-root-cert and ctrl-plane-root-issuer resources are orphaned. (example: "my-issuer" or {name: "my-issuer", kind: "Issuer", group: "cert-manager.io"}) |
