@@ -1,5 +1,5 @@
 # generate an empty Issuer for creating root CAs unless all the controller's other PKIs are configured with an alternative issuer
-{{- if (eq (len .Values.edgeSignerPki.alternativeIssuer) 0) -}}
+{{- if or (eq (len .Values.ctrlPlane.alternativeIssuer) 0) (eq (len .Values.webBindingPki.alternativeIssuer) 0) (eq (len .Values.edgeSignerPki.alternativeIssuer) 0) }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
