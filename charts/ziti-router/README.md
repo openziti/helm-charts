@@ -295,6 +295,7 @@ identity:
 | edge.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | edge.containerPort | int | `3022` | cluster service target port on the container |
 | edge.enabled | bool | `true` | enable the edge listener in the router config; usually true because tunnel bindings require the edge which must have at least on listener |
+| edge.heartbeatIntervalSeconds | int | `60` | heartbeat interval in seconds (min: 10, max: 60, default: 60) |
 | edge.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx for passthrough TLS |
 | edge.ingress.enabled | bool | `false` | create an ingress for the cluster service; typically paired with a ClusterIP service type when enabled |
 | edge.ingress.ingressClassName | string | `""` | ingress class name |
@@ -318,18 +319,6 @@ identity:
 | forwarder.rateLimitedWorkerCount | int | `64` |  |
 | forwarder.xgressDialQueueLength | int | `1000` |  |
 | forwarder.xgressDialWorkerCount | int | `128` |  |
-| healthChecks.ctrlPingCheck.initialDelay | string | `"15s"` |  |
-| healthChecks.ctrlPingCheck.interval | string | `"30s"` |  |
-| healthChecks.ctrlPingCheck.timeout | string | `"15s"` |  |
-| healthChecks.enabled | bool | `true` |  |
-| healthChecks.linkCheck.initialDelay | string | `"1s"` |  |
-| healthChecks.linkCheck.interval | string | `"5s"` |  |
-| healthChecks.linkCheck.minLinks | int | `0` |  |
-| healthChecks.web.address | string | `"127.0.0.1"` |  |
-| healthChecks.web.interface | string | `"0.0.0.0"` |  |
-| healthChecks.web.name | string | `"health-checks"` |  |
-| healthChecks.web.path | string | `"/health-checks?type=short"` |  |
-| healthChecks.web.port | int | `8081` |  |
 | hostNetwork | bool | `false` | Host networking requested for a pod if set, i.e. tproxy ports enabled in the host namespace. i.e. egress gateway |
 | identity.altServerCerts | list | `[]` |  |
 | identityMountDir | string | `"/etc/ziti/identity"` | read-only mountpoint for router identity secret specified in deployment for use by router run container |
@@ -357,7 +346,7 @@ identity:
 | linkListeners.transport.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | livenessProbe | object | `{"active":true,"command":["/bin/sh","-c","ziti agent stats"],"failureThreshold":5,"initialDelaySeconds":10,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":5}` | deployment container liveness probe config |
 | livenessProbe.active | bool | `true` | enables the liveness probe for the deployment |
-| livenessProbe.command | list | `["/bin/sh","-c","ziti agent stats"]` | command to run to determine if the container needs to be restarted |
+| livenessProbe.command | list | `["/bin/sh","-c","ziti agent stats"]` | command to run to determine if the container is ready |
 | livenessProbe.failureThreshold | int | `5` | Number of consecutive probe failures before K8s marks the check as failed |
 | livenessProbe.initialDelaySeconds | int | `10` | seconds to wait before the first probe |
 | livenessProbe.periodSeconds | int | `10` | how often (in seconds) to perform the probe |
@@ -378,7 +367,7 @@ identity:
 | proxy | object | `{}` | Explicit proxy setting in the router configuration. Router can be deployed in a site where all egress traffic is forwarded through an explicit proxy. The enrollment will also be forwarded through the proxy. |
 | readinessProbe | object | `{"active":true,"command":["/bin/sh","-c","ziti agent stats"],"failureThreshold":5,"initialDelaySeconds":10,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":5}` | deployment container readiness probe config |
 | readinessProbe.active | bool | `true` | enables the readiness probe for the deployment |
-| readinessProbe.command | list | `["/bin/sh","-c","ziti agent stats"]` | command to run to determine if the container is ready to receive traffic |
+| readinessProbe.command | list | `["/bin/sh","-c","ziti agent stats"]` | command to run to determine if the container is ready |
 | readinessProbe.failureThreshold | int | `5` | Number of consecutive probe failures before K8s marks the check as failed |
 | readinessProbe.initialDelaySeconds | int | `10` | seconds to wait before the first probe |
 | readinessProbe.periodSeconds | int | `10` | how often (in seconds) to perform the probe |

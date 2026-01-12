@@ -220,6 +220,7 @@ data:
             {{- range .Values.csr.sans.uri }}
             - {{ . | quote }}
             {{- end }}
+      heartbeatIntervalSeconds: {{ .Values.edge.heartbeatIntervalSeconds }}
 
     {{- if eq .Values.websocket.enabled true }}
     transport:

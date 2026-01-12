@@ -152,6 +152,8 @@ edge:
   advertisedPort: 443
   # -- additional common xgress options
   options: {}
+  # -- heartbeat interval in seconds (min: 10, max: 60, default: 60)
+  heartbeatIntervalSeconds: 60
   service:
     # -- create a cluster service for the edge listener; usually true, but you
     # can disable this to effectively un-publish the edge listener
