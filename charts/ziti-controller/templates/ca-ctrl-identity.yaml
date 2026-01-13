@@ -1,17 +1,23 @@
 #######
-# CA to issue the controller's control plane identity. This CA issues the server certificate that is presented by the 
-# controller to routers and other controllers. The same server certificate is reused as a default identity if an 
-# alternative identity is not configured for a particular server TLS binding, e.g., web binding for the client API.
+#
+# DEPRECATION NOTICE: The separate ctrl-plane root CA is deprecated. All leaf certificates are now issued from the
+# edge-signer-issuer. The ctrl-plane-root-cert and ctrl-plane-intermediate-cert resources below are orphaned
+# (helm.sh/resource-policy: keep) to preserve existing private keys for rollback purposes.
+#
 ######
 
-# generate a root CA if no alternative issuer is configured for the controller's
-# control plane PKI
+{{- $mode := include "ziti-controller.clusterMode" . -}}
+
 {{- if eq (len .Values.ctrlPlane.alternativeIssuer) 0 }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-cert
+  annotations:
+    "helm.sh/resource-policy": keep
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -37,12 +43,13 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
+  annotations: {}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
-{{- end }}
+{{- end }}  # end alternativeIssuer check
 
 ---
 apiVersion: cert-manager.io/v1
@@ -51,6 +58,10 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/resource-policy": keep
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
@@ -66,9 +77,14 @@ spec:
     size: 256
     rotationPolicy: Always
   issuerRef:
-    {{- if .Values.ctrlPlane.alternativeIssuer }}
-      {{- with .Values.ctrlPlane.alternativeIssuer }}
-        {{- toYaml . | nindent 4 }}
+    {{- $alt := .Values.ctrlPlane.alternativeIssuer -}}
+    {{- if and $alt (ne (len $alt) 0) }}
+      {{- if typeIs "string" $alt }}
+      name: {{ $alt | quote }}
+      kind: Issuer
+      group: cert-manager.io
+      {{- else }}
+        {{- toYaml $alt | nindent 4 }}
       {{- end }}
     {{- else }}
     kind: Issuer
@@ -82,6 +98,7 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
+  annotations: {}
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
@@ -94,7 +111,7 @@ metadata:
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
-  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity
+  commonName: {{ default (printf "%s-ctrl-plane-identity" (include "ziti-controller.fullname" .)) .Values.cluster.nodeName }}
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
@@ -155,14 +172,16 @@ spec:
       {{- end }}
     {{- end }}
     {{- end }}
-  # uris:
-  #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
+  {{- if hasPrefix "cluster" $mode }}
+  uris:
+    - {{ include "ziti-controller.getSpiffeUri" . }}
+  {{- end }}
   ipAddresses:
     - 127.0.0.1
     - "::1"
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
 
 ---
 # the controller's client certificate
@@ -174,7 +193,7 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   isCA: false
-  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity
+  commonName: {{ default (printf "%s-ctrl-plane-client-identity" (include "ziti-controller.fullname" .)) .Values.cluster.nodeName }}
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
   privateKey:
     algorithm: ECDSA
@@ -185,6 +204,10 @@ spec:
     - digital signature
     - content commitment
     - key encipherment
+  {{- if hasPrefix "cluster" $mode }}
+  uris:
+    - {{ include "ziti-controller.getSpiffeUri" . }}
+  {{- end }}
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer

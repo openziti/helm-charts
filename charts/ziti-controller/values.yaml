@@ -1,9 +1,18 @@
-# Default values for ziti-controller.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
-# -- permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release)
-trustDomain: ""
+# nameOverride: ""
+# fullnameOverride: ""
+
+cluster:
+  # -- the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .edgeSignerPki.alternativeIssuer to the first node's edge-root issuer in same namespace
+  mode: standalone
+  # -- the trust domain part of the SPIFFE ID (required for cluster modes)
+  trustDomain: ""
+  # -- the node name part of the SPIFFE ID (required for cluster modes)
+  nodeName: ""
+  # -- required only when joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)
+  endpoint: ""
+  # -- TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose)
+  agentAppAddr: "tcp:127.0.0.1:10001"
 
 clientApi:
   # -- cluster service target port on the container
@@ -17,7 +26,7 @@ clientApi:
   # -- besides advertisedHost and dnsNames, add these DNS SANs to any ingresses but not the web identity
   altDnsNames: []
   service:
-    # -- create a cluster service for the deployment
+    # -- create a cluster service for the client API - you probably want this unless you're crafting your own ClusterIP service out of band
     enabled: true
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: LoadBalancer  # this is the only service that really needs to be exposed
@@ -58,8 +67,8 @@ managementApi:
   # -- besides advertisedHost and dnsNames, add these DNS SANs to any mgmt api ingresses, but not the web identity
   altDnsNames: []
   service:
-    # -- create a cluster service for the deployment
-    enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
+    # -- create a separate cluster service for the mgmt API enabled: true means provide this API on a separate port, otherwise share server port with clientApi
+    enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
   ingress:
@@ -82,12 +91,6 @@ managementApi:
     # -- IngressRouteTCP labels
     labels: {}
 
-# by default, there's no need for a separate cluster service, ingress, or
-# load balancer for the ctrl plane because it shares a TLS listener with the
-# client API, advertising the same host and port but presenting the separate
-# ctrl plane identity to TLS clients via ALPN; you may override these templates
-# with literal host and port values and configure a separate service, ingress,
-# load balancer, etc. for the ctrl plane
 ctrlPlane:
   # -- cluster service target port on the container
   containerPort: "{{ .Values.clientApi.containerPort }}"
@@ -100,9 +103,7 @@ ctrlPlane:
   # -- besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses
   dnsNames: []
   service:
-    # -- create a separate cluster service for the ctrl plane; enabling this
-    # requires you to also set the host and port for a separate ctrl plane TLS
-    # listener
+    # -- create a separate cluster service for the ctrl plane (default: disabled, shares listener with clientApi via ALPN)
     enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP
@@ -117,7 +118,10 @@ ctrlPlane:
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
-  # -- obtain the ctrl plane identity from an existing issuer instead of generating a new PKI
+  # -- DEPRECATED: The ctrl-plane root CA is deprecated. The ctrl-plane identity is now
+  # issued by edge-signer-issuer. This option is preserved for backward compatibility but
+  # the ctrl-plane-root-cert and ctrl-plane-root-issuer resources are orphaned.
+  # (example: "my-issuer" or {name: "my-issuer", kind: "Issuer", group: "cert-manager.io"})
   alternativeIssuer: {}
   traefikTcpRoute:
     # -- enable Traefik IngressRouteTCP
@@ -128,10 +132,14 @@ ctrlPlane:
     # -- IngressRouteTCP labels
     labels: {}
 
-# -- override the address printed in Helm release notes if you configured an alternative DNS SAN for the console
-consoleAltIngress: {}
-  # host: ""
-  # port: 443
+console:
+  # -- enable the Ziti Admin Console (ZAC) at URL path "/zac" on the same port as the management API (default: true)
+  enabled: true
+  # -- override the address printed in Helm release notes if you configured an alternative DNS SAN for the console, i.e.
+  # {"host": "console.ziti.example.com", "port": 443}
+  altIngress: {}
+    # host: ""
+    # port: 443
 
 # -- set name to value in containers' environment
 env: {}
@@ -239,12 +247,12 @@ cert:
   # -- rewnew server certificates before expiry as Go time.Duration string format
   renewBefore: 720h   # 30d
 
-# you can enable these if you want to use roots of trust that are separate from
-# the main identity used by the ctrl plane
+# The edge signer PKI is now the SINGLE root of trust for the entire Ziti network.
+# All ctrl-plane and web-binding certificates are now issued from the edge-signer-issuer.
 edgeSignerPki:
-  # -- generate a separate PKI root of trust for the edge signer CA
+  # -- deprecated - this can not be disabled - generate the PKI root of trust for the Ziti network (edge-root CA) and issue the edge-signer intermediate
   enabled: true
-  # -- obtain the edge signer intermediate CA from an existing issuer instead of generating a new PKI
+  # -- obtain the edge signer intermediate CA from an existing issuer instead of generating a new PKI - used when joining a cluster
   alternativeIssuer: {}
   # -- type of alternative issuer: Issuer, ClusterIssuer
   # kind:
@@ -258,9 +266,14 @@ edgeSignerPki:
     # -- renew admin client certificate before expiry as Go time.Duration
     renewBefore: 720h
 
+# DEPRECATION NOTICE: The separate web-binding root CA is deprecated.
+# Web certificates are now issued from the edge-signer-issuer (unified PKI).
+# The webBindingPki.alternativeIssuer option is preserved for backward compatibility
+# but the web-root-cert and web-root-issuer resources are orphaned.
 webBindingPki:
-  # -- generate a separate PKI root of trust for web bindings, i.e., client,
-  # management, and prometheus APIs
+  # -- enable web binding PKI (certificates issued from edge-signer-issuer) enabled by default for reverse compatibility
+  # because each web binding gets its own leaf cert with specific SANs, and when disabled the generic ctrl plane
+  # identity cert is used for all web bindings, which is fine in most cases
   enabled: true
   altServerCerts: []
     #  # -- request an alternative server certificate from a cert-manager issuer
@@ -336,10 +349,11 @@ ctrlPlaneCasBundle:
     #   openziti.io/namespace: "enabled"
     # matchLabels:
     #   kubernetes.io/metadata.name: ziti
-
-
-# nameOverride: ""
-# fullnameOverride: ""
+  # -- name of the ConfigMap managed by the trust-manager Bundle resource. For cluster-join nodes, set this to the first
+  # node's ConfigMap name (e.g., "ziti-ctrl1-controller-ctrl-plane-cas") so all nodes share the same trust bundle. For
+  # solo nodes, leave empty to use the default name based on this release. If subsequent nodes are added without this
+  # value, a harmless, redundant Bundle and ConfigMap resource will be created.
+  configMapName: ""
 
 # -- additional volumes to mount to ziti-controller container
 additionalVolumes: []
@@ -394,12 +408,6 @@ tolerations: []
 
 # -- deployment template spec affinity
 affinity: {}
-
-highAvailability:
-  # -- Ziti controller HA mode
-  mode: standalone
-  # -- Ziti controller HA swarm replicas
-  replicas: 1
 
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/

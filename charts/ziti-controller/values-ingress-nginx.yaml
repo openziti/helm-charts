@@ -9,16 +9,3 @@ clientApi:
     annotations:
       kubernetes.io/ingress.allow-http: "false"
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-
-# shares a TLS listener with the client API by default; these values override the defaults and configure a separate
-# ingress for the ctrl plane for reverse compatibility with existing router deployments
-ctrlPlane:
-  service:
-    enabled: true
-    type: ClusterIP
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    annotations:
-      kubernetes.io/ingress.allow-http: "false"
-      nginx.ingress.kubernetes.io/ssl-passthrough: "true"

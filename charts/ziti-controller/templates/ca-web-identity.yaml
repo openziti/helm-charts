@@ -1,17 +1,27 @@
 #######
 # CA that issues the server certificate for web bindings like the edge client API,
 # edge management API
+#
+# DEPRECATION NOTICE: The separate web-binding root CA is deprecated. All certificates are now issued
+# from the edge-signer-issuer. The web-root-cert and web-root-issuer resources below
+# are orphaned (helm.sh/resource-policy: keep) to preserve existing private keys for rollback purposes.
+# These resources will be removed in a future chart release.
 ######
 {{- if (eq .Values.webBindingPki.enabled true) }}
 
-# generate a root CA if no alternative issuer is configured for the controller's
-# web binding PKI
+# DEPRECATED: web-binding root CA resources are orphaned and no longer used.
+# They are preserved with "helm.sh/resource-policy: keep" to allow rollback if needed.
+# These will be removed in a future chart release.
 {{- if eq (len .Values.webBindingPki.alternativeIssuer) 0 }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-web-root-cert
+  annotations:
+    "helm.sh/resource-policy": keep
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -37,6 +47,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-web-root-issuer
+  annotations: {}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -51,6 +62,10 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-web-intermediate-cert
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/resource-policy": keep
+    "openziti.io/deprecated": "true"
+    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-web-intermediate
   secretName: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
@@ -66,13 +81,19 @@ spec:
     size: 256
     rotationPolicy: Always
   issuerRef:
-    {{- if .Values.webBindingPki.alternativeIssuer }}
-      {{- with .Values.webBindingPki.alternativeIssuer }}
-        {{- toYaml . | nindent 4 }}
+    {{- $alt := .Values.webBindingPki.alternativeIssuer -}}
+    {{- if and $alt (ne (len $alt) 0) }}
+      {{- if typeIs "string" $alt }}
+      name: {{ $alt | quote }}
+      kind: Issuer
+      group: cert-manager.io
+      {{- else }}
+        {{- toYaml $alt | nindent 4 }}
       {{- end }}
     {{- else }}
+    # v3 chart: web intermediate CA is issued by the edge root issuer (unified PKI)
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-web-root-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-root-issuer
     {{- end }}
 
 ---
@@ -82,6 +103,7 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
+  annotations: {}
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
@@ -136,7 +158,7 @@ spec:
     - "::1"
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
 
   {{- if .Values.managementApi.service.enabled }}
 ---
@@ -182,7 +204,7 @@ spec:
     - "::1"
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
   {{- end }}
 
   {{- if .Values.prometheus.service.enabled }}
@@ -220,7 +242,7 @@ spec:
     - "::1"
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
   {{- end }}
 
 ---
@@ -246,6 +268,6 @@ spec:
     - key encipherment
   issuerRef:
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-signer-issuer
 
 {{- end }}

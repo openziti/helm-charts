@@ -1,0 +1,239 @@
+{{- if eq (include "ziti-controller.clusterMode" .) "cluster-migrate" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-migrate
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 10
+  activeDeadlineSeconds: 1800 # 30 minutes max overall
+  podFailurePolicy:
+    rules:
+      - onExitCodes:
+          containerName: migrate-runner
+          operator: NotIn
+          values: [0] # retry on any non-zero exit code
+        action: Count
+  template:
+    metadata:
+      annotations:
+        configmap-checksum: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "ziti-controller.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      initContainers:
+        - name: migrate-runner
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          {{- range .Values.image.command }}
+            - {{ . | quote }}
+          {{- end }}
+          args:
+          {{- tpl (toYaml .Values.image.args) . | nindent 12 }}
+          {{- range .Values.image.additionalArgs }}
+            - {{ . | quote }}
+          {{- end }}
+          env:
+            - name: ZITI_CTRL_PLANE_CA
+              value: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
+            - name: HOME
+              value: {{ .Values.image.homeDir }}
+            - name: ZITI_MGMT_API
+              {{- if .Values.managementApi.service.enabled }}
+              value: {{ include "ziti-controller.fullname" . }}-mgmt.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
+              {{- else }}
+              value: {{ include "ziti-controller.fullname" . }}-client.{{ .Release.Namespace }}.svc.{{ .Values.ca.clusterDomain }}:{{ .Values.clientApi.advertisedPort }}
+              {{- end }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key | quote }}
+              value: {{ $val | quote }}
+            {{- end }}
+            {{- range .Values.envSecrets }}
+            - name: {{ .name | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .valueFrom.secretKeyRef.name | quote }}
+                  key: {{ .valueFrom.secretKeyRef.key | quote }}
+            {{- end }}
+          volumeMounts:
+            - mountPath: {{ include "dataMountDir" . }}
+              name: data
+            - mountPath: {{ include "configMountDir" . }}/ziti-controller.yaml
+              name: ziti-controller-configmap
+              subPath: ziti-controller.yaml
+            - mountPath: {{ include "configMountDir" . }}/{{ include  "ziti-controller.ctrlPlaneCaDir" . }}
+              name: ziti-controller-ctrl-plane-cas
+              readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-identity/
+              name: cert-ctrl-plane-identity
+              readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/ctrl-plane-client-identity/
+              name: cert-ctrl-plane-client-identity
+              readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/edge-signer/
+              name: cert-edge-signer
+              readOnly: true
+            {{- if (eq .Values.webBindingPki.enabled true) }}
+            - mountPath: {{ include "configMountDir" . }}/web-identity/
+              name: cert-web-identity
+              readOnly: true
+            - mountPath: {{ include "configMountDir" . }}/web-client-identity/
+              name: cert-web-client-identity
+              readOnly: true
+              {{- if .Values.managementApi.service.enabled }}
+            - mountPath: {{ include "configMountDir" . }}/web-mgmt-api/
+              name: cert-mgmt-api
+              readOnly: true
+              {{- end }}
+              {{- if .Values.prometheus.service.enabled }}
+            - mountPath: {{ include "configMountDir" . }}/web-prometheus-metrics/
+              name: cert-prometheus-metrics
+              readOnly: true
+              {{- end }}
+            {{- end }}
+            {{- if .Values.fabric.events.enabled }}
+            - mountPath: {{ .Values.fabric.events.mountDir }}
+              name: fabric-events
+            {{- end }}
+            {{- if .Values.spireAgent.enabled }}
+            - mountPath: {{ .Values.spireAgent.spireSocketMnt }}
+              name: spire-agent-socket
+              readOnly: true
+            {{- end }}
+            {{- range .Values.additionalVolumes }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+            {{- if gt (len .Values.webBindingPki.altServerCerts) 0 }}
+              {{- range .Values.webBindingPki.altServerCerts }}
+                {{- if eq .mode "certManager" }}
+            - mountPath: {{ .mountPath }}
+              name: {{ printf "%v-%v" (include "ziti-controller.fullname" $) .secretName }}
+              readOnly: true
+                {{- end }}
+              {{- end }}
+            {{- end }}
+      restartPolicy: Never
+      containers:
+        - name: marker-writer
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash","-c"]
+          args:
+            - {{ include "execMountDir" . }}/ziti-cluster-migrate.bash
+          volumeMounts:
+            - mountPath: {{ include "dataMountDir" . }}
+              name: data
+            - mountPath: {{ include "execMountDir" . }}/ziti-cluster-migrate.bash
+              name: ziti-controller-configmap
+              subPath: ziti-cluster-migrate.bash
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: ziti-controller-configmap
+          configMap:
+            name: {{ include "ziti-controller.fullname" . }}-config
+            items:
+              - key: ziti-cluster-migrate.bash
+                path: ziti-cluster-migrate.bash
+                mode: 0555
+              - key: ziti-controller.yaml
+                path: ziti-controller.yaml
+                mode: 0444
+              - key: .bash_profile
+                path: .bash_profile
+                mode: 0444
+              - key: zitiLogin
+                path: zitiLogin
+                mode: 0555
+        - name: ziti-controller-ctrl-plane-cas
+          configMap:
+            name: {{ include "ziti-controller.ctrlPlaneCasConfigMapName" . }}
+            defaultMode: 0444
+        - name: cert-ctrl-plane-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
+        - name: cert-ctrl-plane-client-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity-secret
+        - name: cert-edge-signer
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
+        {{- if (eq .Values.webBindingPki.enabled true) }}
+        - name: cert-web-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
+        - name: cert-web-client-identity
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-client-identity-secret
+          {{- if .Values.managementApi.service.enabled }}
+        - name: cert-mgmt-api
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-mgmt-api-secret
+          {{- end }}
+          {{- if .Values.prometheus.service.enabled }}
+        - name: cert-prometheus-metrics
+          secret:
+            secretName: {{ include "ziti-controller.fullname" . }}-web-prometheus-metrics-secret
+          {{- end }}
+        {{- end }}
+        - name: data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-controller.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.fabric.events.enabled }}
+        - name: fabric-events
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.spireAgent.enabled }}
+        - name: spire-agent-socket
+          hostPath:
+            path: {{ .Values.spireAgent.spireSocketMnt }}
+            type: Directory
+        {{- end }}
+        {{- range .Values.additionalVolumes }}
+        - name: {{ .name }}
+          {{- if eq .volumeType "secret" }}
+          secret:
+            secretName: {{ .secretName }}
+          {{- else if eq .volumeType "configMap" }}
+          configMap:
+            name: {{ .configMapName }}
+          {{- else if eq .volumeType "emptyDir" }}
+          emptyDir: {}
+          {{- end }}
+        {{- end }}
+        {{- if gt (len .Values.webBindingPki.altServerCerts) 0 }}
+          {{- range .Values.webBindingPki.altServerCerts }}
+            {{- if eq .mode "certManager" }}
+        - name: {{ printf "%v-%v" (include "ziti-controller.fullname" $) .secretName }}
+          secret:
+            secretName: {{ .secretName }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+{{- end }}

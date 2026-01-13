@@ -6,6 +6,34 @@ This is the first install of release {{ .Release.Name }}.
 {{ .Chart.Name }} was neither installed nor upgraded.
 {{ end }}
 
+================================================================================
+                           PKI DEPRECATION NOTICE
+================================================================================
+The separate ctrl-plane and web-binding root CAs have been deprecated in favor
+of a unified PKI with a single root of trust (edge-root).
+
+The following resources are now ORPHANED and no longer managed by Helm:
+{{- if eq (len .Values.ctrlPlane.alternativeIssuer) 0 }}
+  - Certificate: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-cert
+  - Issuer: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
+  - Secret: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret
+{{- end }}
+{{- if and .Values.webBindingPki.enabled (eq (len .Values.webBindingPki.alternativeIssuer) 0) }}
+  - Certificate: {{ include "ziti-controller.fullname" . }}-web-root-cert
+  - Issuer: {{ include "ziti-controller.fullname" . }}-web-root-issuer
+  - Secret: {{ include "ziti-controller.fullname" . }}-web-root-secret
+{{- end }}
+
+These resources have been preserved with "helm.sh/resource-policy: keep" to allow rollback if needed. They will be
+REMOVED in a future chart release, but not deleted from the cluster.
+
+If you need to rollback, the private keys are preserved in the orphaned secrets.
+To clean up these resources manually after confirming the new PKI works:
+  kubectl delete certificate,issuer -l openziti.io/deprecated=true -n {{ .Release.Namespace }}
+  kubectl delete secret {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-secret -n {{ .Release.Namespace }}
+  kubectl delete secret {{ include "ziti-controller.fullname" . }}-web-root-secret -n {{ .Release.Namespace }}
+================================================================================
+
 You have chart version {{ .Chart.Version }} and app version {{ .Chart.AppVersion }}.
 
 To learn more about the release, try:

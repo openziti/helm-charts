@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 2.1.1](https://img.shields.io/badge/Version-2.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.2](https://img.shields.io/badge/AppVersion-1.7.2-informational?style=flat-square)
+![Version: 3.0.0-pre1](https://img.shields.io/badge/Version-3.0.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.8.0-pre5](https://img.shields.io/badge/AppVersion-1.8.0--pre5-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -281,15 +281,21 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
 | clientApi.ingress.labels | object | `{}` | ingress labels |
 | clientApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
-| clientApi.service.enabled | bool | `true` | create a cluster service for the deployment |
+| clientApi.service.enabled | bool | `true` | create a cluster service for the client API - you probably want this unless you're crafting your own ClusterIP service out of band |
 | clientApi.service.type | string | `"LoadBalancer"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | clientApi.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
 | clientApi.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
 | clientApi.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
-| consoleAltIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console |
+| cluster.agentAppAddr | string | `"tcp:127.0.0.1:10001"` | TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose) |
+| cluster.endpoint | string | `""` | required only when joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280) |
+| cluster.mode | string | `"standalone"` | the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .edgeSignerPki.alternativeIssuer to the first node's edge-root issuer in same namespace |
+| cluster.nodeName | string | `""` | the node name part of the SPIFFE ID (required for cluster modes) |
+| cluster.trustDomain | string | `""` | the trust domain part of the SPIFFE ID (required for cluster modes) |
+| console.altIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console, i.e. {"host": "console.ziti.example.com", "port": 443} |
+| console.enabled | bool | `true` | enable the Ziti Admin Console (ZAC) at URL path "/zac" on the same port as the management API (default: true) |
 | ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
 | ctrlPlane.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
-| ctrlPlane.alternativeIssuer | object | `{}` | obtain the ctrl plane identity from an existing issuer instead of generating a new PKI |
+| ctrlPlane.alternativeIssuer | object | `{}` | DEPRECATED: The ctrl-plane root CA is deprecated. The ctrl-plane identity is now issued by edge-signer-issuer. This option is preserved for backward compatibility but the ctrl-plane-root-cert and ctrl-plane-root-issuer resources are orphaned. (example: "my-issuer" or {name: "my-issuer", kind: "Issuer", group: "cert-manager.io"}) |
 | ctrlPlane.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | ctrlPlane.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses |
 | ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
@@ -297,11 +303,12 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ctrlPlane.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
 | ctrlPlane.ingress.labels | object | `{}` | ingress labels |
 | ctrlPlane.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
-| ctrlPlane.service.enabled | bool | `false` | create a separate cluster service for the ctrl plane; enabling this requires you to also set the host and port for a separate ctrl plane TLS listener |
+| ctrlPlane.service.enabled | bool | `false` | create a separate cluster service for the ctrl plane (default: disabled, shares listener with clientApi via ALPN) |
 | ctrlPlane.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | ctrlPlane.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
 | ctrlPlane.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
 | ctrlPlane.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
+| ctrlPlaneCasBundle.configMapName | string | `""` | name of the ConfigMap managed by the trust-manager Bundle resource. For cluster-join nodes, set this to the first node's ConfigMap name (e.g., "ziti-ctrl1-controller-ctrl-plane-cas") so all nodes share the same trust bundle. For solo nodes, leave empty to use the default name based on this release. If subsequent nodes are added without this value, a harmless, redundant Bundle and ConfigMap resource will be created. |
 | ctrlPlaneCasBundle.namespaceSelector | object | `{}` | namespaces where trust-manager will create the Bundle resource containing Ziti's trusted CA certs (default: empty means all namespaces) |
 | customAdminSecretName | string | `""` | set the admin user and password from a custom secret The custom admin secret must be of the following format: apiVersion: v1 kind: Secret metadata:   name: myCustomAdminSecret type: Opaque data:   admin-user:   admin-password: |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
@@ -309,8 +316,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.enabled | bool | `false` | create a client certificate for the admin user |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
-| edgeSignerPki.alternativeIssuer | object | `{}` | obtain the edge signer intermediate CA from an existing issuer instead of generating a new PKI |
-| edgeSignerPki.enabled | bool | `true` | generate a separate PKI root of trust for the edge signer CA |
+| edgeSignerPki.alternativeIssuer | object | `{}` | obtain the edge signer intermediate CA from an existing issuer instead of generating a new PKI - used when joining a cluster |
+| edgeSignerPki.enabled | bool | `true` | deprecated - this can not be disabled - generate the PKI root of trust for the Ziti network (edge-root CA) and issue the edge-signer intermediate |
 | env | object | `{}` | set name to value in containers' environment |
 | envSecrets | object | `{}` | set secrets as environment variables in the container |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
@@ -332,8 +339,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | fabric.events.subscriptions[8].type | string | `"services"` |  |
 | fabric.events.subscriptions[9].interval | string | `"5s"` |  |
 | fabric.events.subscriptions[9].type | string | `"edge.entityCounts"` |  |
-| highAvailability.mode | string | `"standalone"` | Ziti controller HA mode |
-| highAvailability.replicas | int | `1` | Ziti controller HA swarm replicas |
 | image.additionalArgs | list | `[]` | additional arguments can be passed directly to the container to modify ziti runtime arguments |
 | image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
@@ -352,7 +357,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | managementApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
 | managementApi.ingress.labels | object | `{}` | ingress labels |
 | managementApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
-| managementApi.service.enabled | bool | `false` | create a cluster service for the deployment |
+| managementApi.service.enabled | bool | `false` | create a separate cluster service for the mgmt API enabled: true means provide this API on a separate port, otherwise share server port with clientApi |
 | managementApi.service.type | string | `"ClusterIP"` | expose the service as a ClusterIP, NodePort, or LoadBalancer |
 | managementApi.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
 | managementApi.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
@@ -404,11 +409,10 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
 | spireAgent.spireSocketMnt | string | `"/run/spire/sockets"` | file path of the spire socket mount |
 | tolerations | list | `[]` | deployment template spec tolerations |
-| trustDomain | string | `""` | permanent SPIFFE ID to use for this controller's trust domain (default: random, fixed for the life of the chart release) |
 | useCustomAdminSecret | bool | `false` | allow for using a custom admin secret, which has to be created beforehand if enabled, the admin secret will not be generated by this Helm chart |
 | webBindingPki.altServerCerts | list | `[]` |  |
 | webBindingPki.alternativeIssuer | object | `{}` | obtain the web identity from an existing issuer instead of generating a new PKI |
-| webBindingPki.enabled | bool | `true` | generate a separate PKI root of trust for web bindings, i.e., client, management, and prometheus APIs |
+| webBindingPki.enabled | bool | `true` | enable web binding PKI (certificates issued from edge-signer-issuer) enabled by default for reverse compatibility because each web binding gets its own leaf cert with specific SANs, and when disabled the generic ctrl plane identity cert is used for all web bindings, which is fine in most cases |
 | webBindingPki.maxTLSVersion | string | `"TLS1.3"` | maximum TLS version to offer to clients |
 | webBindingPki.minTLSVersion | string | `"TLS1.2"` | minimum TLS version to offer to clients |
 

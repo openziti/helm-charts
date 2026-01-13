@@ -1,4 +1,3 @@
-{{- if eq .Values.highAvailability.mode "standalone" }}
 {{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -7,7 +6,6 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
-    app.kubernetes.io/component: "ziti-controller"
 {{- if .Values.persistence.annotations }}
   annotations:
 {{ toYaml .Values.persistence.annotations | trimSuffix "\n" | indent 4 }}
@@ -28,6 +26,5 @@ spec:
 {{- end }}
 {{- if .Values.persistence.VolumeName }}
   volumeName: "{{ .Values.persistence.VolumeName }}"
-{{- end }}
 {{- end }}
 {{- end }}

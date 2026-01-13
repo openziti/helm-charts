@@ -1,0 +1,70 @@
+{{- if eq (include "ziti-controller.clusterMode" .) "cluster-migrate" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-migrate-inspector
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "ziti-controller.name" . }}
+      app.kubernetes.io/component: migrate-inspector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "ziti-controller.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: migrate-inspector
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-migration
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              echo "Waiting for migration marker at {{ include "ziti-controller.clusterMarkerFile" . }}";
+              while [ ! -f "{{ include "ziti-controller.clusterMarkerFile" . }}" ]; do
+                sleep 2;
+              done;
+              echo "Marker found";
+          volumeMounts:
+            - mountPath: {{ include "dataMountDir" . }}
+              name: data
+      containers:
+        - name: inspector
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh","-c"]
+          args: ["echo 'Migration complete. Sleeping for inspection...'; sleep infinity"]
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - test -f {{ include "ziti-controller.clusterMarkerFile" . }}
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 12
+          volumeMounts:
+            - mountPath: {{ include "dataMountDir" . }}
+              name: data
+      volumes:
+        - name: data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "ziti-controller.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+{{- end }}
