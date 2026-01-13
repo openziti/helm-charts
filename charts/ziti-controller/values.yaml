@@ -26,7 +26,7 @@ clientApi:
   # -- besides advertisedHost and dnsNames, add these DNS SANs to any ingresses but not the web identity
   altDnsNames: []
   service:
-    # -- create a cluster service for the deployment
+    # -- create a cluster service for the client API - you probably want this unless you're crafting your own ClusterIP service out of band
     enabled: true
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: LoadBalancer  # this is the only service that really needs to be exposed
@@ -67,8 +67,8 @@ managementApi:
   # -- besides advertisedHost and dnsNames, add these DNS SANs to any mgmt api ingresses, but not the web identity
   altDnsNames: []
   service:
-    # -- create a cluster service for the deployment
-    enabled: false   # enabled: true means provide this API on a separate port, otherwise share server port with clientApi
+    # -- create a separate cluster service for the mgmt API enabled: true means provide this API on a separate port, otherwise share server port with clientApi
+    enabled: false
     # -- expose the service as a ClusterIP, NodePort, or LoadBalancer
     type: ClusterIP  # this doesn't need to be exposed if you exclusively manage with ZAC also running in the same cluster
   ingress:
@@ -271,8 +271,10 @@ edgeSignerPki:
 # The webBindingPki.alternativeIssuer option is preserved for backward compatibility
 # but the web-root-cert and web-root-issuer resources are orphaned.
 webBindingPki:
-  # -- enable web binding PKI (certificates issued from edge-signer-issuer)
-  enabled: true  # enabled by default for reverse compatibility because each web binding gets its own leaf cert with specific SANs, and when disabled the generic ctrl plane identity cert is used for all web bindings, which is fine in most cases
+  # -- enable web binding PKI (certificates issued from edge-signer-issuer) enabled by default for reverse compatibility
+  # because each web binding gets its own leaf cert with specific SANs, and when disabled the generic ctrl plane
+  # identity cert is used for all web bindings, which is fine in most cases
+  enabled: true
   altServerCerts: []
     #  # -- request an alternative server certificate from a cert-manager issuer
     #  mode: certManager
