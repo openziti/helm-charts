@@ -47,10 +47,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-web-root-issuer
-  annotations:
-    "helm.sh/resource-policy": keep
-    "openziti.io/deprecated": "true"
-    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
+  annotations: {}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -106,10 +103,7 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-web-intermediate-issuer
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/resource-policy": keep
-    "openziti.io/deprecated": "true"
-    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
+  annotations: {}
 spec:
   ca:
     secretName: {{ include "ziti-controller.fullname" . }}-web-intermediate-secret
