@@ -272,7 +272,7 @@ edgeSignerPki:
 # but the web-root-cert and web-root-issuer resources are orphaned.
 webBindingPki:
   # -- enable web binding PKI (certificates issued from edge-signer-issuer)
-  enabled: false
+  enabled: true  # enabled by default for reverse compatibility because each web binding gets its own leaf cert with specific SANs, and when disabled the generic ctrl plane identity cert is used for all web bindings, which is fine in most cases
   altServerCerts: []
     #  # -- request an alternative server certificate from a cert-manager issuer
     #  mode: certManager
