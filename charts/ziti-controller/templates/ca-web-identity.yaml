@@ -94,8 +94,9 @@ spec:
         {{- toYaml $alt | nindent 4 }}
       {{- end }}
     {{- else }}
+    # v3 chart: web intermediate CA is issued by the edge root issuer (unified PKI)
     kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-web-root-issuer
+    name: {{ include "ziti-controller.fullname" . }}-edge-root-issuer
     {{- end }}
 
 ---
