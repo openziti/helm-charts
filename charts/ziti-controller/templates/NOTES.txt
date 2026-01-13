@@ -6,14 +6,6 @@ This is the first install of release {{ .Release.Name }}.
 {{ .Chart.Name }} was neither installed nor upgraded.
 {{ end }}
 
-{{- $mode := include "ziti-controller.clusterMode" . -}}
-{{- if or (eq $mode "cluster-init") (eq $mode "cluster-join") -}}
-  {{- $svcEnabled := (toString .Values.ctrlPlane.service.enabled | lower) -}}
-  {{- if ne $svcEnabled "true" -}}
-WARNING: This Ziti controller node's ctrl plane service is not published to other pods (ctrlPlane.service.enabled is not true), so it will not be possible to perform operations like adding another Ziti controller node via this node.
-  {{- end -}}
-{{- end -}}
-
 ================================================================================
                            PKI DEPRECATION NOTICE
 ================================================================================
