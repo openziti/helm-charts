@@ -243,7 +243,10 @@ alertmanager:
     #  matchLabels:
     #    release: "stable"
     #  matchExpressions:
-    #    - { key: environment, operator: In, values: [ dev ] }
+    #    - key: environment
+    #      operator: In
+    #      values:
+    #        - dev
 
   emptyDir:
     ## alertmanager emptyDir volume size limit
@@ -940,7 +943,10 @@ server:
     #  matchLabels:
     #    release: "stable"
     #  matchExpressions:
-    #    - { key: environment, operator: In, values: [ dev ] }
+    #    - key: environment
+    #      operator: In
+    #      values:
+    #        - dev
 
   emptyDir:
     ## Prometheus server emptyDir volume size limit
