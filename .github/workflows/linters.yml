@@ -13,3 +13,12 @@ jobs:
 
       - name: Run code spelling check
         uses: codespell-project/actions-codespell@v2
+
+  check-mdx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run MDX safety check
+        run: ./scripts/check_mdx.py

@@ -118,21 +118,21 @@ linkListeners:
     #   # -- port advertised to other routers
     #   advertisedPort: 443
     #   # -- options for this link listener
-    #   options: {}
+    #   options: `{}`
     #   # -- extra properties for this listener, e.g., groups
-    #   extraProps: {}
+    #   extraProps: `{}`
     #   # -- create a cluster service for this link listener
     #   service:
     #     enabled: true
     #     type: ClusterIP
-    #     labels: {}
-    #     annotations: {}
+    #     labels: `{}`
+    #     annotations: `{}`
     #   # -- create an ingress for this link listener
     #   ingress:
     #     enabled: false
     #     ingressClassName: ""
-    #     labels: {}
-    #     annotations: {}
+    #     labels: `{}`
+    #     annotations: `{}`
 
 
 # listen for edge clients
@@ -200,19 +200,19 @@ edge:
     #  and provide an additional cert for this endpoint.
     #  addHostToSan: false
     #  # -- additional edge listener options
-    #  options: {}
+    #  options: `{}`
     #  # -- additional edge listeners can have their own cluster services
     #  service:
     #    enabled: true
     #    type: ClusterIP
-    #    labels: {}
-    #    annotations: {}
+    #    labels: `{}`
+    #    annotations: `{}`
     #  # -- additional edge listeners can have their own ingresses
     #  ingress:
     #    enabled: false
     #    # -- ingress must passthrough tls to to wss listener
-    #    annotations: {}
-    #    labels: {}
+    #    annotations: `{}`
+    #    labels: `{}`
     #    ingressClassName: ""
 
 tunnel:
