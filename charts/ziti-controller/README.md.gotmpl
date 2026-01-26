@@ -55,41 +55,40 @@ helm upgrade --install trust-manager jetstack/trust-manager \
     --set app.trust.namespace=ziti
 ```
 
-### Breaking Change
+### Breaking Change: Version 3 PKI Consolidation
 
-Version 2 of this chart introduces a breaking change. You must decouple cert-manager and trust-manager from the Ziti controller chart if they were previously installed as subcharts. This allows them to be upgraded and configured independently of the Ziti controller chart.
+Version 3 of this chart consolidates the PKI architecture into a single root of trust. This is a breaking change that requires a controller restart and retires certain cert-manager resources, but it is expected to work without adjusting chart input values and does not require re-enrolling routers or identities.
 
-**Symptom**
+**What Changed**
 
-> Error: Unable to continue with install: CustomResourceDefinition "certificaterequests.cert-manager.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "cert-manager"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "cert-manager"
+- **Before (v2):** The controller used separate PKI roots for the control plane, web/client APIs, and edge enrollment, with separate intermediate issuers for each PKI.
+- **After (v3):** Only the edge PKI root and intermediate issuers are used. The separate control plane and web root and intermediate issuers are retired. All leaf certificates for the control plane, web/client APIs, and edge enrollments are now issued by the edge signer intermediate issuer, which is itself issued by the edge root issuer (the cluster's shared root of trust).
 
-**Cause**
+**Upgrade Process**
 
-Cert Manager and Trust Manager are no longer included as subcharts, so upgrading the Ziti controller chart will delete the cert-manager and trust-manager Operators along with their respective CRDs and associated resources which are critical for the Ziti controller.
+1. Back up the controller database before proceeding.
+1. Upgrade the controller's Helm release with a chart version constraint that allows v3, e.g., `^3.0.0`.
+1. Wait for the web identity certificate to be ready:
 
-**Solution**
+    ```bash
+    kubectl wait certificate.cert-manager.io ziti-controller-web-identity-cert \
+        --namespace ziti \
+        --for condition=Ready=True \
+        --timeout 120s
+    ```
 
-1. As with any controller upgrade, you are advised to back up the database before proceeding so that you will have the option to roll back to a snapshot prior to any irreversible database schema migrations that may occur during an upgrade.
-1. Upgrade the Ziti controller Helm release to chart v2. This will temporarily uninstall the CM and TM Helm releases if they were originally installed as dependencies of the Ziti controller chart.
-1. Install or upgrade as desired the cert-manager and trust-manager Helm releases (see [Custom Resources](#custom-resources) section above for an example that is compatible with this upgrade path).
-1. If the cert-manager or trust-manager charts fail to install with the "symptom" above, then run the provided BASH script (`chown-cert-manager.bash`) to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
-1. Retry installing cert-manager and trust-manager Helm charts. When they are installed successfully, their respective Helm releases will own the CRDs that were annotated and labeled by the provided BASH script.
+1. Restart the controller and all routers to pick up the latest certificates:
 
-> [!IMPORTANT]
-> You must use the same values for CM and TM Helm release names and namespaces when you run the provided script and when you re-install the cert-manager and trust-manager Helm charts.
+    ```bash
+    kubectl rollout restart deployment ziti-controller -n ziti
+    kubectl rollout restart deployment ziti-router -n ziti
+    ```
 
-Assuming your future CM release will be named "cert-manager," your future TM release will be named "trust-manager," and both will be installed in namespace "cert-manager," and your Ziti controller is installed in namespace "ziti," you can use these example values to run the provided script to pave the way to installing the version 2 ziti-controller chart, which will delete the cert-manager and trust-manager Operators, preserving the CRDs and their associated resources.
+**Alternative Root Issuer**
 
-```bash
-helm pull openziti/ziti-controller
-tar -xvf ziti-controller-*.tgz
-CM_NAMESPACE=cert-manager \
-CM_RELEASE_NAME=cert-manager \
-TM_NAMESPACE=cert-manager \
-TM_RELEASE_NAME=trust-manager \
-ZITI_NAMESPACE=ziti \
-./ziti-controller/files/chown-cert-manager.bash
-```
+It is still possible to rebase your edge PKI on an existing, alternative root issuer by configuring `edgeSignerPki.alternativeIssuer`. However, web and control plane identity certificates are always issued by the edge signer intermediate in the v3 chart.
+
+For detailed upgrade instructions, including upgrading to HA, see the [internal documentation](https://github.com/netfoundry/k8s-on-prem-installations/blob/main/docs/ha_upgrade.md).
 
 ## NodePort Service Example
 
@@ -337,5 +336,40 @@ webBindingPki:
 ```
 <!-- {% endraw %} -->
 
+## Upgrading from Version 1 to Version 2
+
+Version 2 of this chart introduced a breaking change requiring you to decouple cert-manager and trust-manager from the Ziti controller chart if they were previously installed as subcharts. This allows them to be upgraded and configured independently of the Ziti controller chart.
+
+**Symptom**
+
+> Error: Unable to continue with install: CustomResourceDefinition "certificaterequests.cert-manager.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "cert-manager"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "cert-manager"
+
+**Cause**
+
+Cert Manager and Trust Manager are no longer included as subcharts, so upgrading the Ziti controller chart will delete the cert-manager and trust-manager Operators along with their respective CRDs and associated resources which are critical for the Ziti controller.
+
+**Solution**
+
+1. As with any controller upgrade, you are advised to back up the database before proceeding so that you will have the option to roll back to a snapshot prior to any irreversible database schema migrations that may occur during an upgrade.
+1. Upgrade the Ziti controller Helm release to chart v2. This will temporarily uninstall the CM and TM Helm releases if they were originally installed as dependencies of the Ziti controller chart.
+1. Install or upgrade as desired the cert-manager and trust-manager Helm releases (see [Custom Resources](#custom-resources) section above for an example that is compatible with this upgrade path).
+1. If the cert-manager or trust-manager charts fail to install with the "symptom" above, then run the provided BASH script (`chown-cert-manager.bash`) to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
+1. Retry installing cert-manager and trust-manager Helm charts. When they are installed successfully, their respective Helm releases will own the CRDs that were annotated and labeled by the provided BASH script.
+
+> [!IMPORTANT]
+> You must use the same values for CM and TM Helm release names and namespaces when you run the provided script and when you re-install the cert-manager and trust-manager Helm charts.
+
+Assuming your future CM release will be named "cert-manager," your future TM release will be named "trust-manager," and both will be installed in namespace "cert-manager," and your Ziti controller is installed in namespace "ziti," you can use these example values to run the provided script to pave the way to installing the version 2 ziti-controller chart, which will delete the cert-manager and trust-manager Operators, preserving the CRDs and their associated resources.
+
+```bash
+helm pull openziti/ziti-controller
+tar -xvf ziti-controller-*.tgz
+CM_NAMESPACE=cert-manager \
+CM_RELEASE_NAME=cert-manager \
+TM_NAMESPACE=cert-manager \
+TM_RELEASE_NAME=trust-manager \
+ZITI_NAMESPACE=ziti \
+./ziti-controller/files/chown-cert-manager.bash
+```
 
 <!-- README.md generated by helm-docs from README.md.gotmpl -->
