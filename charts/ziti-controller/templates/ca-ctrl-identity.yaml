@@ -55,58 +55,6 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-cert
-  labels:
-    {{- include "ziti-controller.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/resource-policy": keep
-    "openziti.io/deprecated": "true"
-    "openziti.io/deprecation-notice": "This resource is orphaned and no longer managed by Helm."
-spec:
-  commonName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate
-  secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
-  isCA: true
-  duration: {{ .Values.ca.duration }}
-  renewBefore: {{ .Values.ca.renewBefore }}
-  usages:
-    - digital signature
-    - cert sign
-    - crl sign
-  privateKey:
-    algorithm: ECDSA
-    size: 256
-    rotationPolicy: Always
-  issuerRef:
-    {{- $alt := .Values.ctrlPlane.alternativeIssuer -}}
-    {{- if and $alt (ne (len $alt) 0) }}
-      {{- if typeIs "string" $alt }}
-      name: {{ $alt | quote }}
-      kind: Issuer
-      group: cert-manager.io
-      {{- else }}
-        {{- toYaml $alt | nindent 4 }}
-      {{- end }}
-    {{- else }}
-    kind: Issuer
-    name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
-    {{- end }}
-
----
-apiVersion: cert-manager.io/v1
-kind: Issuer
-metadata:
-  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-issuer
-  labels:
-    {{- include "ziti-controller.labels" . | nindent 4 }}
-  annotations: {}
-spec:
-  ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-intermediate-secret
-
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
