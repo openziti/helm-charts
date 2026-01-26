@@ -301,15 +301,15 @@ clientApi:
         enabled: true
         type: ClusterIP
     altDnsNames:
-        - "alt-edge.ziti.example.com"
+        - "alt-edge.ziti.example.com"  # configures SNI routing for ingresses
 
 webBindingPki:
     enabled: true
     altServerCerts:
         - mode: certManager
             secretName: my-alt-server-cert
-            dnsNames:
-                - "{{`{{ .Values.clientApi.altDnsNames[0] }}`}}"
+            altDnsNames:
+                - "alt-edge.ziti.example.com"  # sets DNS SANs for the cert for SNI routing in controller process
             issuerRef:
                 group: cert-manager.io
                 kind: ClusterIssuer

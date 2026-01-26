@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 3.0.0-pre1](https://img.shields.io/badge/Version-3.0.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.8.0-pre5](https://img.shields.io/badge/AppVersion-1.8.0--pre5-informational?style=flat-square)
+![Version: 3.0.0-pre2](https://img.shields.io/badge/Version-3.0.0--pre2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.2](https://img.shields.io/badge/AppVersion-1.7.2-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -444,15 +444,15 @@ clientApi:
         enabled: true
         type: ClusterIP
     altDnsNames:
-        - "alt-edge.ziti.example.com"
+        - "alt-edge.ziti.example.com"  # configures SNI routing for ingresses
 
 webBindingPki:
     enabled: true
     altServerCerts:
         - mode: certManager
             secretName: my-alt-server-cert
-            dnsNames:
-                - "{{ .Values.clientApi.altDnsNames[0] }}"
+            altDnsNames:
+                - "alt-edge.ziti.example.com"  # sets DNS SANs for the cert for SNI routing in controller process
             issuerRef:
                 group: cert-manager.io
                 kind: ClusterIssuer

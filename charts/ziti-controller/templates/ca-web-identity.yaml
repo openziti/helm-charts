@@ -151,8 +151,6 @@ spec:
         {{- end }}
       {{- end }}
     {{- end }}
-  # uris:
-  #   - spiffe://{{ .Values.ca.clusterDomain }}/ns/sandbox/sa/example
   ipAddresses:
     - 127.0.0.1
     - "::1"
