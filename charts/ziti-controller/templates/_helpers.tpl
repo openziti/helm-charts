@@ -135,6 +135,18 @@ that are managed by cert-manager
 {{- end -}}
 
 {{/*
+Resolve the organization used in server certificate subjects.
+*/}}
+{{- define "ziti-controller.serverCertSubjectOrganization" -}}
+  {{- $edition := (get .Values "edition") | default dict -}}
+  {{- if (get $edition "enterprise" | default false) -}}
+Enterprise Edition
+  {{- else -}}
+OpenZiti Community
+  {{- end -}}
+{{- end -}}
+
+{{/*
 Validate cluster mode.
 Returns one of: "standalone", "cluster-init", "cluster-join", "cluster-migrate".
 
