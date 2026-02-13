@@ -53,8 +53,7 @@ jobs:
       - name: install miniziti
         uses: supplypike/setup-bin@v5
         with:
-          # uri: https://get.openziti.io/miniziti.bash
-          uri: https://raw.githubusercontent.com/openziti/ziti/miniziti-retry-ctrl/quickstart/kubernetes/miniziti.bash
+          uri: https://get.openziti.io/miniziti.bash
           # uri: https://raw.githubusercontent.com/openziti/ziti/<testing ref>/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease

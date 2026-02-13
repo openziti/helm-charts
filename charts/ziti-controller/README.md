@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.2](https://img.shields.io/badge/AppVersion-1.7.2-informational?style=flat-square)
+![Version: 3.0.1](https://img.shields.io/badge/Version-3.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.2](https://img.shields.io/badge/AppVersion-1.7.2-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -270,6 +270,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ca.renewBefore | string | `"720h"` | Go time.Duration string format |
 | cert.duration | string | `"87840h"` | server certificate duration as Go time.Duration string format |
 | cert.renewBefore | string | `"720h"` | rewnew server certificates before expiry as Go time.Duration string format |
+| cert.subjectMeta | bool | `true` | include origin metadata in server certificate subjects |
 | clientApi.advertisedHost | string | `""` | global DNS name by which routers can resolve a reachable IP for this service |
 | clientApi.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | clientApi.altDnsNames | list | `[]` | besides advertisedHost and dnsNames, add these DNS SANs to any ingresses but not the web identity |

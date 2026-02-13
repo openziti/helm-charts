@@ -246,6 +246,8 @@ cert:
   duration: 87840h    # 3660d / 10 y
   # -- rewnew server certificates before expiry as Go time.Duration string format
   renewBefore: 720h   # 30d
+  # -- include origin metadata in server certificate subjects
+  subjectMeta: true
 
 # The edge signer PKI is now the SINGLE root of trust for the entire Ziti network.
 # All ctrl-plane and web-binding certificates are now issued from the edge-signer-issuer.

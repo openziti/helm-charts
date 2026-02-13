@@ -60,6 +60,11 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   commonName: {{ default (printf "%s-ctrl-plane-identity" (include "ziti-controller.fullname" .)) .Values.cluster.nodeName }}
+  {{- if .Values.cert.subjectMeta }}
+  subject:
+    organizations:
+      - "OpenZiti Community"
+  {{- end }}
   secretName: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
