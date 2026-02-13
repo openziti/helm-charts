@@ -64,6 +64,11 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-web-identity
+  {{- if .Values.cert.subjectMeta }}
+  subject:
+    organizations:
+      - "OpenZiti Community"
+  {{- end }}
   secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
@@ -115,6 +120,11 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-mgmt
+  {{- if .Values.cert.subjectMeta }}
+  subject:
+    organizations:
+      - "OpenZiti Community"
+  {{- end }}
   secretName: {{ include "ziti-controller.fullname" . }}-web-mgmt-api-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
@@ -162,6 +172,11 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-prometheus
+  {{- if .Values.cert.subjectMeta }}
+  subject:
+    organizations:
+      - "OpenZiti Community"
+  {{- end }}
   secretName: {{ include "ziti-controller.fullname" . }}-web-prometheus-metrics-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
