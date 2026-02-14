@@ -352,8 +352,21 @@ jobs:
           curl -skSfw '%{http_code}\t%{url}\n' -o/dev/null \
           https://miniziti-controller.${{ steps.ingress_zone.outputs.ingress_zone }}/zac/
 
+      - name: Enroll client identity (current charts)
+        if: steps.mode.outputs.run_baseline != 'true'
+        run: >
+          ziti edge enroll
+          --jwt ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.jwt
+          --out ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
+
+      - name: Run client proxy (current charts)
+        if: steps.mode.outputs.run_baseline != 'true'
+        run: >
+          nohup ziti tunnel proxy "httpbin-service:4321"
+          --identity ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
+          --verbose </dev/null &>/tmp/miniziti-client.log &
+
       - name: Wait for proxy to serve the httpbin service (after upgrade)
-        if: steps.mode.outputs.run_baseline == 'true'
         id: wait_for_proxy_upgrade
         continue-on-error: true
         uses: iFaxity/wait-on-action@v1
@@ -364,7 +377,6 @@ jobs:
           timeout: 20000
 
       - name: Send a POST request to the httpbin service (after upgrade)
-        if: steps.mode.outputs.run_baseline == 'true'
         id: test_httpbin_upgrade
         continue-on-error: true
         shell: bash
@@ -380,7 +392,6 @@ jobs:
           fi
 
       - name: Upgrade the zrok chart from the current branch and run the test job
-        if: steps.mode.outputs.run_baseline == 'true'
         shell: bash
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
@@ -399,7 +410,6 @@ jobs:
             zrok ./charts/zrok
 
       - name: Check zrok test job result
-        if: steps.mode.outputs.run_baseline == 'true'
         shell: bash
         run: |
           miniziti kubectl -n zrok wait --for=condition=complete --timeout=180s job/zrok-test-job
