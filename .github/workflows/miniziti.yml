@@ -37,10 +37,6 @@ jobs:
         with:
           start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ matrix.kubernetes-version }}
 
-      - name: Find minikube IP address
-        id: minikube_ip
-        run: echo "minikube_ip=$(minikube --profile ${ZITI_NAMESPACE} ip)" >> $GITHUB_OUTPUT
-
       - name: install ziti cli
         uses: supplypike/setup-bin@v5
         with:
@@ -54,7 +50,7 @@ jobs:
         uses: supplypike/setup-bin@v5
         with:
           # uri: https://get.openziti.io/miniziti.bash
-          uri: https://raw.githubusercontent.com/openziti/ziti/miniziti-retry-ctrl/quickstart/kubernetes/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti/d1cdb171ed59242cd232ac6da4b75da16110bd64/quickstart/kubernetes/miniziti.bash
           # uri: https://raw.githubusercontent.com/openziti/ziti/<testing ref>/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
@@ -79,6 +75,12 @@ jobs:
         run: miniziti start --no-hosts --verbose
         env:
           MINIZITI_TIMEOUT_SECS: 300
+
+      - name: Find miniziti ingress zone
+        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        id: ingress_zone
+        run: |
+          echo "ingress_zone=$(miniziti kubectl get configmap ${ZITI_NAMESPACE}-data -n ${ZITI_NAMESPACE} -o jsonpath='{.data.ingress-zone}')" >> $GITHUB_OUTPUT
 
       - name: Find the ziti admin password
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
@@ -183,7 +185,7 @@ jobs:
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
           ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
-          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+          ZROK_DNS_ZONE: ${{ steps.ingress_zone.outputs.ingress_zone }}
         run: |
           helm upgrade \
             --install \
@@ -296,7 +298,7 @@ jobs:
         run: |
           set -euo pipefail
           curl -skSfw '%{http_code}\t%{url}\n' -o/dev/null \
-          https://miniziti-controller.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/zac/
+          https://miniziti-controller.${{ steps.ingress_zone.outputs.ingress_zone }}/zac/
 
       - name: Wait for proxy to serve the httpbin service (after upgrade)
         id: wait_for_proxy_upgrade
@@ -328,7 +330,7 @@ jobs:
         env:
           ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
           ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
-          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+          ZROK_DNS_ZONE: ${{ steps.ingress_zone.outputs.ingress_zone }}
         run: |
           helm upgrade \
             --install \

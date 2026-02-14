@@ -1,0 +1,16 @@
+clientApi:
+  service:
+    enabled: true
+    type: ClusterIP
+  traefikTcpRoute:
+    enabled: true
+    entryPoints:
+      - websecure
+
+# managementApi and ctrlPlane share the clientApi listener by default.
+managementApi:
+  service:
+    enabled: false
+ctrlPlane:
+  service:
+    enabled: false

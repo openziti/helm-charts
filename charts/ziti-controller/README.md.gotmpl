@@ -130,66 +130,27 @@ ziti edge login ctrl1.ziti.example.com:32171 --yes --username admin --password $
 ```
 <!-- {% endraw %} -->
 
+## Traefik Gateway API TLSRoute Example (Experimental)
 
-## Nginx Ingress Example
-
-Here's an example of using [the community `ingress-nginx` chart](https://docs.nginx.com/nginx-ingress-controller/installation/installing-nic/installation-with-helm/) to provision ingresses for the controller's `ClusterIP` services.
-
-Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
-
-If necessary, patch the `ingress-nginx` deployment to enable TLS passthrough.
-
-```bash
-kubectl patch deployment "ingress-nginx-controller" \
-    --namespace ingress-nginx \
-    --type json \
-    --patch '[{"op": "add",
-        "path": "/spec/template/spec/containers/0/args/-",
-        "value":"--enable-ssl-passthrough"
-    }]'
-```
-
-Create a Helm chart values file like this.
-
-```yaml
-# ziti-controller-values.yml
-clientApi:
-    advertisedHost: ctrl1.ziti.example.com
-    advertisedPort: 443
-    service:
-        type: ClusterIP
-    ingress:
-        enabled: true
-        ingressClassName: nginx
-        annotations:
-            kubernetes.io/ingress.allow-http: "false"
-            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-```
-
-Now install or upgrade this controller chart with your values file.
+Gateway API TLSRoute support is available in this chart, but remains experimental for Traefik deployments. Prefer IngressRouteTCP for production and long-lived environments.
 
 ```bash
 helm upgrade ziti-controller openziti/ziti-controller \
     --install \
     --namespace ziti \
-    --values ziti-controller-values.yml
+    --set clientApi.advertisedHost=ctrl1.ziti.example.com \
+    --set clientApi.advertisedPort=443 \
+    --set clientApi.service.type=ClusterIP \
+    --set clientApi.gatewayTlsRoute.enabled=true \
+    --set-json 'clientApi.gatewayTlsRoute.parentRefs=[{"name":"traefik-gateway","namespace":"traefik","sectionName":"websecure"}]'
 ```
 
-Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/
-
-Log in with the `ziti` CLI.
-
-<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and {{``}} escapes the Go template from helm-docs -->
-```bash
-ziti edge login ctrl1.ziti.example.com:443 --yes --username admin --password $(
-    kubectl -n ziti get secrets ziti-controller-admin-secret -o go-template='{{`{{index .data "admin-password" | base64decode }}`}}'
-)
-```
-<!-- {% endraw %} -->
 
 ## Traefik IngressRouteTCP Example
 
-This will create a Traefik IngressRouteTCP with TLS passthrough for the client API's ClusterIP service.
+Recommended default: use Traefik IngressRouteTCP for TLS passthrough.
+
+This example creates a Traefik IngressRouteTCP for the client API's ClusterIP service.
 
 ```bash
 helm upgrade ziti-controller openziti/ziti-controller \
@@ -200,6 +161,15 @@ helm upgrade ziti-controller openziti/ziti-controller \
     --set clientApi.advertisedPort=443 \
     --set clientApi.service.type=ClusterIP \
     --set clientApi.traefikTcpRoute.enabled=true
+```
+
+Or use the provided values file:
+
+```bash
+helm upgrade ziti-controller openziti/ziti-controller \
+    --install \
+    --namespace ziti \
+    --values values-traefik-ingressroutetcp.yaml
 ```
 
 Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/

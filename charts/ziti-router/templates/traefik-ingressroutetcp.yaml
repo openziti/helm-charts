@@ -1,0 +1,45 @@
+---
+{{- if and .Values.edge.enabled .Values.edge.traefikTcpRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-edge
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.edge.traefikTcpRoute.labels | nindent 4 }}
+spec:
+  entryPoints:
+{{- range .Values.edge.traefikTcpRoute.entryPoints }}
+    - {{ . }}
+{{- end }}
+  routes:
+    - match: HostSNI(`{{ .Values.edge.advertisedHost }}`)
+      services:
+        - name: {{ include "ziti-router.fullname" . }}-edge
+          port: {{ .Values.edge.advertisedPort }}
+  tls:
+    passthrough: true
+{{- end }}
+
+---
+{{- if .Values.linkListeners.transport.traefikTcpRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-transport
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.linkListeners.transport.traefikTcpRoute.labels | nindent 4 }}
+spec:
+  entryPoints:
+{{- range .Values.linkListeners.transport.traefikTcpRoute.entryPoints }}
+    - {{ . }}
+{{- end }}
+  routes:
+    - match: HostSNI(`{{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedHost "context" .) }}`)
+      services:
+        - name: {{ include "ziti-router.fullname" . }}-transport
+          port: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedPort "context" .) }}
+  tls:
+    passthrough: true
+{{- end }}

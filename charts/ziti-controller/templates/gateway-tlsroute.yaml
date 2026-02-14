@@ -1,0 +1,96 @@
+---
+{{- if .Values.clientApi.gatewayTlsRoute.enabled }}
+apiVersion: {{ .Values.clientApi.gatewayTlsRoute.apiVersion }}
+kind: TLSRoute
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-client
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.clientApi.gatewayTlsRoute.labels | nindent 4 }}
+spec:
+{{- if .Values.clientApi.gatewayTlsRoute.parentRefs }}
+  parentRefs:
+{{- toYaml .Values.clientApi.gatewayTlsRoute.parentRefs | nindent 4 }}
+{{- else }}
+  parentRefs: []
+{{- end }}
+  hostnames:
+    - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.clientApi.advertisedHost "context" .) }}
+{{- if and (hasKey .Values.clientApi "dnsNames") (.Values.clientApi.dnsNames) }}
+{{- range .Values.clientApi.dnsNames }}
+    - {{ . }}
+{{- end }}
+{{- end }}
+{{- if and (hasKey .Values.clientApi "altDnsNames") (.Values.clientApi.altDnsNames) }}
+{{- range .Values.clientApi.altDnsNames }}
+    - {{ . }}
+{{- end }}
+{{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ include "ziti-controller.fullname" . }}-client
+          port: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.clientApi.advertisedPort "context" .) }}
+{{- end }}
+
+---
+{{- if .Values.managementApi.gatewayTlsRoute.enabled }}
+apiVersion: {{ .Values.managementApi.gatewayTlsRoute.apiVersion }}
+kind: TLSRoute
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-mgmt
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.managementApi.gatewayTlsRoute.labels | nindent 4 }}
+spec:
+{{- if .Values.managementApi.gatewayTlsRoute.parentRefs }}
+  parentRefs:
+{{- toYaml .Values.managementApi.gatewayTlsRoute.parentRefs | nindent 4 }}
+{{- else }}
+  parentRefs: []
+{{- end }}
+  hostnames:
+    - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) }}
+{{- if and (hasKey .Values.managementApi "dnsNames") (.Values.managementApi.dnsNames) }}
+{{- range .Values.managementApi.dnsNames }}
+    - {{ . }}
+{{- end }}
+{{- end }}
+{{- if and (hasKey .Values.managementApi "altDnsNames") (.Values.managementApi.altDnsNames) }}
+{{- range .Values.managementApi.altDnsNames }}
+    - {{ . }}
+{{- end }}
+{{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ include "ziti-controller.fullname" . }}-mgmt
+          port: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedPort "context" .) }}
+{{- end }}
+
+---
+{{- if .Values.ctrlPlane.gatewayTlsRoute.enabled }}
+apiVersion: {{ .Values.ctrlPlane.gatewayTlsRoute.apiVersion }}
+kind: TLSRoute
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-ctrl
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.ctrlPlane.gatewayTlsRoute.labels | nindent 4 }}
+spec:
+{{- if .Values.ctrlPlane.gatewayTlsRoute.parentRefs }}
+  parentRefs:
+{{- toYaml .Values.ctrlPlane.gatewayTlsRoute.parentRefs | nindent 4 }}
+{{- else }}
+  parentRefs: []
+{{- end }}
+  hostnames:
+    - {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) }}
+{{- if and (hasKey .Values.ctrlPlane "dnsNames") (.Values.ctrlPlane.dnsNames) }}
+{{- range .Values.ctrlPlane.dnsNames }}
+    - {{ . }}
+{{- end }}
+{{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ include "ziti-controller.fullname" . }}-ctrl
+          port: {{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedPort "context" .) }}
+{{- end }}
