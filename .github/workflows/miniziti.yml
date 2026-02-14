@@ -15,16 +15,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  compute-k8s-matrix:
+    name: compute Kubernetes version matrix
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.compute.outputs.matrix }}
+    steps:
+      - name: Compute top 3 Kubernetes minors from current stable
+        id: compute
+        shell: bash
+        run: |
+          set -euo pipefail
+          stable="$(curl -fsSL https://dl.k8s.io/release/stable.txt)"
+          stable="${stable#v}"
+          major="${stable%%.*}"
+          rest="${stable#*.}"
+          minor="${rest%%.*}"
+
+          m0="${major}.$((minor))"
+          m1="${major}.$((minor - 1))"
+          m2="${major}.$((minor - 2))"
+
+          matrix_json=$(jq -cn --arg m0 "$m0" --arg m1 "$m1" --arg m2 "$m2" '{"kubernetes_minor": [$m0, $m1, $m2]}')
+          echo "matrix=${matrix_json}" >> "$GITHUB_OUTPUT"
+
   miniziti:
-    name: deploy to minikube ${{ matrix.kubernetes-version }}
+    needs: compute-k8s-matrix
+    name: deploy to minikube ${{ matrix.kubernetes_minor }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
-      matrix:
-        kubernetes-version:
-          - v1.33.1
-          - v1.32.6
-          - v1.31.10
+      matrix: ${{ fromJson(needs.compute-k8s-matrix.outputs.matrix) }}
     env:
       ZITI_NAMESPACE: miniziti
       ZITI_CLI_VERSION: 1.7.0
@@ -32,10 +53,16 @@ jobs:
       - name: Checkout workspace
         uses: actions/checkout@v4
 
+      - name: Resolve latest patch for Kubernetes minor
+        id: resolve_k8s
+        shell: bash
+        run: |
+          echo "kubernetes_version=$(curl -fsSL https://dl.k8s.io/release/stable-${{ matrix.kubernetes_minor }}.txt)" >> "$GITHUB_OUTPUT"
+
       - name: Start minikube
         uses: medyagh/setup-minikube@v0.0.20
         with:
-          start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ matrix.kubernetes-version }}
+          start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ steps.resolve_k8s.outputs.kubernetes_version }}
 
       - name: install ziti cli
         uses: supplypike/setup-bin@v5
