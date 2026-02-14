@@ -112,6 +112,19 @@ linkListeners:
         - websecure
       # -- IngressRouteTCP labels
       labels: {}
+    gatewayTlsRoute:
+      # -- EXPERIMENTAL: enable Gateway API TLSRoute for the transport listener
+      enabled: false
+      # -- API version for TLSRoute (depends on installed Gateway API CRDs)
+      apiVersion: gateway.networking.k8s.io/v1alpha2
+      # -- TLSRoute labels
+      labels: {}
+      # -- parentRefs for TLSRoute, usually a Traefik-managed Gateway listener
+      # parentRefs:
+      #   - name: traefik-gateway
+      #     namespace: traefik
+      #     sectionName: websecure
+      parentRefs: []
   # -- Additional link listeners. Each entry defines an extra 'link' binding in the router config.
   additionalListeners: []
     # - name: router11-link
@@ -192,6 +205,19 @@ edge:
       - websecure
     # -- IngressRouteTCP labels
     labels: {}
+  gatewayTlsRoute:
+    # -- EXPERIMENTAL: enable Gateway API TLSRoute for the edge listener
+    enabled: false
+    # -- API version for TLSRoute (depends on installed Gateway API CRDs)
+    apiVersion: gateway.networking.k8s.io/v1alpha2
+    # -- TLSRoute labels
+    labels: {}
+    # -- parentRefs for TLSRoute, usually a Traefik-managed Gateway listener
+    # parentRefs:
+    #   - name: traefik-gateway
+    #     namespace: traefik
+    #     sectionName: websecure
+    parentRefs: []
   # -- additional edge listeners have the same shape as the default edge
   # listener, except they're enabled if defined, and you must specify a unique
   # name for each additional edge listener. The name distinguishes their

@@ -1,0 +1,27 @@
+edge:
+  # DNS name edge clients and other routers will use to reach this router
+  advertisedHost:  # router1.zitik8s
+  # TCP port to pair with advertisedHost
+  advertisedPort: 443
+  service:
+    enabled: true
+    type: ClusterIP
+  gatewayTlsRoute:
+    enabled: true
+    parentRefs:
+      - name: traefik-gateway
+        namespace: traefik
+        sectionName: websecure
+
+linkListeners:
+  transport:
+    # enabled by default; miniziti may disable/override this listener
+    service:
+      enabled: true
+      type: ClusterIP
+    gatewayTlsRoute:
+      enabled: true
+      parentRefs:
+        - name: traefik-gateway
+          namespace: traefik
+          sectionName: websecure
