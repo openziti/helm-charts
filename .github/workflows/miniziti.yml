@@ -59,16 +59,21 @@ jobs:
         run: |
           helm repo add grafana https://grafana.github.io/helm-charts
           helm repo update
-          helm upgrade --install loki grafana/loki-stack \
+          helm upgrade --install loki grafana/loki \
             --namespace loki-stack \
             --create-namespace \
             --set loki.auth_enabled=false \
-            --set promtail.enabled=true \
-            --set grafana.enabled=false \
+            --set test.enabled=false \
+            --wait --timeout 180s
+
+          helm upgrade --install promtail grafana/promtail \
+            --namespace loki-stack \
+            --set config.clients[0].url=http://loki-gateway/loki/api/v1/push \
             --wait --timeout 180s
           
-          # Wait for Loki StatefulSet to be ready
+          # Wait for Loki and Promtail to be ready
           miniziti kubectl wait statefulsets -n loki-stack loki --for jsonpath='{.status.readyReplicas}'=1 --timeout 120s
+          miniziti kubectl wait daemonsets -n loki-stack promtail --for jsonpath='{.status.numberReady}'=1 --timeout 120s
 
       - name: Run miniziti with latest release charts
         if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
@@ -150,7 +155,7 @@ jobs:
           
           # Query Loki for hook logs
           RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
-            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-install.*\"}" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",pod=~\".*post-install.*\"}" \
             --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
             --data-urlencode "end=$(date -u +%s)000000000")
           
@@ -254,7 +259,7 @@ jobs:
           # Reuse existing port-forward (already running from previous step)
           # Query Loki for hook logs
           RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
-            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-upgrade.*\"}" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",pod=~\".*post-upgrade.*\"}" \
             --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
             --data-urlencode "end=$(date -u +%s)000000000")
           
