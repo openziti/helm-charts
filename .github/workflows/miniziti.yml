@@ -15,16 +15,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  compute-k8s-matrix:
+    name: compute Kubernetes version matrix
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.compute.outputs.matrix }}
+    steps:
+      - name: Compute top 3 Kubernetes minors from current stable
+        id: compute
+        shell: bash
+        run: |
+          set -euo pipefail
+          stable="$(curl -fsSL https://dl.k8s.io/release/stable.txt)"
+          stable="${stable#v}"
+          major="${stable%%.*}"
+          rest="${stable#*.}"
+          minor="${rest%%.*}"
+
+          m0="${major}.$((minor))"
+          m1="${major}.$((minor - 1))"
+          m2="${major}.$((minor - 2))"
+
+          matrix_json=$(jq -cn --arg m0 "$m0" --arg m1 "$m1" --arg m2 "$m2" '{"kubernetes_minor": [$m0, $m1, $m2]}')
+          echo "matrix=${matrix_json}" >> "$GITHUB_OUTPUT"
+
   miniziti:
-    name: deploy to minikube ${{ matrix.kubernetes-version }}
+    needs: compute-k8s-matrix
+    name: deploy to minikube ${{ matrix.kubernetes_minor }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
-      matrix:
-        kubernetes-version:
-          - v1.33.1
-          - v1.32.6
-          - v1.31.10
+      matrix: ${{ fromJson(needs.compute-k8s-matrix.outputs.matrix) }}
     env:
       ZITI_NAMESPACE: miniziti
       ZITI_CLI_VERSION: 1.7.0
@@ -32,14 +53,16 @@ jobs:
       - name: Checkout workspace
         uses: actions/checkout@v4
 
+      - name: Resolve latest patch for Kubernetes minor
+        id: resolve_k8s
+        shell: bash
+        run: |
+          echo "kubernetes_version=$(curl -fsSL https://dl.k8s.io/release/stable-${{ matrix.kubernetes_minor }}.txt)" >> "$GITHUB_OUTPUT"
+
       - name: Start minikube
         uses: medyagh/setup-minikube@v0.0.20
         with:
-          start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ matrix.kubernetes-version }}
-
-      - name: Find minikube IP address
-        id: minikube_ip
-        run: echo "minikube_ip=$(minikube --profile ${ZITI_NAMESPACE} ip)" >> $GITHUB_OUTPUT
+          start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ steps.resolve_k8s.outputs.kubernetes_version }}
 
       - name: install ziti cli
         uses: supplypike/setup-bin@v5
@@ -54,10 +77,22 @@ jobs:
         uses: supplypike/setup-bin@v5
         with:
           # uri: https://get.openziti.io/miniziti.bash
-          uri: https://raw.githubusercontent.com/openziti/ziti/miniziti-retry-ctrl/quickstart/kubernetes/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti/d1cdb171ed59242cd232ac6da4b75da16110bd64/quickstart/kubernetes/miniziti.bash
           # uri: https://raw.githubusercontent.com/openziti/ziti/<testing ref>/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
+
+      - name: Select test mode
+        id: mode
+        shell: bash
+        run: |
+          if [[ "${{ vars.SKIP_MINIKUBE_LATEST_CHARTS }}" == "true" ]]; then
+            echo "run_baseline=false" >> "$GITHUB_OUTPUT"
+            echo "Running upgrade-only path"
+          else
+            echo "run_baseline=true" >> "$GITHUB_OUTPUT"
+            echo "Running baseline+upgrade path"
+          fi
 
       - name: Install Loki for log aggregation
         run: |
@@ -69,19 +104,23 @@ jobs:
             --set loki.auth_enabled=false \
             --set promtail.enabled=true \
             --set grafana.enabled=false \
-            --wait --timeout 180s
-          
-          # Wait for Loki StatefulSet to be ready
-          miniziti kubectl wait statefulsets -n loki-stack loki --for jsonpath='{.status.readyReplicas}'=1 --timeout 120s
+            --set test.enabled=false \
+            --wait --timeout 120s
 
       - name: Run miniziti with latest release charts
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        if: steps.mode.outputs.run_baseline == 'true'
         run: miniziti start --no-hosts --verbose
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
-      - name: Find the ziti admin password
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+      - name: Find miniziti ingress zone (initial)
+        if: steps.mode.outputs.run_baseline == 'true'
+        id: ingress_zone_initial
+        run: |
+          echo "ingress_zone=$(miniziti kubectl get configmap miniziti-config -n ${ZITI_NAMESPACE} -o jsonpath='{.data.ingress-zone}')" >> $GITHUB_OUTPUT
+
+      - name: Find the ziti admin password (initial)
+        if: steps.mode.outputs.run_baseline == 'true'
         id: get_ziti_pwd_initial
         run: |
           miniziti kubectl get secrets "ziti-controller-admin-secret" \
@@ -89,21 +128,21 @@ jobs:
             | xargs -Iadmin_password echo "ZITI_PWD=admin_password" >> $GITHUB_OUTPUT
 
       - name: Enroll client identity
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        if: steps.mode.outputs.run_baseline == 'true'
         run: >
           ziti edge enroll
           --jwt ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.jwt
           --out ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
 
       - name: Run client proxy
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        if: steps.mode.outputs.run_baseline == 'true'
         run: >
           nohup ziti tunnel proxy "httpbin-service:4321"
           --identity ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
           --verbose </dev/null &>/tmp/miniziti-client.log &
 
       - name: Wait for proxy to serve the httpbin service
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        if: steps.mode.outputs.run_baseline == 'true'
         id: wait_for_proxy_initial
         continue-on-error: true
         uses: iFaxity/wait-on-action@v1
@@ -114,7 +153,7 @@ jobs:
           timeout: 20000
 
       - name: Send a POST request to the httpbin service
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true'
+        if: steps.mode.outputs.run_baseline == 'true'
         id: test_httpbin_initial
         continue-on-error: true
         shell: bash
@@ -130,7 +169,7 @@ jobs:
           fi
 
       - name: Start Loki port-forward for log queries
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true' && always()
+        if: steps.mode.outputs.run_baseline == 'true' && always()
         shell: bash
         run: |
           # Start port-forward in background
@@ -139,7 +178,7 @@ jobs:
           sleep 5
 
       - name: Query Loki for post-install hook logs
-        if: vars.SKIP_MINIKUBE_LATEST_CHARTS != 'true' && always()
+        if: steps.mode.outputs.run_baseline == 'true' && always()
         shell: bash
         run: |
           echo "=========================================="
@@ -148,7 +187,7 @@ jobs:
           
           # Query Loki for hook logs
           RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
-            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-install.*\"}" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",pod=~\".*post-install.*\"}" \
             --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
             --data-urlencode "end=$(date -u +%s)000000000")
           
@@ -179,11 +218,12 @@ jobs:
           fi
 
       - name: Install the zrok chart from the latest release
+        if: steps.mode.outputs.run_baseline == 'true'
         shell: bash
         env:
-          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+          ZITI_MGMT_API_HOST: miniziti-controller.${{ steps.ingress_zone_initial.outputs.ingress_zone }}
           ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
-          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+          ZROK_DNS_ZONE: ${{ steps.ingress_zone_initial.outputs.ingress_zone }}
         run: |
           helm upgrade \
             --install \
@@ -197,6 +237,7 @@ jobs:
             zrok openziti/zrok
 
       - name: Capture zrok controller and frontend logs (before upgrade)
+        if: steps.mode.outputs.run_baseline == 'true'
         shell: bash
         run: |
           echo "=========================================="
@@ -242,7 +283,20 @@ jobs:
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
+      - name: Find miniziti ingress zone (current)
+        id: ingress_zone
+        run: |
+          echo "ingress_zone=$(miniziti kubectl get configmap miniziti-config -n ${ZITI_NAMESPACE} -o jsonpath='{.data.ingress-zone}')" >> $GITHUB_OUTPUT
+
+      - name: Find the ziti admin password (current)
+        id: get_ziti_pwd
+        run: |
+          miniziti kubectl get secrets "ziti-controller-admin-secret" \
+            --output go-template='{{index .data "admin-password" | base64decode }}' \
+            | xargs -Iadmin_password echo "ZITI_PWD=admin_password" >> $GITHUB_OUTPUT
+
       - name: Query Loki for post-upgrade hook logs
+        if: steps.mode.outputs.run_baseline == 'true'
         shell: bash
         run: |
           echo "=========================================="
@@ -252,7 +306,7 @@ jobs:
           # Reuse existing port-forward (already running from previous step)
           # Query Loki for hook logs
           RESPONSE=$(curl -s "http://localhost:3100/loki/api/v1/query_range" \
-            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",job=\"loki-stack/promtail\",pod=~\".*post-upgrade.*\"}" \
+            --data-urlencode "query={namespace=\"${ZITI_NAMESPACE}\",pod=~\".*post-upgrade.*\"}" \
             --data-urlencode "start=$(date -u -d '10 minutes ago' +%s)000000000" \
             --data-urlencode "end=$(date -u +%s)000000000")
           
@@ -296,7 +350,21 @@ jobs:
         run: |
           set -euo pipefail
           curl -skSfw '%{http_code}\t%{url}\n' -o/dev/null \
-          https://miniziti-controller.${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io/zac/
+          https://miniziti-controller.${{ steps.ingress_zone.outputs.ingress_zone }}/zac/
+
+      - name: Enroll client identity (current charts)
+        if: steps.mode.outputs.run_baseline != 'true'
+        run: >
+          ziti edge enroll
+          --jwt ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.jwt
+          --out ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
+
+      - name: Run client proxy (current charts)
+        if: steps.mode.outputs.run_baseline != 'true'
+        run: >
+          nohup ziti tunnel proxy "httpbin-service:4321"
+          --identity ~/.local/state/miniziti/profiles/${ZITI_NAMESPACE}/identities/${ZITI_NAMESPACE}-client.json
+          --verbose </dev/null &>/tmp/miniziti-client.log &
 
       - name: Wait for proxy to serve the httpbin service (after upgrade)
         id: wait_for_proxy_upgrade
@@ -326,9 +394,9 @@ jobs:
       - name: Upgrade the zrok chart from the current branch and run the test job
         shell: bash
         env:
-          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
-          ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
-          ZROK_DNS_ZONE: ${{ steps.minikube_ip.outputs.minikube_ip }}.sslip.io
+          ZITI_MGMT_API_HOST: miniziti-controller.${{ steps.ingress_zone.outputs.ingress_zone }}
+          ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
+          ZROK_DNS_ZONE: ${{ steps.ingress_zone.outputs.ingress_zone }}
         run: |
           helm upgrade \
             --install \

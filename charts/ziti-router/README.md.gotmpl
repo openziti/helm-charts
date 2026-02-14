@@ -44,34 +44,9 @@ helm upgrade \
 
 ### Ingress TLS Passthrough
 
-All router TLS listeners must terminate TLS, so it's essential that Ingress resources use TLS passthrough.
+All router TLS listeners must terminate TLS, so it's essential that north-south routing uses TLS passthrough.
 
-This example demonstrates creating TLS pass-through Ingress resources for use with [ingress-nginx](https://docs.nginx.com/nginx-ingress-controller/installation/installing-nic/installation-with-helm/).
-
-Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
-
-If not enabled, then you must patch the `ingress-nginx` deployment to enable the SSL passthrough option.
-
-```bash
-kubectl patch deployment "ingress-nginx-controller" \
-    --namespace ingress-nginx \
-    --type json \
-    --patch '[{"op": "add",
-        "path": "/spec/template/spec/containers/0/args/-",
-        "value":"--enable-ssl-passthrough"
-    }]'
-```
-
-```bash
-# subscribe to ingress-nginx
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
-
-# install ingress-nginx
-helm install \
-  --namespace ingress-nginx --create-namespace --generate-name \
-  ingress-nginx/ingress-nginx \
-    --set controller.extraArgs.enable-ssl-passthrough=true 
-```
+Recommended default: use Traefik IngressRouteTCP.
 
 Create a Helm chart values file for this router chart.
 
@@ -84,12 +59,10 @@ edge:
   advertisedPort: 443
   service:
     type: ClusterIP
-  ingress:
+  traefikTcpRoute:
     enabled: true
-    ingressClassName: nginx
-    annotations:
-      kubernetes.io/ingress.allow-http: "false"
-      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    entryPoints:
+      - websecure
 ```
 
 Now upgrade your router chart release with the values file.

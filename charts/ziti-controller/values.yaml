@@ -33,11 +33,11 @@ clientApi:
   ingress:
     # -- create a TLS-passthrough ingress for the client API's ClusterIP service
     enabled: false
-    # -- ingress class name, e.g., "nginx"
+    # -- ingress class name
     ingressClassName: ""
     # -- ingress labels
     labels: {}
-    # -- ingress annotations, e.g., to configure ingress-nginx
+    # -- ingress annotations
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
@@ -49,6 +49,19 @@ clientApi:
       - websecure
     # -- IngressRouteTCP labels
     labels: {}
+  gatewayTlsRoute:
+    # -- EXPERIMENTAL: enable Gateway API TLSRoute for this listener
+    enabled: false
+    # -- API version for TLSRoute (depends on installed Gateway API CRDs)
+    apiVersion: gateway.networking.k8s.io/v1alpha2
+    # -- TLSRoute labels
+    labels: {}
+    # -- parentRefs for TLSRoute, usually a Traefik-managed Gateway listener
+    # parentRefs:
+    #   - name: traefik-gateway
+    #     namespace: traefik
+    #     sectionName: websecure
+    parentRefs: []
 
 # -- by default, there's no need for a separate cluster service, ingress, or
 # load balancer for the management API because it shares a TLS listener with the
@@ -74,11 +87,11 @@ managementApi:
   ingress:
     # -- create a TLS-passthrough ingress for the client API's ClusterIP service
     enabled: false
-    # -- ingress class name, e.g., "nginx"
+    # -- ingress class name
     ingressClassName: ""
     # -- ingress labels
     labels: {}
-    # -- ingress annotations, e.g., to configure ingress-nginx
+    # -- ingress annotations
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
@@ -90,6 +103,19 @@ managementApi:
       - websecure
     # -- IngressRouteTCP labels
     labels: {}
+  gatewayTlsRoute:
+    # -- EXPERIMENTAL: enable Gateway API TLSRoute for this listener
+    enabled: false
+    # -- API version for TLSRoute (depends on installed Gateway API CRDs)
+    apiVersion: gateway.networking.k8s.io/v1alpha2
+    # -- TLSRoute labels
+    labels: {}
+    # -- parentRefs for TLSRoute, usually a Traefik-managed Gateway listener
+    # parentRefs:
+    #   - name: traefik-gateway
+    #     namespace: traefik
+    #     sectionName: websecure
+    parentRefs: []
 
 ctrlPlane:
   # -- cluster service target port on the container
@@ -110,11 +136,11 @@ ctrlPlane:
   ingress:
     # -- create an ingress for the cluster service
     enabled: false
-    # -- ingress class name, e.g., "nginx"
+    # -- ingress class name
     ingressClassName: ""
     # -- ingress labels
     labels: {}
-    # -- ingress annotations, e.g., to configure ingress-nginx
+    # -- ingress annotations
     annotations: {}
     # -- deprecated: tls passthrough is required
     tls: {}
@@ -131,6 +157,19 @@ ctrlPlane:
       - websecure
     # -- IngressRouteTCP labels
     labels: {}
+  gatewayTlsRoute:
+    # -- EXPERIMENTAL: enable Gateway API TLSRoute for this listener
+    enabled: false
+    # -- API version for TLSRoute (depends on installed Gateway API CRDs)
+    apiVersion: gateway.networking.k8s.io/v1alpha2
+    # -- TLSRoute labels
+    labels: {}
+    # -- parentRefs for TLSRoute, usually a Traefik-managed Gateway listener
+    # parentRefs:
+    #   - name: traefik-gateway
+    #     namespace: traefik
+    #     sectionName: websecure
+    parentRefs: []
 
 console:
   # -- enable the Ziti Admin Console (ZAC) at URL path "/zac" on the same port as the management API (default: true)

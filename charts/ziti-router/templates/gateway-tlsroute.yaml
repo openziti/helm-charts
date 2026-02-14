@@ -1,0 +1,47 @@
+---
+{{- if and .Values.edge.enabled .Values.edge.gatewayTlsRoute.enabled }}
+apiVersion: {{ .Values.edge.gatewayTlsRoute.apiVersion }}
+kind: TLSRoute
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-edge
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.edge.gatewayTlsRoute.labels | nindent 4 }}
+spec:
+{{- if .Values.edge.gatewayTlsRoute.parentRefs }}
+  parentRefs:
+{{- toYaml .Values.edge.gatewayTlsRoute.parentRefs | nindent 4 }}
+{{- else }}
+  parentRefs: []
+{{- end }}
+  hostnames:
+    - {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.edge.advertisedHost "context" .) }}
+  rules:
+    - backendRefs:
+        - name: {{ include "ziti-router.fullname" . }}-edge
+          port: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.edge.advertisedPort "context" .) }}
+{{- end }}
+
+---
+{{- if .Values.linkListeners.transport.gatewayTlsRoute.enabled }}
+apiVersion: {{ .Values.linkListeners.transport.gatewayTlsRoute.apiVersion }}
+kind: TLSRoute
+metadata:
+  name: {{ include "ziti-router.fullname" . }}-transport
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- toYaml .Values.linkListeners.transport.gatewayTlsRoute.labels | nindent 4 }}
+spec:
+{{- if .Values.linkListeners.transport.gatewayTlsRoute.parentRefs }}
+  parentRefs:
+{{- toYaml .Values.linkListeners.transport.gatewayTlsRoute.parentRefs | nindent 4 }}
+{{- else }}
+  parentRefs: []
+{{- end }}
+  hostnames:
+    - {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedHost "context" .) }}
+  rules:
+    - backendRefs:
+        - name: {{ include "ziti-router.fullname" . }}-transport
+          port: {{ include "ziti-router.tplOrLiteral" (dict "value" .Values.linkListeners.transport.advertisedPort "context" .) }}
+{{- end }}

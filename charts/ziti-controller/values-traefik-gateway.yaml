@@ -1,0 +1,18 @@
+clientApi:
+  service:
+    enabled: true
+    type: ClusterIP
+  gatewayTlsRoute:
+    enabled: true
+    parentRefs:
+      - name: traefik-gateway
+        namespace: traefik
+        sectionName: websecure
+
+# managementApi and ctrlPlane share the clientApi listener by default.
+managementApi:
+  service:
+    enabled: false
+ctrlPlane:
+  service:
+    enabled: false

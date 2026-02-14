@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.2](https://img.shields.io/badge/AppVersion-1.7.2-informational?style=flat-square)
+![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.2](https://img.shields.io/badge/AppVersion-1.7.2-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -121,65 +121,26 @@ ziti edge login ctrl1.ziti.example.com:32171 --yes --username admin --password $
 ```
 <!-- {% endraw %} -->
 
-## Nginx Ingress Example
+## Traefik Gateway API TLSRoute Example (Experimental)
 
-Here's an example of using [the community `ingress-nginx` chart](https://docs.nginx.com/nginx-ingress-controller/installation/installing-nic/installation-with-helm/) to provision ingresses for the controller's `ClusterIP` services.
-
-Ensure you have the `ingress-nginx` chart installed with `controller.extraArgs.enable-ssl-passthrough=true`. You can verify this feature is enabled by running `kubectl describe pods {ingress-nginx-controller pod}` and checking the args for `--enable-ssl-passthrough=true`.
-
-If necessary, patch the `ingress-nginx` deployment to enable TLS passthrough.
-
-```bash
-kubectl patch deployment "ingress-nginx-controller" \
-    --namespace ingress-nginx \
-    --type json \
-    --patch '[{"op": "add",
-        "path": "/spec/template/spec/containers/0/args/-",
-        "value":"--enable-ssl-passthrough"
-    }]'
-```
-
-Create a Helm chart values file like this.
-
-```yaml
-# ziti-controller-values.yml
-clientApi:
-    advertisedHost: ctrl1.ziti.example.com
-    advertisedPort: 443
-    service:
-        type: ClusterIP
-    ingress:
-        enabled: true
-        ingressClassName: nginx
-        annotations:
-            kubernetes.io/ingress.allow-http: "false"
-            nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-```
-
-Now install or upgrade this controller chart with your values file.
+Gateway API TLSRoute support is available in this chart, but remains experimental for Traefik deployments. Prefer IngressRouteTCP for production and long-lived environments.
 
 ```bash
 helm upgrade ziti-controller openziti/ziti-controller \
     --install \
     --namespace ziti \
-    --values ziti-controller-values.yml
+    --set clientApi.advertisedHost=ctrl1.ziti.example.com \
+    --set clientApi.advertisedPort=443 \
+    --set clientApi.service.type=ClusterIP \
+    --set clientApi.gatewayTlsRoute.enabled=true \
+    --set-json 'clientApi.gatewayTlsRoute.parentRefs=[{"name":"traefik-gateway","namespace":"traefik","sectionName":"websecure"}]'
 ```
-
-Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/
-
-Log in with the `ziti` CLI.
-
-<!-- {% raw %} "raw" escapes this code block's handlebars from GH Pages Jekyll, and  escapes the Go template from helm-docs -->
-```bash
-ziti edge login ctrl1.ziti.example.com:443 --yes --username admin --password $(
-    kubectl -n ziti get secrets ziti-controller-admin-secret -o go-template='{{index .data "admin-password" | base64decode }}'
-)
-```
-<!-- {% endraw %} -->
 
 ## Traefik IngressRouteTCP Example
 
-This will create a Traefik IngressRouteTCP with TLS passthrough for the client API's ClusterIP service.
+Recommended default: use Traefik IngressRouteTCP for TLS passthrough.
+
+This example creates a Traefik IngressRouteTCP for the client API's ClusterIP service.
 
 ```bash
 helm upgrade ziti-controller openziti/ziti-controller \
@@ -190,6 +151,15 @@ helm upgrade ziti-controller openziti/ziti-controller \
     --set clientApi.advertisedPort=443 \
     --set clientApi.service.type=ClusterIP \
     --set clientApi.traefikTcpRoute.enabled=true
+```
+
+Or use the provided values file:
+
+```bash
+helm upgrade ziti-controller openziti/ziti-controller \
+    --install \
+    --namespace ziti \
+    --values values-traefik-ingressroutetcp.yaml
 ```
 
 Visit the Ziti Administration Console (ZAC): https://ctrl1.ziti.example.com/zac/
@@ -275,9 +245,13 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.altDnsNames | list | `[]` | besides advertisedHost and dnsNames, add these DNS SANs to any ingresses but not the web identity |
 | clientApi.containerPort | int | `1280` | cluster service target port on the container |
 | clientApi.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the web identity and any ingresses |
-| clientApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
+| clientApi.gatewayTlsRoute.apiVersion | string | `"gateway.networking.k8s.io/v1alpha2"` | API version for TLSRoute (depends on installed Gateway API CRDs) |
+| clientApi.gatewayTlsRoute.enabled | bool | `false` | EXPERIMENTAL: enable Gateway API TLSRoute for this listener |
+| clientApi.gatewayTlsRoute.labels | object | `{}` | TLSRoute labels |
+| clientApi.gatewayTlsRoute.parentRefs | list | `[]` | parentRefs for TLSRoute, usually a Traefik-managed Gateway listener parentRefs:   - name: traefik-gateway     namespace: traefik     sectionName: websecure |
+| clientApi.ingress.annotations | object | `{}` | ingress annotations |
 | clientApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
-| clientApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| clientApi.ingress.ingressClassName | string | `""` | ingress class name |
 | clientApi.ingress.labels | object | `{}` | ingress labels |
 | clientApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | clientApi.service.enabled | bool | `true` | create a cluster service for the client API - you probably want this unless you're crafting your own ClusterIP service out of band |
@@ -297,9 +271,13 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ctrlPlane.alternativeIssuer | object | `{}` | DEPRECATED: The ctrl-plane root CA is deprecated. The ctrl-plane identity is now issued by edge-signer-issuer. This option is preserved for backward compatibility but the ctrl-plane-root-cert and ctrl-plane-root-issuer resources are orphaned. (example: "my-issuer" or `{name: "my-issuer", kind: "Issuer", group: "cert-manager.io"}`) |
 | ctrlPlane.containerPort | string | `"{{ .Values.clientApi.containerPort }}"` | cluster service target port on the container |
 | ctrlPlane.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the ctrl plane identity and any ctrl plane ingresses |
-| ctrlPlane.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
+| ctrlPlane.gatewayTlsRoute.apiVersion | string | `"gateway.networking.k8s.io/v1alpha2"` | API version for TLSRoute (depends on installed Gateway API CRDs) |
+| ctrlPlane.gatewayTlsRoute.enabled | bool | `false` | EXPERIMENTAL: enable Gateway API TLSRoute for this listener |
+| ctrlPlane.gatewayTlsRoute.labels | object | `{}` | TLSRoute labels |
+| ctrlPlane.gatewayTlsRoute.parentRefs | list | `[]` | parentRefs for TLSRoute, usually a Traefik-managed Gateway listener parentRefs:   - name: traefik-gateway     namespace: traefik     sectionName: websecure |
+| ctrlPlane.ingress.annotations | object | `{}` | ingress annotations |
 | ctrlPlane.ingress.enabled | bool | `false` | create an ingress for the cluster service |
-| ctrlPlane.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| ctrlPlane.ingress.ingressClassName | string | `""` | ingress class name |
 | ctrlPlane.ingress.labels | object | `{}` | ingress labels |
 | ctrlPlane.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | ctrlPlane.service.enabled | bool | `false` | create a separate cluster service for the ctrl plane (default: disabled, shares listener with clientApi via ALPN) |
@@ -345,15 +323,19 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
-| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altDnsNames":[],"containerPort":1281,"dnsNames":[],"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefikTcpRoute":{"enabled":false,"entryPoints":["websecure"],"labels":{}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
+| managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altDnsNames":[],"containerPort":1281,"dnsNames":[],"gatewayTlsRoute":{"apiVersion":"gateway.networking.k8s.io/v1alpha2","enabled":false,"labels":{},"parentRefs":[]},"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefikTcpRoute":{"enabled":false,"entryPoints":["websecure"],"labels":{}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
 | managementApi.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service |
 | managementApi.advertisedPort | string | `"{{ .Values.clientApi.advertisedPort }}"` | cluster service, node port, load balancer, and ingress port |
 | managementApi.altDnsNames | list | `[]` | besides advertisedHost and dnsNames, add these DNS SANs to any mgmt api ingresses, but not the web identity |
 | managementApi.containerPort | int | `1281` | cluster service target port on the container |
 | managementApi.dnsNames | list | `[]` | besides advertisedHost, add these DNS SANs to the web identity and any mgmt api ingresses |
-| managementApi.ingress.annotations | object | `{}` | ingress annotations, e.g., to configure ingress-nginx |
+| managementApi.gatewayTlsRoute.apiVersion | string | `"gateway.networking.k8s.io/v1alpha2"` | API version for TLSRoute (depends on installed Gateway API CRDs) |
+| managementApi.gatewayTlsRoute.enabled | bool | `false` | EXPERIMENTAL: enable Gateway API TLSRoute for this listener |
+| managementApi.gatewayTlsRoute.labels | object | `{}` | TLSRoute labels |
+| managementApi.gatewayTlsRoute.parentRefs | list | `[]` | parentRefs for TLSRoute, usually a Traefik-managed Gateway listener parentRefs:   - name: traefik-gateway     namespace: traefik     sectionName: websecure |
+| managementApi.ingress.annotations | object | `{}` | ingress annotations |
 | managementApi.ingress.enabled | bool | `false` | create a TLS-passthrough ingress for the client API's ClusterIP service |
-| managementApi.ingress.ingressClassName | string | `""` | ingress class name, e.g., "nginx" |
+| managementApi.ingress.ingressClassName | string | `""` | ingress class name |
 | managementApi.ingress.labels | object | `{}` | ingress labels |
 | managementApi.ingress.tls | object | `{}` | deprecated: tls passthrough is required |
 | managementApi.service.enabled | bool | `false` | create a separate cluster service for the mgmt API enabled: true means provide this API on a separate port, otherwise share server port with clientApi |
