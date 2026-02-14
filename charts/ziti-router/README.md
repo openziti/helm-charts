@@ -268,6 +268,10 @@ identity:
 | edge.advertisedPort | int | `443` | cluster service, node port, load balancer, and ingress port |
 | edge.containerPort | int | `3022` | cluster service target port on the container |
 | edge.enabled | bool | `true` | enable the edge listener in the router config; usually true because tunnel bindings require the edge which must have at least on listener |
+| edge.gatewayTlsRoute.apiVersion | string | `"gateway.networking.k8s.io/v1alpha2"` | API version for TLSRoute (depends on installed Gateway API CRDs) |
+| edge.gatewayTlsRoute.enabled | bool | `false` | EXPERIMENTAL: enable Gateway API TLSRoute for the edge listener |
+| edge.gatewayTlsRoute.labels | object | `{}` | TLSRoute labels |
+| edge.gatewayTlsRoute.parentRefs | list | `[]` | parentRefs for TLSRoute, usually a Traefik-managed Gateway listener parentRefs:   - name: traefik-gateway     namespace: traefik     sectionName: websecure |
 | edge.heartbeatIntervalSeconds | int | `60` | heartbeat interval in seconds (min: 10, max: 60, default: 60) |
 | edge.ingress.annotations | object | `{}` | ingress annotations |
 | edge.ingress.enabled | bool | `false` | create an ingress for the cluster service; typically paired with a ClusterIP service type when enabled |
@@ -311,6 +315,10 @@ identity:
 | linkListeners.transport.containerPort | string | `"{{ .Values.edge.containerPort }}"` | cluster service target port on the container; default is to share a listener with the edge, providing ziti-link ALPN |
 | linkListeners.transport.enabled | bool | `true` | enable the transport listener in the router config; set false for a private router that only connects to other routers and does not accept incoming links |
 | linkListeners.transport.extraProps | object | `{}` | extra properties to define for the transport link listener, e.g., groups |
+| linkListeners.transport.gatewayTlsRoute.apiVersion | string | `"gateway.networking.k8s.io/v1alpha2"` | API version for TLSRoute (depends on installed Gateway API CRDs) |
+| linkListeners.transport.gatewayTlsRoute.enabled | bool | `false` | EXPERIMENTAL: enable Gateway API TLSRoute for the transport listener |
+| linkListeners.transport.gatewayTlsRoute.labels | object | `{}` | TLSRoute labels |
+| linkListeners.transport.gatewayTlsRoute.parentRefs | list | `[]` | parentRefs for TLSRoute, usually a Traefik-managed Gateway listener parentRefs:   - name: traefik-gateway     namespace: traefik     sectionName: websecure |
 | linkListeners.transport.ingress.annotations | object | `{}` | ingress annotations |
 | linkListeners.transport.ingress.enabled | bool | `false` | create an ingress for the cluster service |
 | linkListeners.transport.ingress.ingressClassName | string | `""` | ingress class name |
