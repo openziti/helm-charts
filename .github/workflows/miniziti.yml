@@ -90,6 +90,13 @@ jobs:
             --namespace loki-stack \
             --create-namespace \
             --set loki.auth_enabled=false \
+            --set loki.useTestSchema=true \
+            --set loki.commonConfig.replication_factor=1 \
+            --set deploymentMode=SingleBinary \
+            --set singleBinary.replicas=1 \
+            --set read.replicas=0 \
+            --set write.replicas=0 \
+            --set backend.replicas=0 \
             --set test.enabled=false \
             --wait --timeout 180s
 
