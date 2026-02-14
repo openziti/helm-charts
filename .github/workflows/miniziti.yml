@@ -221,7 +221,7 @@ jobs:
         if: steps.mode.outputs.run_baseline == 'true'
         shell: bash
         env:
-          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+          ZITI_MGMT_API_HOST: miniziti-controller.${{ steps.ingress_zone_initial.outputs.ingress_zone }}
           ZITI_PWD: ${{ steps.get_ziti_pwd_initial.outputs.ZITI_PWD }}
           ZROK_DNS_ZONE: ${{ steps.ingress_zone_initial.outputs.ingress_zone }}
         run: |
@@ -394,7 +394,7 @@ jobs:
       - name: Upgrade the zrok chart from the current branch and run the test job
         shell: bash
         env:
-          ZITI_MGMT_API_HOST: ziti-controller-client.${{ env.ZITI_NAMESPACE }}.svc.cluster.local
+          ZITI_MGMT_API_HOST: miniziti-controller.${{ steps.ingress_zone.outputs.ingress_zone }}
           ZITI_PWD: ${{ steps.get_ziti_pwd.outputs.ZITI_PWD }}
           ZROK_DNS_ZONE: ${{ steps.ingress_zone.outputs.ingress_zone }}
         run: |
