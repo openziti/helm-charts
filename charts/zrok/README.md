@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.10](https://img.shields.io/badge/AppVersion-1.1.10-informational?style=flat-square)
+![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.11](https://img.shields.io/badge/AppVersion-1.1.11-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -16,7 +16,7 @@ Run the zrok controller and zrok frontend components as a K8s deployment
 helm repo add openziti https://docs.openziti.io/helm-charts/
 ```
 
-## Minimal Example with Nginx Ingress
+## Minimal Example with Traefik Ingress
 
 This example does not configure TLS termination for the API or public shares, metrics, or limits. You must configure a
 wildcard DNS record (A record) that resolve to the value of `ZROK_DNS_ZONE`.
@@ -34,7 +34,7 @@ ZITI_PWD=$(kubectl -n "${ZITI_NAMESPACE}" get secrets "ziti-controller-admin-sec
 helm upgrade \
     --install \
     --namespace zrok --create-namespace \
-    --values https://openziti.io/helm-charts/charts/zrok/values-ingress-nginx.yaml \
+    --values https://openziti.io/helm-charts/charts/zrok/values-ingress-traefik.yaml \
     --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
     --set "ziti.password=${ZITI_PWD}" \
     --set "dnsZone=${ZROK_DNS_ZONE}" \
@@ -42,9 +42,9 @@ helm upgrade \
     zrok openziti/zrok
 ```
 
-## TLS termination with Nginx
+## TLS termination with Traefik
 
-One way to terminate TLS with Nginx is to use Cert Manager. Cert Manager will issue a certificate, store it in the specified Secret, and configure the Ingress to use the certificate. This example shows the default behavior to use the Ingress host(s) as DNS SANs.
+One way to terminate TLS with Traefik is to use Cert Manager. Cert Manager will issue a certificate, store it in the specified Secret, and configure the Ingress to use the certificate. This example shows the default behavior to use the Ingress host(s) as DNS SANs.
 
 1. Install Cert Manager
 1. Create a ClusterIssuer with a Let's Encrypt account and DNS challenge solver. Solving the DNS challenge is one way
@@ -93,15 +93,15 @@ username: ziggy@zrok.192.168.49.2.sslip.io
 
 ```
 
-The zrok console URL depends on how you configure ingress. If you used the NGINX Ingress example, then you can query the URL with:
+The zrok console URL depends on how you configure ingress. If you used the Traefik Ingress example, then you can query the URL with:
 
 ```bash
 kubectl -n zrok get ingress zrok 
 ```
 
 ```text title="Output"
-NAME   CLASS   HOSTS                             ADDRESS        PORTS   AGE
-zrok   nginx   api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
+NAME   CLASS    HOSTS                             ADDRESS        PORTS   AGE
+zrok   traefik  api.zrok.192.168.49.2.sslip.io    192.168.49.2   80      8m41s
 ```
 
 ## Values Reference

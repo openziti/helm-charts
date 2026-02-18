@@ -228,7 +228,7 @@ jobs:
           helm upgrade \
             --install \
             --namespace zrok --create-namespace \
-            --values ./charts/zrok/values-ingress-nginx.yaml \
+            --values ./charts/zrok/values-ingress-traefik.yaml \
             --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
             --set "ziti.password=${ZITI_PWD}" \
             --set "dnsZone=${ZROK_DNS_ZONE}" \
@@ -401,7 +401,7 @@ jobs:
           helm upgrade \
             --install \
             --namespace zrok --create-namespace \
-            --values ./charts/zrok/values-ingress-nginx.yaml \
+            --values ./charts/zrok/values-ingress-traefik.yaml \
             --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
             --set "ziti.password=${ZITI_PWD}" \
             --set "dnsZone=${ZROK_DNS_ZONE}" \

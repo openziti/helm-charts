@@ -1,11 +1,11 @@
 
-# minimal input values for ingress-nginx; to enable tls, add cert manager issuer annotation and tls.secretName to each ingress dict
+# minimal input values for traefik ingress; to enable tls, add cert manager issuer annotation and tls.secretName to each ingress dict
 
 controller:
   ingress:
     enabled: true
     scheme: http
-    className: nginx
+    className: traefik
     # annotations:
     #   cert-manager.io/cluster-issuer: cloudflare-dns-issuer-prod
     # tls:
@@ -15,7 +15,7 @@ frontend:
   ingress:
     enabled: true
     scheme: http
-    className: nginx
+    className: traefik
     # annotations:
     #   cert-manager.io/cluster-issuer: cloudflare-dns-issuer-prod
     # tls:

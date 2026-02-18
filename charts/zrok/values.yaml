@@ -65,7 +65,7 @@ controller:
     className: ""
     # -- The annotations to use for the zrok controller ingress resource
     annotations: {}
-      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/ingress.class: traefik
       # kubernetes.io/tls-acme: "true"
     # -- domain names for the zrok controller ingress resource; first is used for email templates
     hosts: []
