@@ -48,7 +48,7 @@ jobs:
       matrix: ${{ fromJson(needs.compute-k8s-matrix.outputs.matrix) }}
     env:
       ZITI_NAMESPACE: miniziti
-      ZITI_CLI_VERSION: 1.7.0
+      ZITI_CLI_VERSION: 1.7.2
     steps:
       - name: Checkout workspace
         uses: actions/checkout@v4
