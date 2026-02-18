@@ -121,9 +121,64 @@ ziti edge login ctrl1.ziti.example.com:32171 --yes --username admin --password $
 ```
 <!-- {% endraw %} -->
 
-## Traefik Gateway API TLSRoute Example (Experimental)
+## Traefik Gateway API TLSRoute Example
 
-Gateway API TLSRoute support is available in this chart, but remains experimental for Traefik deployments. Prefer IngressRouteTCP for production and long-lived environments.
+Gateway API TLSRoute enables SNI-based routing with TLS passthrough, allowing multiple Ziti services to
+share a single external port (e.g., 443) while each pod terminates TLS with its own certificate.
+
+### Prerequisites
+
+1. Install the Gateway API CRDs (experimental channel required for TLSRoute):
+
+    ```bash
+    kubectl apply --server-side --force-conflicts \
+        -f https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/experimental-install.yaml
+    ```
+
+2. If using k3s, disable the built-in Traefik to avoid a duplicate LoadBalancer Service:
+
+    ```bash
+    # k3s install flag:
+    --disable=traefik
+    # or for k3d:
+    k3d cluster create mycluster --k3s-arg '--disable=traefik@server:*'
+    ```
+
+3. Deploy Traefik with Gateway API support and a TLS Passthrough listener. Create a values file:
+
+    ```yaml
+    # traefik-values.yaml
+    providers:
+      kubernetesGateway:
+        enabled: true
+        experimentalChannel: true
+    ingressClass:
+      enabled: false
+    gateway:
+      enabled: true
+      name: traefik-gateway
+      listeners:
+        websecure:
+          protocol: TLS
+          port: 8443
+          mode: Passthrough
+          namespacePolicy:
+            from: All
+    ```
+
+    ```bash
+    helm upgrade --install traefik traefik/traefik \
+        --namespace traefik \
+        --create-namespace \
+        -f traefik-values.yaml \
+        --skip-crds \
+        --wait
+    ```
+
+    The `mode: Passthrough` on the Gateway listener tells Traefik to inspect the SNI in the TLS
+    ClientHello and forward the raw TCP stream to the matched backend without terminating TLS.
+
+### Install the Ziti Controller
 
 ```bash
 helm upgrade ziti-controller openziti/ziti-controller \
@@ -135,6 +190,10 @@ helm upgrade ziti-controller openziti/ziti-controller \
     --set clientApi.gatewayTlsRoute.enabled=true \
     --set-json 'clientApi.gatewayTlsRoute.parentRefs=[{"name":"traefik-gateway","namespace":"traefik","sectionName":"websecure"}]'
 ```
+
+The TLSRoute's `hostnames` field (derived from `clientApi.advertisedHost`) must match the SNI that
+clients send. Traefik matches the SNI against TLSRoute hostnames and forwards the connection to the
+backend pod, which completes the TLS handshake with its own certificate.
 
 ## Traefik IngressRouteTCP Example
 
