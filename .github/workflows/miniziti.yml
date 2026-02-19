@@ -77,7 +77,7 @@ jobs:
         uses: supplypike/setup-bin@v5
         with:
           # uri: https://get.openziti.io/miniziti.bash
-          uri: https://raw.githubusercontent.com/openziti/ziti/retire-ingress-nginx/quickstart/kubernetes/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti/main/quickstart/kubernetes/miniziti.bash
           # uri: https://raw.githubusercontent.com/openziti/ziti/<testing ref>/quickstart/kubernetes/miniziti.bash
           name: miniziti
           version: quickstartrelease
