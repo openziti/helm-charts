@@ -2,7 +2,7 @@
 
 # zrok
 
-![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.11](https://img.shields.io/badge/AppVersion-1.1.11-informational?style=flat-square)
+![Version: 1.2.1](https://img.shields.io/badge/Version-1.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.11](https://img.shields.io/badge/AppVersion-1.1.11-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
 
@@ -34,7 +34,7 @@ ZITI_PWD=$(kubectl -n "${ZITI_NAMESPACE}" get secrets "ziti-controller-admin-sec
 helm upgrade \
     --install \
     --namespace zrok --create-namespace \
-    --values https://openziti.io/helm-charts/charts/zrok/values-ingress-traefik.yaml \
+    --values https://raw.githubusercontent.com/openziti/helm-charts/main/charts/zrok/values-ingress-traefik.yaml \
     --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
     --set "ziti.password=${ZITI_PWD}" \
     --set "dnsZone=${ZROK_DNS_ZONE}" \
