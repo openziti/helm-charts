@@ -3391,6 +3391,16 @@ entries:
   zrok:
   - apiVersion: v2
     appVersion: 1.1.11
+    created: "2026-02-19T18:05:15.917200289Z"
+    description: Run the zrok controller and zrok frontend components as a K8s deployment
+    digest: cb935601de490ae180ce381f9db4c4fdc34d3ba3da6448322331051a0b623197
+    name: zrok
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/zrok-1.2.1/zrok-1.2.1.tgz
+    version: 1.2.1
+  - apiVersion: v2
+    appVersion: 1.1.11
     created: "2026-02-18T20:15:27.58505805Z"
     description: Run the zrok controller and zrok frontend components as a K8s deployment
     digest: 5912387d6580bcbdb16ab8f543c0d5111a60284840bc48fcee8772d54a736de5
@@ -3549,4 +3559,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2026-02-18T20:15:27.585630138Z"
+generated: "2026-02-19T18:05:15.917693552Z"
