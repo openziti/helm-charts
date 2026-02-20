@@ -82,6 +82,29 @@ jobs:
           name: miniziti
           version: quickstartrelease
 
+      - name: Prepare baseline chart overrides
+        shell: bash
+        run: |
+          mkdir -p testvalues
+          cat > testvalues/ziti-controller.yaml <<EOF
+          image:
+            additionalArgs:
+              - --verbose
+          EOF
+          cat > testvalues/ziti-router.yaml <<EOF
+          image:
+            additionalArgs:
+              - --verbose
+          EOF
+          if [[ -n "${{ vars.MINIZITI_VERSION }}" ]]; then
+            cat >> testvalues/ziti-controller.yaml <<EOF
+            tag: ${{ vars.MINIZITI_VERSION }}
+          EOF
+            cat >> testvalues/ziti-router.yaml <<EOF
+            tag: ${{ vars.MINIZITI_VERSION }}
+          EOF
+          fi
+
       - name: Select test mode
         id: mode
         shell: bash
@@ -109,7 +132,7 @@ jobs:
 
       - name: Run miniziti with latest release charts
         if: steps.mode.outputs.run_baseline == 'true'
-        run: miniziti start --no-hosts --verbose
+        run: miniziti start --no-hosts --verbose --values-dir ./testvalues
         env:
           MINIZITI_TIMEOUT_SECS: 300
 
@@ -271,7 +294,7 @@ jobs:
             echo "WARNING: No zrok frontend pod found"
           fi
 
-      - name: Create test values directory
+      - name: Add httpbin test values
         run: |
           mkdir -p testvalues
           cat > testvalues/httpbin.yaml <<EOF
