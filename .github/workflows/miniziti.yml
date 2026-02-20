@@ -48,10 +48,14 @@ jobs:
       matrix: ${{ fromJson(needs.compute-k8s-matrix.outputs.matrix) }}
     env:
       ZITI_NAMESPACE: miniziti
-      ZITI_CLI_VERSION: 1.7.2
     steps:
       - name: Checkout workspace
         uses: actions/checkout@v4
+
+      - name: Resolve latest Ziti CLI version
+        shell: bash
+        run: |
+          echo "ZITI_CLI_VERSION=$(curl -sSf https://api.github.com/repos/openziti/ziti/releases/latest | jq -r '.tag_name')" >> "$GITHUB_ENV"
 
       - name: Resolve latest patch for Kubernetes minor
         id: resolve_k8s
@@ -67,9 +71,9 @@ jobs:
       - name: install ziti cli
         uses: supplypike/setup-bin@v5
         with:
-          uri: https://github.com/openziti/ziti/releases/download/v${{ env.ZITI_CLI_VERSION }}/ziti-linux-amd64-${{ env.ZITI_CLI_VERSION }}.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/${{ env.ZITI_CLI_VERSION }}/ziti-linux-amd64-${{ replace(env.ZITI_CLI_VERSION, 'v', '') }}.tar.gz
           name: ziti
-          version: ${{ env.ZITI_CLI_VERSION }}
+          version: ${{ replace(env.ZITI_CLI_VERSION, 'v', '') }}
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
