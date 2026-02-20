@@ -55,7 +55,9 @@ jobs:
       - name: Resolve latest Ziti CLI version
         shell: bash
         run: |
-          echo "ZITI_CLI_VERSION=$(curl -sSf https://api.github.com/repos/openziti/ziti/releases/latest | jq -r '.tag_name')" >> "$GITHUB_ENV"
+          ZITI_CLI_TAG="$(curl -sSf https://api.github.com/repos/openziti/ziti/releases/latest | jq -r '.tag_name')"
+          echo "ZITI_CLI_TAG=${ZITI_CLI_TAG}" >> "$GITHUB_ENV"
+          echo "ZITI_CLI_VERSION=${ZITI_CLI_TAG#v}" >> "$GITHUB_ENV"
 
       - name: Resolve latest patch for Kubernetes minor
         id: resolve_k8s
@@ -71,9 +73,9 @@ jobs:
       - name: install ziti cli
         uses: supplypike/setup-bin@v5
         with:
-          uri: https://github.com/openziti/ziti/releases/download/${{ env.ZITI_CLI_VERSION }}/ziti-linux-amd64-${{ replace(env.ZITI_CLI_VERSION, 'v', '') }}.tar.gz
+          uri: https://github.com/openziti/ziti/releases/download/${{ env.ZITI_CLI_TAG }}/ziti-linux-amd64-${{ env.ZITI_CLI_VERSION }}.tar.gz
           name: ziti
-          version: ${{ replace(env.ZITI_CLI_VERSION, 'v', '') }}
+          version: ${{ env.ZITI_CLI_VERSION }}
 
       # this is the kubernetes quickstart script from
       # https://openziti.io/docs/learn/quickstarts/network/local-kubernetes
