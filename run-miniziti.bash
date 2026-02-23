@@ -202,19 +202,29 @@ stage_proxy_test() {
     #
     # ${ZITI_NAMESPACE} is expanded by the host shell; $ZITI_ADMIN_PASSWORD and
     # $ZITI_CTRL_PLANE_CA are expanded by the container shell.
-    miniziti kubectl exec \
-        -n "${ZITI_NAMESPACE}" \
-        deployments/ziti-controller \
-        -c ziti-controller \
-        -- \
-        sh -c 'zitiLogin > /dev/null 2>&1 && ziti ops verify traffic \
-            --timeout 60 \
-            --prefix '"${ZITI_NAMESPACE}"' \
-            --password "$ZITI_ADMIN_PASSWORD" \
-            --ca "$ZITI_CTRL_PLANE_CA/ctrl-plane-cas.crt" \
-            --cleanup'
-
-    log_ok "traffic verified"
+    local max_attempts=10 delay=3 attempt
+    for (( attempt = 1; attempt <= max_attempts; attempt++ )); do
+        if miniziti kubectl exec \
+            -n "${ZITI_NAMESPACE}" \
+            deployments/ziti-controller \
+            -c ziti-controller \
+            -- \
+            sh -c 'zitiLogin > /dev/null 2>&1 && ziti ops verify traffic \
+                --timeout 60 \
+                --prefix '"${ZITI_NAMESPACE}"' \
+                --password "$ZITI_ADMIN_PASSWORD" \
+                --ca "$ZITI_CTRL_PLANE_CA/ctrl-plane-cas.crt" \
+                --cleanup' 2>/dev/null; then
+            log_ok "traffic verified"
+            return 0
+        fi
+        if (( attempt < max_attempts )); then
+            echo "  retry ${attempt}/${max_attempts} — waiting ${delay}s …" >&2
+            sleep "${delay}"
+        fi
+    done
+    echo "ERROR: ziti ops verify traffic failed after ${max_attempts} attempts" >&2
+    return 1
 }
 
 # ── stage: zrok ───────────────────────────────────────────────────────────────
