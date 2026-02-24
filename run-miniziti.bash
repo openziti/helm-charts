@@ -65,7 +65,16 @@ log_ok()    { printf '  ✓ %s\n' "$*"; }
 # MINIKUBE_PROFILE is not inherited from the environment — it must be passed
 # explicitly via the --profile flag.  With the default ZITI_NAMESPACE=miniziti
 # this is equivalent to the previous behaviour.
-miniziti() { command miniziti --profile "${ZITI_NAMESPACE}" "$@"; }
+#
+# Also inject ZITI_NETWORK_NAME.  miniziti hardcodes a default of
+# "miniziti-controller" (`:= miniziti-controller` in its init block) and never
+# derives it from --profile, but it IS inherited from the environment.  Setting
+# it here ensures IngressRouteTCP HostSNI rules, advertised hosts, and login
+# URLs all use the correct prefix when ZITI_NAMESPACE differs from "miniziti".
+miniziti() {
+    ZITI_NETWORK_NAME="${ZITI_NAMESPACE}-controller" \
+        command miniziti --profile "${ZITI_NAMESPACE}" "$@"
+}
 
 # ── cluster helpers ───────────────────────────────────────────────────────────
 get_ingress_zone() {
@@ -250,14 +259,79 @@ stage_zrok() {
 
 # ── stage: upgrade ────────────────────────────────────────────────────────────
 stage_upgrade() {
-    log_stage "upgrade (branch charts + --check-cert-subject)"
+    log_stage "upgrade (branch charts + cert subject check)"
+
+    # Capture the current issuance revision before the upgrade.  After helm
+    # applies the new chart (which adds subject.organizations to the Certificate
+    # spec), cert-manager will create a CertificateRequest and increment
+    # status.revision once the new cert is stored in the secret.  We use this
+    # to know when the reissuance is complete rather than relying on
+    # kubectl wait --for=condition=ready, which returns immediately for the
+    # already-valid pre-upgrade cert and races against cert-manager.
+    local cert_name="ziti-controller-web-identity-cert"
+    local pre_revision
+    pre_revision="$(miniziti kubectl get certificate \
+        -n "${ZITI_NAMESPACE}" "${cert_name}" \
+        -o jsonpath='{.status.revision}' 2>/dev/null || echo 0)"
+
     MINIZITI_TIMEOUT_SECS="${MINIZITI_TIMEOUT_SECS}" \
         miniziti start \
             --no-hosts \
             --verbose \
             --charts "${REPO_ROOT}/charts" \
-            --values-dir "${TESTVALUES_DIR}" \
-            --check-cert-subject
+            --values-dir "${TESTVALUES_DIR}"
+
+    # Wait for cert-manager to complete reissuance of the web-identity cert.
+    # status.revision increments when the new cert is stored in the secret,
+    # confirming the Certificate spec change (subject.organizations) has been
+    # applied by cert-manager.
+    log_info "waiting for cert-manager to reissue ${cert_name} (pre-upgrade revision: ${pre_revision})"
+    local deadline=$(( SECONDS + MINIZITI_TIMEOUT_SECS )) new_revision=0
+    while (( SECONDS < deadline )); do
+        new_revision="$(miniziti kubectl get certificate \
+            -n "${ZITI_NAMESPACE}" "${cert_name}" \
+            -o jsonpath='{.status.revision}' 2>/dev/null || echo 0)"
+        if [[ "${new_revision}" -gt "${pre_revision}" ]]; then
+            log_ok "cert reissued (revision ${pre_revision} → ${new_revision})"
+            break
+        fi
+        sleep 3
+    done
+    if [[ "${new_revision}" -le "${pre_revision}" ]]; then
+        printf 'ERROR: timed out waiting for %s to be reissued (still at revision %s)\n' \
+            "${cert_name}" "${new_revision}" >&2
+        return 1
+    fi
+
+    # Verify the subject of the freshly issued cert from the Kubernetes secret.
+    # We read from the secret (the authoritative output of cert-manager) rather
+    # than the live TLS endpoint to decouple the test from kubelet volume-sync
+    # timing and the controller's cert-reload cycle.
+    local secret_name="ziti-controller-web-identity-secret"
+    local expected_org="OpenZiti Community"
+    local max_attempts=10 delay=6 attempt subject=""
+    log_info "verifying cert subject contains '${expected_org}'"
+    for (( attempt = 1; attempt <= max_attempts; attempt++ )); do
+        subject="$(miniziti kubectl get secret \
+            -n "${ZITI_NAMESPACE}" "${secret_name}" \
+            -o jsonpath='{.data.tls\.crt}' 2>/dev/null \
+            | base64 -d 2>/dev/null \
+            | openssl x509 -noout -subject 2>/dev/null || true)"
+        if [[ "${subject}" == *"${expected_org}"* ]]; then
+            log_ok "cert subject verified: ${subject}"
+            break
+        fi
+        if (( attempt < max_attempts )); then
+            log_info "subject not yet updated (${subject:-<empty>}), retry ${attempt}/${max_attempts} — waiting ${delay}s …"
+            sleep "${delay}"
+        fi
+    done
+    if [[ "${subject}" != *"${expected_org}"* ]]; then
+        printf 'ERROR: cert subject missing "%s" after %d attempts\nsubject: %s\n' \
+            "${expected_org}" "${max_attempts}" "${subject}" >&2
+        return 1
+    fi
+
     log_ok "upgrade complete"
 }
 
@@ -292,12 +366,24 @@ stage_verify() {
     log_stage "verify (ZAC console reachable)"
     local ingress_zone status
     ingress_zone="$(get_ingress_zone)"
-    status="$(curl -skSfw '%{http_code}' -o/dev/null \
-        "https://${ZITI_NAMESPACE}-controller.${ingress_zone}/zac/")"
-    log_info "HTTP ${status} — https://${ZITI_NAMESPACE}-controller.${ingress_zone}/zac/"
-    [[ "${status}" == "200" ]] \
-        || { printf 'ERROR: ZAC console returned HTTP %s\n' "${status}" >&2; exit 1; }
-    log_ok "ZAC console accessible"
+    # The controller pod may have been replaced during the preceding upgrade;
+    # retry to allow the TLS listener time to become fully available.
+    local max_attempts=10 delay=6 attempt
+    for (( attempt = 1; attempt <= max_attempts; attempt++ )); do
+        status="$(curl -skSw '%{http_code}' -o/dev/null \
+            "https://${ZITI_NAMESPACE}-controller.${ingress_zone}/zac/" || true)"
+        log_info "HTTP ${status} — https://${ZITI_NAMESPACE}-controller.${ingress_zone}/zac/"
+        if [[ "${status}" == "200" ]]; then
+            log_ok "ZAC console accessible"
+            return 0
+        fi
+        if (( attempt < max_attempts )); then
+            echo "  retry ${attempt}/${max_attempts} — waiting ${delay}s …" >&2
+            sleep "${delay}"
+        fi
+    done
+    printf 'ERROR: ZAC console returned HTTP %s after %d attempts\n' "${status}" "${max_attempts}" >&2
+    exit 1
 }
 
 # ── stage: zrok-test ──────────────────────────────────────────────────────────

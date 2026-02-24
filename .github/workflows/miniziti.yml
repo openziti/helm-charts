@@ -91,7 +91,7 @@ jobs:
         id: mode
         shell: bash
         run: |
-          if [[ "${{ vars.SKIP_MINIKUBE_LATEST_CHARTS }}" == "true" ]]; then
+          if [[ "${{ vars.SKIP_MINIZITI_BASELINE }}" == "true" ]]; then
             echo "run_baseline=false" >> "$GITHUB_OUTPUT"
             echo "Running upgrade-only path"
           else
