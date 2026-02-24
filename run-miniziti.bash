@@ -194,7 +194,9 @@ EOF
     fi
 
     log_ok "testvalues written"
-    ls -1 "${TESTVALUES_DIR}"
+    ls -1 "${TESTVALUES_DIR}/ziti-controller.yaml" \
+          "${TESTVALUES_DIR}/ziti-router.yaml" \
+          "${TESTVALUES_DIR}/httpbin.yaml"
 }
 
 # ── stage: baseline ───────────────────────────────────────────────────────────
@@ -273,6 +275,17 @@ stage_zrok() {
 # ── stage: upgrade ────────────────────────────────────────────────────────────
 stage_upgrade() {
     log_stage "upgrade (branch charts + cert subject check)"
+
+    local ingress_ip trust_domain
+    ingress_ip="$(minikube ip --profile "${ZITI_NAMESPACE}")"
+    trust_domain="${ingress_ip//./-}.sslip.io"
+
+    cat > "${TESTVALUES_DIR}/ziti-controller-upgrade.yaml" <<EOF
+cluster:
+  mode: cluster-init
+  trustDomain: ${trust_domain}
+  nodeName: ziti-controller
+EOF
 
     # Capture the current issuance revision before the upgrade.  After helm
     # applies the new chart (which adds subject.organizations to the Certificate

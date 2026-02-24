@@ -31,3 +31,10 @@ __snapshot__
 # top-level directory with local test data
 /valuestest/
 /testvalues/
+
+# AI configuration - link your agent's config file to GUIDELINES.md to opt-in
+/CLAUDE.md
+/AGENT.md
+/GEMINI.md
+/OPENAI.md
+/GROK.md

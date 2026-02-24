@@ -158,6 +158,14 @@ Rules:
 */}}
 {{- define "ziti-controller.clusterMode" -}}
   {{- $mode := .Values.cluster.mode | trim | lower -}}
+  {{- if eq $mode "" -}}
+    {{- fail (print "cluster.mode is required. Set cluster.mode to one of:\n"
+      "  - standalone      single controller, no clustering\n"
+      "  - cluster-init    permanent run mode for the first node of a cluster\n"
+      "  - cluster-join    permanent run mode for subsequent nodes joining a cluster\n"
+      "  - cluster-migrate one-time migration from standalone to cluster (then switch to cluster-init)\n"
+      "See the chart README for details on each mode.") -}}
+  {{- end -}}
   {{- $trustDomain := include "ziti-controller.getTrustDomain" . | trim -}}
   {{- if not (or (eq $mode "standalone") (eq $mode "cluster-init") (eq $mode "cluster-join") (eq $mode "cluster-migrate")) -}}
     {{- fail (printf "invalid cluster mode: %s; valid values are: standalone, cluster-init, cluster-join, cluster-migrate" $mode) -}}

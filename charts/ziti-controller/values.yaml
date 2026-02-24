@@ -3,13 +3,13 @@
 # fullnameOverride: ""
 
 cluster:
-  # -- the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .edgeSignerPki.alternativeIssuer to the first node's edge-root issuer in same namespace
-  mode: standalone
+  # -- (required) the cluster mode; options: standalone, cluster-init, cluster-join, cluster-migrate. See the README for usage of each mode.
+  mode: ""
   # -- the trust domain part of the SPIFFE ID (required for cluster modes)
   trustDomain: ""
   # -- the node name part of the SPIFFE ID (required for cluster modes)
   nodeName: ""
-  # -- required only when joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)
+  # -- required only when joining a cluster: reachable ctrl plane endpoint address of an existing node. The ctrl plane API is bound to the same TCP port as the client API in the default configuration (example: ziti-controller1.ziti.example.com:443 or ziti-controller1-ctrl:1280)
   endpoint: ""
   # -- TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose)
   agentAppAddr: "tcp:127.0.0.1:10001"

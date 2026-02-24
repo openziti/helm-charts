@@ -9,8 +9,7 @@ if ! command -v helm-docs &> /dev/null; then
 fi
 
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
-REPO_ROOT=$(dirname "$SCRIPT_DIR")
-CHARTS_DIR="$REPO_ROOT/charts"
+CHARTS_DIR="$SCRIPT_DIR/charts"
 
 echo "Using helm-docs version: $(helm-docs --version)"
 
@@ -27,7 +26,7 @@ for chart in "$CHARTS_DIR"/ziti-*; do
         readme="$chart/README.md"
         if [ -f "$readme" ]; then
             echo "Linting $readme..."
-            "$SCRIPT_DIR/check_mdx.py" "$readme"
+            "$SCRIPT_DIR/scripts/check_mdx.py" "$readme"
         else
             echo "Warning: No README.md found for $chart_name after running helm-docs"
         fi
