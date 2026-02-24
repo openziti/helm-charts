@@ -64,6 +64,9 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-web-identity
+  subject:
+    organizations:
+      - {{ include "ziti-controller.serverCertSubjectOrganization" . | quote }}
   secretName: {{ include "ziti-controller.fullname" . }}-web-identity-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
@@ -115,6 +118,9 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-mgmt
+  subject:
+    organizations:
+      - {{ include "ziti-controller.serverCertSubjectOrganization" . | quote }}
   secretName: {{ include "ziti-controller.fullname" . }}-web-mgmt-api-secret
   isCA: false
   duration: {{ .Values.cert.duration }}
@@ -162,6 +168,9 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   commonName: {{ include "ziti-controller.fullname" . }}-prometheus
+  subject:
+    organizations:
+      - {{ include "ziti-controller.serverCertSubjectOrganization" . | quote }}
   secretName: {{ include "ziti-controller.fullname" . }}-web-prometheus-metrics-secret
   isCA: false
   duration: {{ .Values.cert.duration }}

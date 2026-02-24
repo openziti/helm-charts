@@ -10,6 +10,9 @@ metadata:
   name: {{ printf "%s-alt-cert-%d" (include "ziti-controller.fullname" $) $index }}
   namespace: {{ $.Release.Namespace }}
 spec:
+  subject:
+    organizations:
+      - {{ include "ziti-controller.serverCertSubjectOrganization" $ | quote }}
   {{- if $cert.secretName }}
   secretName: {{ $cert.secretName | quote }}
   {{- else }}
