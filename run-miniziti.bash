@@ -317,9 +317,9 @@ stage_upgrade() {
     fi
 
     # Verify the subject of the freshly issued cert from the Kubernetes secret.
-    # We read from the secret (the authoritative output of cert-manager) rather
-    # than the live TLS endpoint to decouple the test from kubelet volume-sync
-    # timing and the controller's cert-reload cycle.
+    # We read from the secret (the authoritative output of cert-manager) first
+    # to confirm cert-manager completed the reissuance.  We then separately
+    # wait for the live TLS endpoint to serve the new cert (below).
     local secret_name="ziti-controller-web-identity-secret"
     local expected_org="OpenZiti Community"
     local max_attempts=10 delay=6 attempt subject=""
@@ -344,6 +344,56 @@ stage_upgrade() {
             "${expected_org}" "${max_attempts}" "${subject}" >&2
         return 1
     fi
+
+    # cert-manager >= v1.18 defaults to privateKey.rotationPolicy=Always, so
+    # every reissuance generates a new private key.  The new cert is stored in
+    # the secret immediately (checked above), but the kubelet may take up to
+    # ~60s to sync it into the controller pod volume, after which the controller
+    # hot-reloads.  During that window the controller still serves the OLD cert,
+    # which was signed by the now-orphaned web-root CA.  The trust-manager
+    # bundle was updated during helm upgrade to include only the new edge-root
+    # CA, so the router's HTTPS fetch of the JWKS endpoint fails TLS
+    # verification and surfaces as "public key not found" on every incoming JWT.
+    #
+    # Fix: poll the controller's live TLS endpoint until it serves the new cert
+    # (containing expected_org in the subject), then restart the router so it
+    # fetches JWKS from the stable endpoint.
+    local ingress_zone
+    ingress_zone="$(get_ingress_zone)"
+    log_info "waiting for controller TLS endpoint to serve new cert (O=${expected_org})"
+    local max_tls_wait=24 tls_delay=5 tls_attempt live_subject=""
+    for (( tls_attempt = 1; tls_attempt <= max_tls_wait; tls_attempt++ )); do
+        live_subject="$(echo \
+            | timeout 10 openssl s_client \
+                -connect "${ZITI_NAMESPACE}-controller.${ingress_zone}:443" \
+                -servername "${ZITI_NAMESPACE}-controller.${ingress_zone}" \
+                2>/dev/null \
+            | openssl x509 -noout -subject 2>/dev/null || true)"
+        if [[ "${live_subject}" == *"${expected_org}"* ]]; then
+            log_ok "controller serving new cert: ${live_subject}"
+            break
+        fi
+        if (( tls_attempt < max_tls_wait )); then
+            log_info "old cert still served (${live_subject:-<no cert>}), retry ${tls_attempt}/${max_tls_wait} in ${tls_delay}s …"
+            sleep "${tls_delay}"
+        fi
+    done
+    if [[ "${live_subject}" != *"${expected_org}"* ]]; then
+        printf 'ERROR: controller TLS not serving new cert after %d attempts\nlast subject: %s\n' \
+            "${max_tls_wait}" "${live_subject}" >&2
+        return 1
+    fi
+
+    # Restart the router now that the controller TLS endpoint is stable.
+    # The router will fetch JWKS using the new cert (trusted by edge-root in the
+    # updated trust bundle) and cache the current OIDC signing key before the
+    # proxy-test stage runs.
+    log_info "restarting router after cert reload (JWKS refresh)"
+    miniziti kubectl rollout restart deployment/ziti-router \
+        -n "${ZITI_NAMESPACE}"
+    miniziti kubectl rollout status deployment/ziti-router \
+        -n "${ZITI_NAMESPACE}" --timeout "${MINIZITI_TIMEOUT_SECS}s"
+    log_ok "router restarted; JWKS up to date"
 
     log_ok "upgrade complete"
 }
