@@ -31,9 +31,12 @@
 #   debug          dump pod/log/service/network state (best-effort)
 #
 # Environment variables:
-#   ZITI_NAMESPACE          minikube profile / k8s namespace  (default: miniziti)
+#   ZITI_NAMESPACE          minikube profile / k8s namespace  (default: unique mz-NNNNN per run)
 #   MINIZITI_TIMEOUT_SECS   timeout passed to miniziti start   (default: 300)
 #   MINIZITI_REF            git ref for local miniziti install  (default: codify-jwks-orchestration)
+#   MINIZITI_BASH           path to miniziti.bash source; when set, invoked directly instead of the
+#                           installed binary — useful for local dev to skip the copy step
+#                           (default: empty → uses "command miniziti" from PATH)
 #   MINIZITI_VERSION        if set, pins image.tag in testvalues (controller + router)
 #   KUBERNETES_VERSION      if set, passed as --kubernetes-version to minikube start
 #   SKIP_BASELINE           set 1 to run the upgrade-only pipeline locally
@@ -42,9 +45,12 @@
 set -euo pipefail
 
 # ── config ────────────────────────────────────────────────────────────────────
-ZITI_NAMESPACE="${ZITI_NAMESPACE:-miniziti}"
+# Default to a unique per-run namespace so any hardcoded "miniziti" strings
+# fail visibly.  CI sets ZITI_NAMESPACE explicitly via workflow env:.
+ZITI_NAMESPACE="${ZITI_NAMESPACE:-mz-$((RANDOM % 90000 + 10000))}"
 MINIZITI_TIMEOUT_SECS="${MINIZITI_TIMEOUT_SECS:-300}"
 MINIZITI_REF="${MINIZITI_REF:-codify-jwks-orchestration}"
+MINIZITI_BASH="${MINIZITI_BASH:-}"
 SKIP_BASELINE="${SKIP_BASELINE:-0}"
 ALWAYS_DEBUG="${ALWAYS_DEBUG:-0}"
 KUBERNETES_VERSION="${KUBERNETES_VERSION:-}"
@@ -63,17 +69,24 @@ log_ok()    { printf '  ✓ %s\n' "$*"; }
 # Always forward --profile so that parallel workers with different ZITI_NAMESPACE
 # values each target their own minikube profile.  miniziti's internal
 # MINIKUBE_PROFILE is not inherited from the environment — it must be passed
-# explicitly via the --profile flag.  With the default ZITI_NAMESPACE=miniziti
-# this is equivalent to the previous behaviour.
+# explicitly via the --profile flag.
 #
-# Also inject ZITI_NETWORK_NAME.  miniziti hardcodes a default of
-# "miniziti-controller" (`:= miniziti-controller` in its init block) and never
-# derives it from --profile, but it IS inherited from the environment.  Setting
-# it here ensures IngressRouteTCP HostSNI rules, advertised hosts, and login
-# URLs all use the correct prefix when ZITI_NAMESPACE differs from "miniziti".
+# Also inject ZITI_NETWORK_NAME so IngressRouteTCP HostSNI rules, advertised
+# hosts, and login URLs all use the correct prefix when ZITI_NAMESPACE differs
+# from "miniziti" (the hardcoded default in the miniziti script).
+#
+# When MINIZITI_BASH is set and points to an existing file, invoke it with
+# "bash" directly — useful for local development against the authoritative
+# source repo without a separate install/copy step.
 miniziti() {
+    local -a _cmd
+    if [[ -n "${MINIZITI_BASH}" && -f "${MINIZITI_BASH}" ]]; then
+        _cmd=(bash "${MINIZITI_BASH}")
+    else
+        _cmd=(command miniziti)
+    fi
     ZITI_NETWORK_NAME="${ZITI_NAMESPACE}-controller" \
-        command miniziti --profile "${ZITI_NAMESPACE}" "$@"
+        "${_cmd[@]}" --profile "${ZITI_NAMESPACE}" "$@"
 }
 
 # ── cluster helpers ───────────────────────────────────────────────────────────
