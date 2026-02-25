@@ -29,7 +29,9 @@ spec:
       initContainers:
         - name: wait-for-migration
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          {{- if .Values.image.pullPolicy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           command: ["/bin/sh","-c"]
           args:
             - |
@@ -44,7 +46,9 @@ spec:
       containers:
         - name: inspector
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          {{- if .Values.image.pullPolicy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           command: ["/bin/sh","-c"]
           args: ["echo 'Migration complete. Sleeping for inspection...'; sleep infinity"]
           readinessProbe:

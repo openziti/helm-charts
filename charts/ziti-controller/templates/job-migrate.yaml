@@ -34,7 +34,9 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          {{- if .Values.image.pullPolicy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           command:
           {{- range .Values.image.command }}
             - {{ . | quote }}
@@ -128,7 +130,9 @@ spec:
       containers:
         - name: marker-writer
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          {{- if .Values.image.pullPolicy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           command: ["/bin/bash","-c"]
           args:
             - {{ include "execMountDir" . }}/ziti-cluster-migrate.bash

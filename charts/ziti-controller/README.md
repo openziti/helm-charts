@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 3.1.1](https://img.shields.io/badge/Version-3.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.2](https://img.shields.io/badge/AppVersion-1.7.2-informational?style=flat-square)
+![Version: 4.0.0-pre1](https://img.shields.io/badge/Version-4.0.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.0-pre1](https://img.shields.io/badge/AppVersion-2.0.0--pre1-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -46,7 +46,169 @@ helm upgrade --install trust-manager jetstack/trust-manager \
     --set app.trust.namespace=ziti
 ```
 
-### Breaking Change: Version 3 PKI Consolidation
+### Breaking Change v4: Clustered Mode
+
+> [!IMPORTANT]
+> **Prerequisite: v3 PKI Consolidation.** Clustering requires the consolidated PKI introduced in chart version 3.
+> If upgrading from chart v2, you **must** first adopt the v3 chart and complete the [PKI consolidation migration](#breaking-change-v3-pki-consolidation) before proceeding.
+> Do not attempt to enable clustering on a v2-era installation.
+
+Starting with chart version 4, `cluster.mode` is a **required** value. There is no default. Every installation must explicitly declare one of the supported modes:
+
+| Mode | Purpose |
+|------|---------|
+| `standalone` | Single controller, no clustering. Equivalent to pre-v4 default behavior. |
+| `cluster-init` | First (or only) node of a cluster. Permanent mode for the initial node. |
+| `cluster-join` | Additional node joining an existing cluster. Permanent mode for joiners. |
+| `cluster-migrate` | One-time migration of a standalone controller to become the first node in a new cluster. |
+
+#### New Installation: Standalone
+
+For a single controller with no clustering, explicitly set `cluster.mode=standalone`:
+
+```bash
+helm upgrade --install ziti-controller1 openziti/ziti-controller \
+    --namespace ziti --create-namespace \
+    --set clientApi.advertisedHost=ziti-controller1.ziti.example.com \
+    --set cluster.mode=standalone
+```
+
+#### New Installation: First Cluster Node (cluster-init)
+
+To create the first node of a new cluster, set `cluster.mode=cluster-init` along with a trust domain and node name:
+
+```yaml
+cluster:
+  mode: cluster-init
+  trustDomain: ziti.example.com
+  nodeName: ziti-controller1
+
+clientApi:
+  advertisedHost: ziti-controller1.ziti.example.com
+```
+
+The `trustDomain` is an arbitrary string that functions like a namespace. It becomes part of the SPIFFE ID and must be the same for all controllers in the cluster.
+
+```bash
+helm upgrade --install ziti-controller1 openziti/ziti-controller \
+    --namespace ziti --create-namespace \
+    --values controller1-values.yaml
+```
+
+#### Joining the Cluster (cluster-join)
+
+Each additional controller node uses `cluster-join`. This requires:
+
+1. The same `trustDomain` as the first node
+2. `cluster.endpoint` pointing to a reachable ctrl plane address of the first node. The ctrl plane API is bound to the same TCP port as the client API in the default configuration, e.g., `ziti-controller1.ziti.example.com:443`.
+3. `edgeSignerPki.alternativeIssuer` referencing the first node's `edge-root-issuer`
+
+```yaml
+cluster:
+  mode: cluster-join
+  trustDomain: ziti.example.com
+  nodeName: ziti-controller2
+  endpoint: ziti-controller1.ziti.example.com:443
+
+clientApi:
+  advertisedHost: ziti-controller2.ziti.example.com
+
+edgeSignerPki:
+  alternativeIssuer:
+    # Reference the first node's edge-root-issuer
+    name: ziti-controller1-edge-root-issuer
+    kind: Issuer
+    group: cert-manager.io
+```
+
+```bash
+helm upgrade --install ziti-controller2 openziti/ziti-controller \
+    --namespace ziti \
+    --values controller2-values.yaml \
+    --wait
+```
+
+Repeat for additional nodes (e.g., `ziti-controller3`), changing `nodeName`, `advertisedHost`, and the Helm release name. All controllers must run the same Ziti version -- install the same major version of the controller chart on every node (as of chart v4, chart versions express Ziti version compatibility by pinning the default Ziti version in the chart's `Chart.yaml`).
+
+#### Migrating from Standalone to Cluster
+
+If you have an existing standalone controller and want to convert it to a cluster, follow this two-step process.
+
+**Step 1: Migrate (one-time, causes downtime)**
+
+Add clustering values to your existing controller values file:
+
+```yaml
+cluster:
+  trustDomain: ziti.example.com
+  nodeName: ziti-controller1
+```
+
+Run the migration. This is a **downtime event** -- the Deployment is scaled to zero while a migration Job runs:
+
+```bash
+helm upgrade ziti-controller1 openziti/ziti-controller \
+    --namespace ziti \
+    --values controller-values.yaml \
+    --set cluster.mode=cluster-migrate \
+    --wait
+```
+
+Wait for the `helm upgrade` command to succeed. The `--wait` flag ensures the migration Job completes before returning.
+
+**Step 2: Switch to cluster-init (permanent)**
+
+After migration succeeds, switch the mode to `cluster-init`. This starts the controller as a single-node cluster ready to accept joiners:
+
+```bash
+helm upgrade ziti-controller1 openziti/ziti-controller \
+    --namespace ziti \
+    --values controller-values.yaml \
+    --set cluster.mode=cluster-init \
+    --wait
+```
+
+You can now add additional nodes using `cluster-join` as described above.
+
+#### Verifying the Cluster
+
+After all nodes are deployed, verify cluster membership in two steps. First, query any node to find the current leader:
+
+<!-- {% raw %} -->
+```bash
+kubectl exec -n ziti deployments/ziti-controller1 -c ziti-controller -- \
+    ziti agent cluster list --app-addr=127.0.0.1:10001
+```
+<!-- {% endraw %} -->
+
+Then, query the leader node to see which nodes are connected. Only the leader can see node connections:
+
+<!-- {% raw %} -->
+```bash
+# replace ziti-controller1 with whichever node is LEADER=true
+kubectl exec -n ziti deployments/ziti-controller1 -c ziti-controller -- \
+    ziti agent cluster list --app-addr=127.0.0.1:10001
+```
+<!-- {% endraw %} -->
+
+Expected output from the leader shows all nodes with their connection status:
+
+```text
+╭──────────────────┬──────────────────────────────────────────────┬───────┬────────┬─────────┬───────────╮
+│ ID               │ ADDRESS                                      │ VOTER │ LEADER │ VERSION │ CONNECTED │
+├──────────────────┼──────────────────────────────────────────────┼───────┼────────┼─────────┼───────────┤
+│ ziti-controller1 │ tls:ziti-controller1.ziti.example.com:443    │ true  │ true   │         │ true      │
+│ ziti-controller2 │ tls:ziti-controller2.ziti.example.com:443    │ true  │ false  │         │ true      │
+│ ziti-controller3 │ tls:ziti-controller3.ziti.example.com:443    │ true  │ false  │         │ true      │
+╰──────────────────┴──────────────────────────────────────────────┴───────┴────────┴─────────┴───────────╯
+```
+
+> **Note:** `CONNECTED` will show `false` for non-leader nodes when querying a non-leader. Always query the leader
+> to get an accurate view of cluster connectivity.
+
+After all controllers have joined, restart all routers and verify they remain online. Test connectivity of critical services.
+
+### Breaking Change v3: PKI Consolidation
 
 Version 3 of this chart consolidates the PKI architecture into a single root of trust. This is a breaking change that requires a controller restart and retires certain cert-manager resources, but it is expected to work without adjusting chart input values and does not require re-enrolling routers or identities.
 
@@ -80,6 +242,42 @@ Version 3 of this chart consolidates the PKI architecture into a single root of 
 It is still possible to rebase your edge PKI on an existing, alternative root issuer by configuring `edgeSignerPki.alternativeIssuer`. However, web and control plane identity certificates are always issued by the edge signer intermediate in the v3 chart.
 
 For detailed upgrade instructions, including upgrading to HA, see the [internal documentation](https://github.com/netfoundry/k8s-on-prem-installations/blob/main/docs/ha_upgrade.md).
+
+### Breaking Change v2: Decoupled Subcharts
+
+Version 2 of this chart introduced a breaking change requiring you to decouple cert-manager and trust-manager from the Ziti controller chart if they were previously installed as subcharts. This allows them to be upgraded and configured independently of the Ziti controller chart.
+
+**Symptom**
+
+> Error: Unable to continue with install: CustomResourceDefinition "certificaterequests.cert-manager.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "cert-manager"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "cert-manager"
+
+**Cause**
+
+Cert Manager and Trust Manager are no longer included as subcharts, so upgrading the Ziti controller chart will delete the cert-manager and trust-manager Operators along with their respective CRDs and associated resources which are critical for the Ziti controller.
+
+**Solution**
+
+1. As with any controller upgrade, you are advised to back up the database before proceeding so that you will have the option to roll back to a snapshot prior to any irreversible database schema migrations that may occur during an upgrade.
+1. Upgrade the Ziti controller Helm release to chart v2. This will temporarily uninstall the CM and TM Helm releases if they were originally installed as dependencies of the Ziti controller chart.
+1. Install or upgrade as desired the cert-manager and trust-manager Helm releases (see [Custom Resources](#custom-resources) section above for an example that is compatible with this upgrade path).
+1. If the cert-manager or trust-manager charts fail to install with the "symptom" above, then run the provided BASH script (`chown-cert-manager.bash`) to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
+1. Retry installing cert-manager and trust-manager Helm charts. When they are installed successfully, their respective Helm releases will own the CRDs that were annotated and labeled by the provided BASH script.
+
+> [!IMPORTANT]
+> You must use the same values for CM and TM Helm release names and namespaces when you run the provided script and when you re-install the cert-manager and trust-manager Helm charts.
+
+Assuming your future CM release will be named "cert-manager," your future TM release will be named "trust-manager," and both will be installed in namespace "cert-manager," and your Ziti controller is installed in namespace "ziti," you can use these example values to run the provided script to pave the way to installing the version 2 ziti-controller chart, which will delete the cert-manager and trust-manager Operators, preserving the CRDs and their associated resources.
+
+```bash
+helm pull openziti/ziti-controller
+tar -xvf ziti-controller-*.tgz
+CM_NAMESPACE=cert-manager \
+CM_RELEASE_NAME=cert-manager \
+TM_NAMESPACE=cert-manager \
+TM_RELEASE_NAME=trust-manager \
+ZITI_NAMESPACE=ziti \
+./ziti-controller/files/chown-cert-manager.bash
+```
 
 ## NodePort Service Example
 
@@ -319,8 +517,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
 | clientApi.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
 | cluster.agentAppAddr | string | `"tcp:127.0.0.1:10001"` | TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose) |
-| cluster.endpoint | string | `""` | required only when joining a cluster: reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280) |
-| cluster.mode | string | `"standalone"` | the cluster mode (default: standalone; options: cluster-migrate, cluster-init, cluster-join); if joining a cluster, you must also set .edgeSignerPki.alternativeIssuer to the first node's edge-root issuer in same namespace |
+| cluster.endpoint | string | `""` | required only when joining a cluster: reachable ctrl plane endpoint address of an existing node. The ctrl plane API is bound to the same TCP port as the client API in the default configuration (example: ziti-controller1.ziti.example.com:443 or ziti-controller1-ctrl:1280) |
+| cluster.mode | required | `""` | the cluster mode; options: standalone, cluster-init, cluster-join, cluster-migrate. See the README for usage of each mode. |
 | cluster.nodeName | string | `""` | the node name part of the SPIFFE ID (required for cluster modes) |
 | cluster.trustDomain | string | `""` | the trust domain part of the SPIFFE ID (required for cluster modes) |
 | console.altIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console, i.e. `{"host": "console.ziti.example.com", "port": 443}` |
@@ -379,7 +577,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
-| image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
+| image.pullPolicy | string | `""` | deployment image pull policy; leave empty to use the Kubernetes default |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altDnsNames":[],"containerPort":1281,"dnsNames":[],"gatewayTlsRoute":{"apiVersion":"gateway.networking.k8s.io/v1alpha2","enabled":false,"labels":{},"parentRefs":[]},"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefikTcpRoute":{"enabled":false,"entryPoints":["websecure"],"labels":{}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
@@ -458,7 +656,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 ## TODO's
 
-* High availability clustered mode
 * Deploy Prometheus scraper configuration when `prometheus.enabled = true`
 
 ## Alternative Web Server Certificates
@@ -519,41 +716,5 @@ webBindingPki:
           secretName: my-alt-server-cert
 ```
 <!-- {% endraw %} -->
-
-## Upgrading from Version 1 to Version 2
-
-Version 2 of this chart introduced a breaking change requiring you to decouple cert-manager and trust-manager from the Ziti controller chart if they were previously installed as subcharts. This allows them to be upgraded and configured independently of the Ziti controller chart.
-
-**Symptom**
-
-> Error: Unable to continue with install: CustomResourceDefinition "certificaterequests.cert-manager.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "cert-manager"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "cert-manager"
-
-**Cause**
-
-Cert Manager and Trust Manager are no longer included as subcharts, so upgrading the Ziti controller chart will delete the cert-manager and trust-manager Operators along with their respective CRDs and associated resources which are critical for the Ziti controller.
-
-**Solution**
-
-1. As with any controller upgrade, you are advised to back up the database before proceeding so that you will have the option to roll back to a snapshot prior to any irreversible database schema migrations that may occur during an upgrade.
-1. Upgrade the Ziti controller Helm release to chart v2. This will temporarily uninstall the CM and TM Helm releases if they were originally installed as dependencies of the Ziti controller chart.
-1. Install or upgrade as desired the cert-manager and trust-manager Helm releases (see [Custom Resources](#custom-resources) section above for an example that is compatible with this upgrade path).
-1. If the cert-manager or trust-manager charts fail to install with the "symptom" above, then run the provided BASH script (`chown-cert-manager.bash`) to set the owner labels and annotations on existing cert-manager and trust-manager CRDs and resources.
-1. Retry installing cert-manager and trust-manager Helm charts. When they are installed successfully, their respective Helm releases will own the CRDs that were annotated and labeled by the provided BASH script.
-
-> [!IMPORTANT]
-> You must use the same values for CM and TM Helm release names and namespaces when you run the provided script and when you re-install the cert-manager and trust-manager Helm charts.
-
-Assuming your future CM release will be named "cert-manager," your future TM release will be named "trust-manager," and both will be installed in namespace "cert-manager," and your Ziti controller is installed in namespace "ziti," you can use these example values to run the provided script to pave the way to installing the version 2 ziti-controller chart, which will delete the cert-manager and trust-manager Operators, preserving the CRDs and their associated resources.
-
-```bash
-helm pull openziti/ziti-controller
-tar -xvf ziti-controller-*.tgz
-CM_NAMESPACE=cert-manager \
-CM_RELEASE_NAME=cert-manager \
-TM_NAMESPACE=cert-manager \
-TM_RELEASE_NAME=trust-manager \
-ZITI_NAMESPACE=ziti \
-./ziti-controller/files/chown-cert-manager.bash
-```
 
 <!-- README.md generated by helm-docs from README.md.gotmpl -->
