@@ -368,8 +368,8 @@ image:
   repository: docker.io/openziti/ziti-controller
   # -- override the container image tag specified in the chart
   tag: ""
-  # -- deployment image pull policy
-  pullPolicy: IfNotPresent
+  # -- deployment image pull policy; leave empty to use the Kubernetes default
+  pullPolicy: ""
   # -- container entrypoint command
   command: ["ziti", "controller", "run"]
   # -- args for the entrypoint command

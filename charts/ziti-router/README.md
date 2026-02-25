@@ -307,7 +307,7 @@ identity:
 | image.additionalArgs | list | `[]` | additional arguments can be passed directly to the container to modify ziti runtime arguments |
 | image.args | list | `["run","{{ .Values.configMountDir }}/{{ .Values.configFile }}"]` | deployment container command args and opts |
 | image.command | list | `["/entrypoint.bash"]` | deployment container command |
-| image.pullPolicy | string | `"Always"` | deployment image pull policy |
+| image.pullPolicy | string | `""` | deployment image pull policy; leave empty to use the Kubernetes default |
 | image.repository | string | `"docker.io/openziti/ziti-router"` | container image tag for deployment |
 | image.tag | string | `nil` | container image tag (default is Chart's appVersion) |
 | linkDialers.transport.extraProps | object | `{}` | extra properties to define for the transport link dialer, e.g., groups |

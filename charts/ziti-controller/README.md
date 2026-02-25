@@ -577,7 +577,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | image.args | list | `["{{ include \"configMountDir\" . }}/ziti-controller.yaml"]` | args for the entrypoint command |
 | image.command | list | `["ziti","controller","run"]` | container entrypoint command |
 | image.homeDir | string | `"/home/ziggy"` | homeDir for admin login shell must align with container image's ~/.bashrc for ziti CLI auto-complete to work |
-| image.pullPolicy | string | `"IfNotPresent"` | deployment image pull policy |
+| image.pullPolicy | string | `""` | deployment image pull policy; leave empty to use the Kubernetes default |
 | image.repository | string | `"docker.io/openziti/ziti-controller"` | container image repository for app deployment |
 | image.tag | string | `""` | override the container image tag specified in the chart |
 | managementApi | object | `{"advertisedHost":"{{ .Values.clientApi.advertisedHost }}","advertisedPort":"{{ .Values.clientApi.advertisedPort }}","altDnsNames":[],"containerPort":1281,"dnsNames":[],"gatewayTlsRoute":{"apiVersion":"gateway.networking.k8s.io/v1alpha2","enabled":false,"labels":{},"parentRefs":[]},"ingress":{"annotations":{},"enabled":false,"ingressClassName":"","labels":{},"tls":{}},"service":{"enabled":false,"type":"ClusterIP"},"traefikTcpRoute":{"enabled":false,"entryPoints":["websecure"],"labels":{}}}` | by default, there's no need for a separate cluster service, ingress, or load balancer for the management API because it shares a TLS listener with the client API, and is reachable at the same address and presents the same web identity cert; you may configure a separate service, ingress, load balancer, etc.  for the management API by setting managementApi.service.enabled=true |
