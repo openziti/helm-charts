@@ -23,7 +23,7 @@
 #   baseline     miniziti start with latest stable release charts
 #   proxy-test   exec ziti ops verify traffic inside the controller container
 #   zrok         install zrok from latest release (test.enabled=false)
-#   upgrade        miniziti start --charts ./charts --check-cert-subject
+#   upgrade        standalone → clustered migration (cluster-migrate + cluster-init)
 #   verify         curl-check the ZAC console is accessible
 #   restart-ctrl   rollout restart ziti-controller + wait for ready
 #   restart-router rollout restart ziti-router + wait for ready
@@ -194,7 +194,9 @@ EOF
     fi
 
     log_ok "testvalues written"
-    ls -1 "${TESTVALUES_DIR}"
+    ls -1 "${TESTVALUES_DIR}/ziti-controller.yaml" \
+          "${TESTVALUES_DIR}/ziti-router.yaml" \
+          "${TESTVALUES_DIR}/httpbin.yaml"
 }
 
 # ── stage: baseline ───────────────────────────────────────────────────────────
@@ -271,78 +273,229 @@ stage_zrok() {
 }
 
 # ── stage: upgrade ────────────────────────────────────────────────────────────
+# Performs a standalone → clustered migration in two phases:
+#   1. cluster-migrate: scales the controller to 0 replicas, runs a migration
+#      Job that converts the BoltDB from standalone to clustered format, then
+#      writes a marker file on the PVC.
+#   2. cluster-init: scales the controller back to 1 replica in clustered mode.
+#
+# Each phase uses its own values directory so that miniziti (which reads only
+# ziti-controller.yaml from --values-dir) picks up the correct cluster.mode.
 stage_upgrade() {
-    log_stage "upgrade (branch charts + cert subject check)"
+    log_stage "upgrade (standalone → clustered via branch charts)"
 
-    # Capture the current issuance revision before the upgrade.  After helm
-    # applies the new chart (which adds subject.organizations to the Certificate
-    # spec), cert-manager will create a CertificateRequest and increment
-    # status.revision once the new cert is stored in the secret.  We use this
-    # to know when the reissuance is complete rather than relying on
-    # kubectl wait --for=condition=ready, which returns immediately for the
-    # already-valid pre-upgrade cert and races against cert-manager.
+    local ingress_ip trust_domain
+    ingress_ip="$(minikube ip --profile "${ZITI_NAMESPACE}")"
+    trust_domain="${ingress_ip//./-}.sslip.io"
+
+    # Prefer an explicit MINIZITI_VERSION when provided. Otherwise, pin phase
+    # upgrades to the currently deployed tags so chart-logic validation is not
+    # coupled to pre-release runtime image regressions.
+    local resolved_controller_tag="${MINIZITI_VERSION:-}"
+    local resolved_router_tag="${MINIZITI_VERSION:-}"
+    if [[ -z "${resolved_controller_tag}" ]]; then
+        local current_controller_image=""
+        current_controller_image="$(miniziti kubectl get deployment ziti-controller \
+            -n "${ZITI_NAMESPACE}" \
+            -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+        if [[ "${current_controller_image}" == *":"* && "${current_controller_image}" != *@* ]]; then
+            resolved_controller_tag="${current_controller_image##*:}"
+            log_info "detected controller tag for upgrade phases: ${resolved_controller_tag}"
+        fi
+    fi
+    if [[ -z "${resolved_router_tag}" ]]; then
+        local current_router_image=""
+        current_router_image="$(miniziti kubectl get deployment ziti-router \
+            -n "${ZITI_NAMESPACE}" \
+            -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+        if [[ "${current_router_image}" == *":"* && "${current_router_image}" != *@* ]]; then
+            resolved_router_tag="${current_router_image##*:}"
+            log_info "detected router tag for upgrade phases: ${resolved_router_tag}"
+        fi
+    fi
+
+    # Helper: write a controller values file with cluster config for a given mode.
+    _write_controller_values() {
+        local file="$1" mode="$2"
+        mkdir -p "$(dirname "${file}")"
+        {
+            echo "image:"
+            echo "  additionalArgs:"
+            echo "    - --verbose"
+            [[ -n "${resolved_controller_tag}" ]] && printf '  tag: "%s"\n' "${resolved_controller_tag}"
+            echo "cluster:"
+            echo "  mode: ${mode}"
+            echo "  trustDomain: ${trust_domain}"
+            echo "  nodeName: ziti-controller"
+        } > "${file}"
+    }
+
+    local phase_base="/tmp/miniziti-${ZITI_NAMESPACE}"
+
+    # ── Phase 1: cluster-migrate ──────────────────────────────────────────────
+    # The controller Deployment scales to 0 replicas.  A migration Job converts
+    # the standalone BoltDB to clustered format.  A migrate-inspector Deployment
+    # becomes ready once the marker file is written.
+    #
+    # We use `helm upgrade` directly (not miniziti start) because miniziti
+    # attempts to exec into the controller pod after deploying, but in
+    # cluster-migrate mode the controller has replicas=0.
+    local migrate_values="${phase_base}/migrate/ziti-controller.yaml"
+    _write_controller_values "${migrate_values}" "cluster-migrate"
+
+    log_info "phase 1: deploying with cluster.mode=cluster-migrate"
+    # Do NOT use --wait here: in cluster-migrate mode the main Deployment has
+    # replicas=0, so helm --wait would block forever waiting for a ready pod
+    # that will never exist.  The migration Job completion is awaited explicitly
+    # below.
+    helm upgrade ziti-controller "${REPO_ROOT}/charts/ziti-controller" \
+        --kube-context "${ZITI_NAMESPACE}" \
+        --namespace "${ZITI_NAMESPACE}" \
+        --reuse-values \
+        --values "${migrate_values}" \
+        --timeout "${MINIZITI_TIMEOUT_SECS}s"
+
+    # Wait for the migration Job to complete before proceeding.
+    local migrate_job="ziti-controller-migrate"
+    log_info "waiting for migration Job '${migrate_job}' to complete"
+    miniziti kubectl wait job "${migrate_job}" \
+        -n "${ZITI_NAMESPACE}" \
+        --for=condition=complete \
+        --timeout="${MINIZITI_TIMEOUT_SECS}s"
+    log_ok "migration Job completed"
+
+    # ── Phase 2: cluster-init ─────────────────────────────────────────────────
+    # Scales the controller back to 1 replica in clustered mode.  The migration
+    # Job and migrate-inspector Deployment are removed (no longer in templates).
+    # Phase 2 uses miniziti start, which reads ziti-controller.yaml from
+    # --values-dir.  Symlink the router and httpbin values from the main
+    # TESTVALUES_DIR so miniziti sees them too.
+    local init_dir="${phase_base}/cluster-init"
+    _write_controller_values "${init_dir}/ziti-controller.yaml" "cluster-init"
+    cp "${TESTVALUES_DIR}/ziti-router.yaml" "${init_dir}/ziti-router.yaml"
+    [[ -n "${resolved_router_tag}" ]] && printf '  tag: "%s"\n' "${resolved_router_tag}" >> "${init_dir}/ziti-router.yaml"
+    ln -sf "${TESTVALUES_DIR}/httpbin.yaml"       "${init_dir}/httpbin.yaml"
+
     local cert_name="ziti-controller-web-identity-cert"
+    local secret_name="ziti-controller-web-identity-secret"
+    local expected_org="OpenZiti Community"
+
+    # Check whether the cert already has the expected subject before upgrading.
+    # If the baseline chart already included subject.organizations, no
+    # reissuance will occur and we can skip the revision-wait.
+    local pre_subject=""
+    pre_subject="$(miniziti kubectl get secret \
+        -n "${ZITI_NAMESPACE}" "${secret_name}" \
+        -o jsonpath='{.data.tls\.crt}' 2>/dev/null \
+        | base64 -d 2>/dev/null \
+        | openssl x509 -noout -subject 2>/dev/null || true)"
+
     local pre_revision
     pre_revision="$(miniziti kubectl get certificate \
         -n "${ZITI_NAMESPACE}" "${cert_name}" \
         -o jsonpath='{.status.revision}' 2>/dev/null || echo 0)"
 
+    log_info "phase 2: deploying with cluster.mode=cluster-init"
     MINIZITI_TIMEOUT_SECS="${MINIZITI_TIMEOUT_SECS}" \
         miniziti start \
             --no-hosts \
             --verbose \
             --charts "${REPO_ROOT}/charts" \
-            --values-dir "${TESTVALUES_DIR}"
+            --values-dir "${init_dir}"
 
-    # Wait for cert-manager to complete reissuance of the web-identity cert.
-    # status.revision increments when the new cert is stored in the secret,
-    # confirming the Certificate spec change (subject.organizations) has been
-    # applied by cert-manager.
-    log_info "waiting for cert-manager to reissue ${cert_name} (pre-upgrade revision: ${pre_revision})"
-    local deadline=$(( SECONDS + MINIZITI_TIMEOUT_SECS )) new_revision=0
-    while (( SECONDS < deadline )); do
-        new_revision="$(miniziti kubectl get certificate \
-            -n "${ZITI_NAMESPACE}" "${cert_name}" \
-            -o jsonpath='{.status.revision}' 2>/dev/null || echo 0)"
-        if [[ "${new_revision}" -gt "${pre_revision}" ]]; then
-            log_ok "cert reissued (revision ${pre_revision} → ${new_revision})"
-            break
+    # If the cert subject already contained the expected org before the
+    # upgrade, no Certificate spec change occurred and cert-manager will not
+    # reissue.  Skip the revision-wait in that case.
+    if [[ "${pre_subject}" == *"${expected_org}"* ]]; then
+        log_ok "cert subject already has '${expected_org}'; skipping reissuance wait"
+    else
+        # Wait for cert-manager to complete reissuance of the web-identity cert.
+        # status.revision increments when the new cert is stored in the secret,
+        # confirming the Certificate spec change (subject.organizations) has been
+        # applied by cert-manager.
+        log_info "waiting for cert-manager to reissue ${cert_name} (pre-upgrade revision: ${pre_revision})"
+        local deadline=$(( SECONDS + MINIZITI_TIMEOUT_SECS )) new_revision=0
+        while (( SECONDS < deadline )); do
+            new_revision="$(miniziti kubectl get certificate \
+                -n "${ZITI_NAMESPACE}" "${cert_name}" \
+                -o jsonpath='{.status.revision}' 2>/dev/null || echo 0)"
+            if [[ "${new_revision}" -gt "${pre_revision}" ]]; then
+                log_ok "cert reissued (revision ${pre_revision} → ${new_revision})"
+                break
+            fi
+            sleep 3
+        done
+        if [[ "${new_revision}" -le "${pre_revision}" ]]; then
+            printf 'ERROR: timed out waiting for %s to be reissued (still at revision %s)\n' \
+                "${cert_name}" "${new_revision}" >&2
+            return 1
         fi
-        sleep 3
-    done
-    if [[ "${new_revision}" -le "${pre_revision}" ]]; then
-        printf 'ERROR: timed out waiting for %s to be reissued (still at revision %s)\n' \
-            "${cert_name}" "${new_revision}" >&2
-        return 1
+
+        # Verify the subject of the freshly issued cert from the Kubernetes secret.
+        local max_attempts=10 delay=6 attempt subject=""
+        log_info "verifying cert subject contains '${expected_org}'"
+        for (( attempt = 1; attempt <= max_attempts; attempt++ )); do
+            subject="$(miniziti kubectl get secret \
+                -n "${ZITI_NAMESPACE}" "${secret_name}" \
+                -o jsonpath='{.data.tls\.crt}' 2>/dev/null \
+                | base64 -d 2>/dev/null \
+                | openssl x509 -noout -subject 2>/dev/null || true)"
+            if [[ "${subject}" == *"${expected_org}"* ]]; then
+                log_ok "cert subject verified: ${subject}"
+                break
+            fi
+            if (( attempt < max_attempts )); then
+                log_info "subject not yet updated (${subject:-<empty>}), retry ${attempt}/${max_attempts} — waiting ${delay}s …"
+                sleep "${delay}"
+            fi
+        done
+        if [[ "${subject}" != *"${expected_org}"* ]]; then
+            printf 'ERROR: cert subject missing "%s" after %d attempts\nsubject: %s\n' \
+                "${expected_org}" "${max_attempts}" "${subject}" >&2
+            return 1
+        fi
     fi
 
-    # Verify the subject of the freshly issued cert from the Kubernetes secret.
-    # We read from the secret (the authoritative output of cert-manager) rather
-    # than the live TLS endpoint to decouple the test from kubelet volume-sync
-    # timing and the controller's cert-reload cycle.
-    local secret_name="ziti-controller-web-identity-secret"
-    local expected_org="OpenZiti Community"
-    local max_attempts=10 delay=6 attempt subject=""
-    log_info "verifying cert subject contains '${expected_org}'"
-    for (( attempt = 1; attempt <= max_attempts; attempt++ )); do
-        subject="$(miniziti kubectl get secret \
-            -n "${ZITI_NAMESPACE}" "${secret_name}" \
-            -o jsonpath='{.data.tls\.crt}' 2>/dev/null \
-            | base64 -d 2>/dev/null \
-            | openssl x509 -noout -subject 2>/dev/null || true)"
-        if [[ "${subject}" == *"${expected_org}"* ]]; then
-            log_ok "cert subject verified: ${subject}"
-            break
+    # When a cert reissuance occurred, the kubelet may take up to ~60s to
+    # sync the new cert into the controller pod volume.  Poll the controller's
+    # live TLS endpoint until it serves the reissued cert, then restart the
+    # router so it re-fetches JWKS with the new trust chain.
+    #
+    # When no reissuance occurred (cert already had the expected subject),
+    # miniziti already restarted the router during Phase 2, so we skip this.
+    if [[ "${pre_subject}" != *"${expected_org}"* ]]; then
+        local ingress_zone
+        ingress_zone="$(get_ingress_zone)"
+        log_info "waiting for controller TLS endpoint to serve new cert (O=${expected_org})"
+        local max_tls_wait=24 tls_delay=5 tls_attempt live_subject=""
+        for (( tls_attempt = 1; tls_attempt <= max_tls_wait; tls_attempt++ )); do
+            live_subject="$(echo \
+                | timeout 10 openssl s_client \
+                    -connect "${ZITI_NAMESPACE}-controller.${ingress_zone}:443" \
+                    -servername "${ZITI_NAMESPACE}-controller.${ingress_zone}" \
+                    2>/dev/null \
+                | openssl x509 -noout -subject 2>/dev/null || true)"
+            if [[ "${live_subject}" == *"${expected_org}"* ]]; then
+                log_ok "controller serving new cert: ${live_subject}"
+                break
+            fi
+            if (( tls_attempt < max_tls_wait )); then
+                log_info "old cert still served (${live_subject:-<no cert>}), retry ${tls_attempt}/${max_tls_wait} in ${tls_delay}s …"
+                sleep "${tls_delay}"
+            fi
+        done
+        if [[ "${live_subject}" != *"${expected_org}"* ]]; then
+            printf 'ERROR: controller TLS not serving new cert after %d attempts\nlast subject: %s\n' \
+                "${max_tls_wait}" "${live_subject}" >&2
+            return 1
         fi
-        if (( attempt < max_attempts )); then
-            log_info "subject not yet updated (${subject:-<empty>}), retry ${attempt}/${max_attempts} — waiting ${delay}s …"
-            sleep "${delay}"
-        fi
-    done
-    if [[ "${subject}" != *"${expected_org}"* ]]; then
-        printf 'ERROR: cert subject missing "%s" after %d attempts\nsubject: %s\n' \
-            "${expected_org}" "${max_attempts}" "${subject}" >&2
-        return 1
+
+        log_info "restarting router after cert reload (JWKS refresh)"
+        miniziti kubectl rollout restart deployment/ziti-router \
+            -n "${ZITI_NAMESPACE}"
+        miniziti kubectl rollout status deployment/ziti-router \
+            -n "${ZITI_NAMESPACE}" --timeout "${MINIZITI_TIMEOUT_SECS}s"
+        log_ok "router restarted; JWKS up to date"
     fi
 
     log_ok "upgrade complete"
@@ -513,7 +666,52 @@ run_stage() {
     esac
 }
 
+usage() {
+    cat <<'USAGE'
+Usage: run-miniziti.bash [STAGE ...]
+
+Run the miniziti integration-test pipeline.  When no stages are given the full
+pipeline is executed (or the upgrade-only subset when SKIP_BASELINE=1).
+
+Stages:
+  clean           (local) delete the minikube profile and miniziti state dir
+  minikube        (local) start a fresh minikube cluster
+  prereqs         (local) install ziti CLI and miniziti to ~/.local/bin
+  testvalues      write helm override YAML files to ./testvalues/
+  baseline        miniziti start with latest stable release charts
+  proxy-test      verify traffic inside the controller container
+  zrok            install zrok from latest release (test.enabled=false)
+  upgrade         standalone → clustered migration
+  verify          curl-check the ZAC console is accessible
+  restart-ctrl    rollout restart ziti-controller + wait for ready
+  restart-router  rollout restart ziti-router + wait for ready
+  zrok-test       upgrade zrok (test.enabled=true) and wait for test job
+  debug           dump pod/log/service/network state (best-effort)
+
+Environment variables:
+  ZITI_NAMESPACE          minikube profile / k8s namespace  (default: mz-NNNNN)
+  MINIZITI_TIMEOUT_SECS   timeout for miniziti start        (default: 300)
+  MINIZITI_REF            git ref for miniziti install       (default: codify-jwks-orchestration)
+  MINIZITI_BASH           path to miniziti.bash source       (default: use installed binary)
+  MINIZITI_VERSION        pin image.tag in testvalues        (default: unset)
+  KUBERNETES_VERSION      passed to minikube start           (default: unset)
+  SKIP_BASELINE           set 1 for upgrade-only pipeline    (default: 0)
+  ALWAYS_DEBUG            set 1 to always run debug stage    (default: 0)
+
+Examples:
+  ./run-miniziti.bash                          # full pipeline
+  SKIP_BASELINE=1 ./run-miniziti.bash          # upgrade-only pipeline
+  ./run-miniziti.bash clean minikube prereqs   # specific stages
+  ALWAYS_DEBUG=1 bash -x ./run-miniziti.bash   # verbose with debug dump
+USAGE
+}
+
 main() {
+    if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+        usage
+        exit 0
+    fi
+
     local -a stages=("$@")
 
     if [[ ${#stages[@]} -eq 0 ]]; then

@@ -380,8 +380,8 @@ image:
   repository: docker.io/openziti/ziti-router
   # -- container image tag (default is Chart's appVersion)
   tag:
-  # -- deployment image pull policy
-  pullPolicy: Always
+  # -- deployment image pull policy; leave empty to use the Kubernetes default
+  pullPolicy: ""
   # pullSecrets:
   # command: ["sh", "-c", "while true; do sleep 86400; done"]
   # -- deployment container command

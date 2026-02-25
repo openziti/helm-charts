@@ -115,7 +115,9 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          {{- if .Values.image.pullPolicy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           ports:
           - name: client-api
             containerPort: {{ .Values.clientApi.containerPort }}
@@ -285,7 +287,9 @@ spec:
         {{- if eq (include "ziti-controller.clusterMode" .) "cluster-init" }}
         - name: cluster-init
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          {{- if .Values.image.pullPolicy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           command: ["/bin/bash","-c"]
           args:
             - |
@@ -334,7 +338,9 @@ spec:
         {{- else if eq (include "ziti-controller.clusterMode" .) "cluster-join" }}
         - name: cluster-join
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          {{- if .Values.image.pullPolicy }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           command: ["/bin/bash","-c"]
           args:
             - |
