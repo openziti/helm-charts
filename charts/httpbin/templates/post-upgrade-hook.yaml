@@ -36,7 +36,9 @@ spec:
       containers:
       - name: post-upgrade-job
         image: {{ .Values.zitiImage.repository }}
+        {{- if .Values.zitiImage.pullPolicy }}
         imagePullPolicy: {{ .Values.zitiImage.pullPolicy }}
+        {{- end }}
         env:
           # used by init script to branch on the condition where the identity
           # secret already exists
