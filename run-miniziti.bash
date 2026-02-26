@@ -11,7 +11,7 @@
 #   bash run-miniziti.bash debug                                           # always / on failure
 #
 # Local usage:
-#   MINIZITI_REF=codify-jwks-orchestration ALWAYS_DEBUG=1 bash -x ./run-miniziti.bash
+#   MINIZITI_REF=main ALWAYS_DEBUG=1 bash -x ./run-miniziti.bash
 #   SKIP_BASELINE=1 ./run-miniziti.bash          # upgrade-only (skips baseline + zrok stages)
 #   ./run-miniziti.bash clean minikube prereqs testvalues upgrade debug
 #
@@ -33,7 +33,7 @@
 # Environment variables:
 #   ZITI_NAMESPACE          minikube profile / k8s namespace  (default: unique mz-NNNNN per run)
 #   MINIZITI_TIMEOUT_SECS   timeout passed to miniziti start   (default: 300)
-#   MINIZITI_REF            git ref for local miniziti install  (default: codify-jwks-orchestration)
+#   MINIZITI_REF            git ref for local miniziti install  (default: main)
 #   MINIZITI_BASH           path to miniziti.bash source; when set, invoked directly instead of the
 #                           installed binary — useful for local dev to skip the copy step
 #                           (default: empty → uses "command miniziti" from PATH)
@@ -49,7 +49,7 @@ set -euo pipefail
 # fail visibly.  CI sets ZITI_NAMESPACE explicitly via workflow env:.
 ZITI_NAMESPACE="${ZITI_NAMESPACE:-mz-$((RANDOM % 90000 + 10000))}"
 MINIZITI_TIMEOUT_SECS="${MINIZITI_TIMEOUT_SECS:-300}"
-MINIZITI_REF="${MINIZITI_REF:-codify-jwks-orchestration}"
+MINIZITI_REF="${MINIZITI_REF:-main}"
 MINIZITI_BASH="${MINIZITI_BASH:-}"
 SKIP_BASELINE="${SKIP_BASELINE:-0}"
 ALWAYS_DEBUG="${ALWAYS_DEBUG:-0}"
@@ -95,7 +95,7 @@ get_ingress_zone() {
         -n "${ZITI_NAMESPACE}" -o jsonpath='{.data.ingress-zone}'
 }
 get_ziti_pwd() {
-    miniziti kubectl get secrets "ziti-controller-admin-secret" \
+    miniziti kubectl get secrets "ziti-controller1-admin-secret" \
         -n "${ZITI_NAMESPACE}" \
         --output go-template='{{index .data "admin-password" | base64decode }}'
 }
@@ -155,13 +155,19 @@ stage_prereqs() {
         log_ok "installed ziti ${ziti_ver}"
     fi
 
-    # always (re-)fetch miniziti for the configured ref so the version is authoritative
-    log_info "installing miniziti from ref ${MINIZITI_REF} to ${LOCAL_BIN}"
-    curl -fsSL \
-        "https://raw.githubusercontent.com/openziti/ziti/${MINIZITI_REF}/quickstart/kubernetes/miniziti.bash" \
-        -o "${LOCAL_BIN}/miniziti"
-    chmod +x "${LOCAL_BIN}/miniziti"
-    log_ok "installed miniziti (${MINIZITI_REF})"
+    # When MINIZITI_BASH is set, the wrapper function invokes the local script
+    # directly, so there is no need to download or install miniziti.
+    if [[ -n "${MINIZITI_BASH}" ]]; then
+        log_ok "using local miniziti: ${MINIZITI_BASH}"
+    else
+        # always (re-)fetch miniziti for the configured ref so the version is authoritative
+        log_info "installing miniziti from ref ${MINIZITI_REF} to ${LOCAL_BIN}"
+        curl -fsSL \
+            "https://raw.githubusercontent.com/openziti/ziti/${MINIZITI_REF}/quickstart/kubernetes/miniziti.bash" \
+            -o "${LOCAL_BIN}/miniziti"
+        chmod +x "${LOCAL_BIN}/miniziti"
+        log_ok "installed miniziti (${MINIZITI_REF})"
+    fi
 
     # ensure LOCAL_BIN is on PATH for the remainder of this process
     export PATH="${LOCAL_BIN}:${PATH}"
@@ -230,7 +236,7 @@ stage_proxy_test() {
     for (( attempt = 1; attempt <= max_attempts; attempt++ )); do
         if miniziti kubectl exec \
             -n "${ZITI_NAMESPACE}" \
-            deployments/ziti-controller \
+            deployments/ziti-controller1 \
             -c ziti-controller \
             -- \
             sh -c 'zitiLogin > /dev/null 2>&1 && ziti ops verify traffic \
@@ -264,6 +270,7 @@ stage_zrok() {
         --values "${REPO_ROOT}/charts/zrok/values-ingress-traefik.yaml" \
         --set "ziti.advertisedHost=${ZITI_NAMESPACE}-controller.${ingress_zone}" \
         --set "ziti.password=${ziti_pwd}" \
+        --set "ziti.ca_cert_configmap=ziti-controller1-ctrl-plane-cas" \
         --set "dnsZone=${ingress_zone}" \
         --set "controller.ingress.hosts[0]=zrok.${ingress_zone}" \
         --set "test.enabled=false" \
@@ -282,20 +289,16 @@ stage_zrok() {
 # Each phase uses its own values directory so that miniziti (which reads only
 # ziti-controller.yaml from --values-dir) picks up the correct cluster.mode.
 stage_upgrade() {
-    log_stage "upgrade (standalone → clustered via branch charts)"
+    log_stage "upgrade (cluster-init via branch charts)"
 
-    local ingress_ip trust_domain
-    ingress_ip="$(minikube ip --profile "${ZITI_NAMESPACE}")"
-    trust_domain="${ingress_ip//./-}.sslip.io"
-
-    # Prefer an explicit MINIZITI_VERSION when provided. Otherwise, pin phase
+    # Prefer an explicit MINIZITI_VERSION when provided. Otherwise, pin
     # upgrades to the currently deployed tags so chart-logic validation is not
     # coupled to pre-release runtime image regressions.
     local resolved_controller_tag="${MINIZITI_VERSION:-}"
     local resolved_router_tag="${MINIZITI_VERSION:-}"
     if [[ -z "${resolved_controller_tag}" ]]; then
         local current_controller_image=""
-        current_controller_image="$(miniziti kubectl get deployment ziti-controller \
+        current_controller_image="$(miniziti kubectl get deployment ziti-controller1 \
             -n "${ZITI_NAMESPACE}" \
             -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
         if [[ "${current_controller_image}" == *":"* && "${current_controller_image}" != *@* ]]; then
@@ -314,70 +317,33 @@ stage_upgrade() {
         fi
     fi
 
-    # Helper: write a controller values file with cluster config for a given mode.
+    # Helper: write a controller values file for cluster-init mode.
+    # cluster-init settings are provided by the inner miniziti.bash script,
+    # so we only write the image block here.
     _write_controller_values() {
-        local file="$1" mode="$2"
+        local file="$1"
         mkdir -p "$(dirname "${file}")"
         {
             echo "image:"
             echo "  additionalArgs:"
             echo "    - --verbose"
             [[ -n "${resolved_controller_tag}" ]] && printf '  tag: "%s"\n' "${resolved_controller_tag}"
-            echo "cluster:"
-            echo "  mode: ${mode}"
-            echo "  trustDomain: ${trust_domain}"
-            echo "  nodeName: ziti-controller"
         } > "${file}"
     }
 
-    local phase_base="/tmp/miniziti-${ZITI_NAMESPACE}"
-
-    # ── Phase 1: cluster-migrate ──────────────────────────────────────────────
-    # The controller Deployment scales to 0 replicas.  A migration Job converts
-    # the standalone BoltDB to clustered format.  A migrate-inspector Deployment
-    # becomes ready once the marker file is written.
-    #
-    # We use `helm upgrade` directly (not miniziti start) because miniziti
-    # attempts to exec into the controller pod after deploying, but in
-    # cluster-migrate mode the controller has replicas=0.
-    local migrate_values="${phase_base}/migrate/ziti-controller.yaml"
-    _write_controller_values "${migrate_values}" "cluster-migrate"
-
-    log_info "phase 1: deploying with cluster.mode=cluster-migrate"
-    # Do NOT use --wait here: in cluster-migrate mode the main Deployment has
-    # replicas=0, so helm --wait would block forever waiting for a ready pod
-    # that will never exist.  The migration Job completion is awaited explicitly
-    # below.
-    helm upgrade ziti-controller "${REPO_ROOT}/charts/ziti-controller" \
-        --kube-context "${ZITI_NAMESPACE}" \
-        --namespace "${ZITI_NAMESPACE}" \
-        --reuse-values \
-        --values "${migrate_values}" \
-        --timeout "${MINIZITI_TIMEOUT_SECS}s"
-
-    # Wait for the migration Job to complete before proceeding.
-    local migrate_job="ziti-controller-migrate"
-    log_info "waiting for migration Job '${migrate_job}' to complete"
-    miniziti kubectl wait job "${migrate_job}" \
-        -n "${ZITI_NAMESPACE}" \
-        --for=condition=complete \
-        --timeout="${MINIZITI_TIMEOUT_SECS}s"
-    log_ok "migration Job completed"
-
-    # ── Phase 2: cluster-init ─────────────────────────────────────────────────
-    # Scales the controller back to 1 replica in clustered mode.  The migration
-    # Job and migrate-inspector Deployment are removed (no longer in templates).
-    # Phase 2 uses miniziti start, which reads ziti-controller.yaml from
-    # --values-dir.  Symlink the router and httpbin values from the main
-    # TESTVALUES_DIR so miniziti sees them too.
-    local init_dir="${phase_base}/cluster-init"
-    _write_controller_values "${init_dir}/ziti-controller.yaml" "cluster-init"
+    # ── cluster-init ──────────────────────────────────────────────────────────
+    # miniziti.bash always starts in clustered mode, so no migration phase is
+    # needed.  Deploy directly with cluster-init via miniziti start, which reads
+    # ziti-controller.yaml from --values-dir.  Include the router and httpbin
+    # values from the main TESTVALUES_DIR so miniziti sees them too.
+    local init_dir="/tmp/miniziti-${ZITI_NAMESPACE}/cluster-init"
+    _write_controller_values "${init_dir}/ziti-controller.yaml"
     cp "${TESTVALUES_DIR}/ziti-router.yaml" "${init_dir}/ziti-router.yaml"
     [[ -n "${resolved_router_tag}" ]] && printf '  tag: "%s"\n' "${resolved_router_tag}" >> "${init_dir}/ziti-router.yaml"
     ln -sf "${TESTVALUES_DIR}/httpbin.yaml"       "${init_dir}/httpbin.yaml"
 
-    local cert_name="ziti-controller-web-identity-cert"
-    local secret_name="ziti-controller-web-identity-secret"
+    local cert_name="ziti-controller1-web-identity-cert"
+    local secret_name="ziti-controller1-web-identity-secret"
     local expected_org="OpenZiti Community"
 
     # Check whether the cert already has the expected subject before upgrading.
@@ -395,7 +361,7 @@ stage_upgrade() {
         -n "${ZITI_NAMESPACE}" "${cert_name}" \
         -o jsonpath='{.status.revision}' 2>/dev/null || echo 0)"
 
-    log_info "phase 2: deploying with cluster.mode=cluster-init"
+    log_info "deploying with cluster.mode=cluster-init"
     MINIZITI_TIMEOUT_SECS="${MINIZITI_TIMEOUT_SECS}" \
         miniziti start \
             --no-hosts \
@@ -462,7 +428,7 @@ stage_upgrade() {
     # router so it re-fetches JWKS with the new trust chain.
     #
     # When no reissuance occurred (cert already had the expected subject),
-    # miniziti already restarted the router during Phase 2, so we skip this.
+    # miniziti already restarted the router during cluster-init, so we skip this.
     if [[ "${pre_subject}" != *"${expected_org}"* ]]; then
         local ingress_zone
         ingress_zone="$(get_ingress_zone)"
@@ -507,10 +473,10 @@ stage_upgrade() {
 # restarted, so its JWKS cache still holds the old key — the subsequent
 # proxy-test stage should expose the JWT validation failure.
 stage_restart_ctrl() {
-    log_stage "restart-ctrl (rollout restart ziti-controller)"
-    miniziti kubectl rollout restart deployment/ziti-controller \
+    log_stage "restart-ctrl (rollout restart ziti-controller1)"
+    miniziti kubectl rollout restart deployment/ziti-controller1 \
         -n "${ZITI_NAMESPACE}"
-    miniziti kubectl rollout status deployment/ziti-controller \
+    miniziti kubectl rollout status deployment/ziti-controller1 \
         -n "${ZITI_NAMESPACE}" --timeout "${MINIZITI_TIMEOUT_SECS}s"
     log_ok "controller restarted and ready"
 }
@@ -562,9 +528,11 @@ stage_zrok_test() {
     helm upgrade --install \
         --kube-context "${ZITI_NAMESPACE}" \
         --namespace zrok --create-namespace \
+        --wait --timeout "${MINIZITI_TIMEOUT_SECS}s" \
         --values "${REPO_ROOT}/charts/zrok/values-ingress-traefik.yaml" \
         --set "ziti.advertisedHost=${ZITI_NAMESPACE}-controller.${ingress_zone}" \
         --set "ziti.password=${ziti_pwd}" \
+        --set "ziti.ca_cert_configmap=ziti-controller1-ctrl-plane-cas" \
         --set "dnsZone=${ingress_zone}" \
         --set "controller.ingress.hosts[0]=zrok.${ingress_zone}" \
         --set "test.enabled=true" \
@@ -691,7 +659,7 @@ Stages:
 Environment variables:
   ZITI_NAMESPACE          minikube profile / k8s namespace  (default: mz-NNNNN)
   MINIZITI_TIMEOUT_SECS   timeout for miniziti start        (default: 300)
-  MINIZITI_REF            git ref for miniziti install       (default: codify-jwks-orchestration)
+  MINIZITI_REF            git ref for miniziti install       (default: main)
   MINIZITI_BASH           path to miniziti.bash source       (default: use installed binary)
   MINIZITI_VERSION        pin image.tag in testvalues        (default: unset)
   KUBERNETES_VERSION      passed to minikube start           (default: unset)
@@ -722,10 +690,14 @@ main() {
         fi
     fi
 
+    # On failure, automatically run the debug stage to capture diagnostics.
+    trap 'trap - ERR; stage_debug' ERR
+
     for s in "${stages[@]}"; do
         run_stage "${s}"
     done
 
+    trap - ERR
     [[ "${ALWAYS_DEBUG}" == "1" ]] && stage_debug
 
     echo
