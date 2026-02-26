@@ -95,7 +95,7 @@ get_ingress_zone() {
         -n "${ZITI_NAMESPACE}" -o jsonpath='{.data.ingress-zone}'
 }
 get_ziti_pwd() {
-    miniziti kubectl get secrets "ziti-controller-admin-secret" \
+    miniziti kubectl get secrets "ziti-controller1-admin-secret" \
         -n "${ZITI_NAMESPACE}" \
         --output go-template='{{index .data "admin-password" | base64decode }}'
 }
@@ -230,7 +230,7 @@ stage_proxy_test() {
     for (( attempt = 1; attempt <= max_attempts; attempt++ )); do
         if miniziti kubectl exec \
             -n "${ZITI_NAMESPACE}" \
-            deployments/ziti-controller \
+            deployments/ziti-controller1 \
             -c ziti-controller \
             -- \
             sh -c 'zitiLogin > /dev/null 2>&1 && ziti ops verify traffic \
@@ -295,7 +295,7 @@ stage_upgrade() {
     local resolved_router_tag="${MINIZITI_VERSION:-}"
     if [[ -z "${resolved_controller_tag}" ]]; then
         local current_controller_image=""
-        current_controller_image="$(miniziti kubectl get deployment ziti-controller \
+        current_controller_image="$(miniziti kubectl get deployment ziti-controller1 \
             -n "${ZITI_NAMESPACE}" \
             -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
         if [[ "${current_controller_image}" == *":"* && "${current_controller_image}" != *@* ]]; then
@@ -314,7 +314,10 @@ stage_upgrade() {
         fi
     fi
 
-    # Helper: write a controller values file with cluster config for a given mode.
+    # Helper: write a controller values file for a given cluster mode.
+    # cluster-init settings are provided by the inner miniziti.bash script,
+    # so only write the cluster block for modes that bypass miniziti (e.g.
+    # cluster-migrate, which uses a direct helm upgrade).
     _write_controller_values() {
         local file="$1" mode="$2"
         mkdir -p "$(dirname "${file}")"
@@ -323,10 +326,12 @@ stage_upgrade() {
             echo "  additionalArgs:"
             echo "    - --verbose"
             [[ -n "${resolved_controller_tag}" ]] && printf '  tag: "%s"\n' "${resolved_controller_tag}"
-            echo "cluster:"
-            echo "  mode: ${mode}"
-            echo "  trustDomain: ${trust_domain}"
-            echo "  nodeName: ziti-controller"
+            if [[ "${mode}" != "cluster-init" ]]; then
+                echo "cluster:"
+                echo "  mode: ${mode}"
+                echo "  trustDomain: ${trust_domain}"
+                echo "  nodeName: ziti-controller1"
+            fi
         } > "${file}"
     }
 
@@ -348,7 +353,7 @@ stage_upgrade() {
     # replicas=0, so helm --wait would block forever waiting for a ready pod
     # that will never exist.  The migration Job completion is awaited explicitly
     # below.
-    helm upgrade ziti-controller "${REPO_ROOT}/charts/ziti-controller" \
+    helm upgrade ziti-controller1 "${REPO_ROOT}/charts/ziti-controller" \
         --kube-context "${ZITI_NAMESPACE}" \
         --namespace "${ZITI_NAMESPACE}" \
         --reuse-values \
@@ -356,7 +361,7 @@ stage_upgrade() {
         --timeout "${MINIZITI_TIMEOUT_SECS}s"
 
     # Wait for the migration Job to complete before proceeding.
-    local migrate_job="ziti-controller-migrate"
+    local migrate_job="ziti-controller1-migrate"
     log_info "waiting for migration Job '${migrate_job}' to complete"
     miniziti kubectl wait job "${migrate_job}" \
         -n "${ZITI_NAMESPACE}" \
@@ -376,8 +381,8 @@ stage_upgrade() {
     [[ -n "${resolved_router_tag}" ]] && printf '  tag: "%s"\n' "${resolved_router_tag}" >> "${init_dir}/ziti-router.yaml"
     ln -sf "${TESTVALUES_DIR}/httpbin.yaml"       "${init_dir}/httpbin.yaml"
 
-    local cert_name="ziti-controller-web-identity-cert"
-    local secret_name="ziti-controller-web-identity-secret"
+    local cert_name="ziti-controller1-web-identity-cert"
+    local secret_name="ziti-controller1-web-identity-secret"
     local expected_org="OpenZiti Community"
 
     # Check whether the cert already has the expected subject before upgrading.
@@ -507,10 +512,10 @@ stage_upgrade() {
 # restarted, so its JWKS cache still holds the old key — the subsequent
 # proxy-test stage should expose the JWT validation failure.
 stage_restart_ctrl() {
-    log_stage "restart-ctrl (rollout restart ziti-controller)"
-    miniziti kubectl rollout restart deployment/ziti-controller \
+    log_stage "restart-ctrl (rollout restart ziti-controller1)"
+    miniziti kubectl rollout restart deployment/ziti-controller1 \
         -n "${ZITI_NAMESPACE}"
-    miniziti kubectl rollout status deployment/ziti-controller \
+    miniziti kubectl rollout status deployment/ziti-controller1 \
         -n "${ZITI_NAMESPACE}" --timeout "${MINIZITI_TIMEOUT_SECS}s"
     log_ok "controller restarted and ready"
 }
