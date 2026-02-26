@@ -82,10 +82,9 @@ jobs:
         uses: supplypike/setup-bin@v5
         with:
           # uri: https://get.openziti.io/miniziti.bash
-          # uri: https://raw.githubusercontent.com/openziti/ziti/main/quickstart/kubernetes/miniziti.bash
-          uri: https://raw.githubusercontent.com/openziti/ziti/codify-jwks-orchestration/quickstart/kubernetes/miniziti.bash
+          uri: https://raw.githubusercontent.com/openziti/ziti/main/quickstart/kubernetes/miniziti.bash
           name: miniziti
-          version: codify-jwks-orchestration
+          version: main
 
       - name: Select test mode
         id: mode
