@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 4.0.0-pre1](https://img.shields.io/badge/Version-4.0.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.0-pre1](https://img.shields.io/badge/AppVersion-2.0.0--pre1-informational?style=flat-square)
+![Version: 3.2.0-pre1](https://img.shields.io/badge/Version-3.2.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.0-pre1](https://img.shields.io/badge/AppVersion-2.0.0--pre1-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -46,23 +46,55 @@ helm upgrade --install trust-manager jetstack/trust-manager \
     --set app.trust.namespace=ziti
 ```
 
-### Breaking Change v4: Clustered Mode
+### Breaking Change v3: PKI Consolidation and Clustered Mode
 
-> [!IMPORTANT]
-> **Prerequisite: v3 PKI Consolidation.** Clustering requires the consolidated PKI introduced in chart version 3.
-> If upgrading from chart v2, you **must** first adopt the v3 chart and complete the [PKI consolidation migration](#breaking-change-v3-pki-consolidation) before proceeding.
-> Do not attempt to enable clustering on a v2-era installation.
+Version 3 of this chart consolidates the PKI architecture into a single root of trust and introduces clustered mode for multi-controller deployments. This is a breaking change that requires a controller restart and retires certain cert-manager resources. The PKI consolidation is expected to work without adjusting chart input values and does not require re-enrolling routers or identities.
 
-Starting with chart version 4, `cluster.mode` is a **required** value. There is no default. Every installation must explicitly declare one of the supported modes:
+#### PKI Consolidation
+
+**What Changed**
+
+- **Before (v2):** The controller used separate PKI roots for the control plane, web/client APIs, and edge enrollment, with separate intermediate issuers for each PKI.
+- **After (v3):** Only the edge PKI root and intermediate issuers are used. The separate control plane and web root and intermediate issuers are retired. All leaf certificates for the control plane, web/client APIs, and edge enrollments are now issued by the edge signer intermediate issuer, which is itself issued by the edge root issuer (the cluster's shared root of trust).
+
+**Upgrade Process**
+
+1. Back up the controller database before proceeding.
+1. Upgrade the controller's Helm release with a chart version constraint that allows v3, e.g., `^3.0.0`.
+1. Wait for the web identity certificate to be ready:
+
+    ```bash
+    kubectl wait certificate.cert-manager.io ziti-controller-web-identity-cert \
+        --namespace ziti \
+        --for condition=Ready=True \
+        --timeout 120s
+    ```
+
+1. Restart the controller and all routers to pick up the latest certificates:
+
+    ```bash
+    kubectl rollout restart deployment ziti-controller -n ziti
+    kubectl rollout restart deployment ziti-router -n ziti
+    ```
+
+**Alternative Root Issuer**
+
+It is still possible to rebase your edge PKI on an existing, alternative root issuer by configuring `edgeSignerPki.alternativeIssuer`. However, web and control plane identity certificates are always issued by the edge signer intermediate in the v3 chart.
+
+For detailed upgrade instructions, including upgrading to HA, see the [internal documentation](https://github.com/netfoundry/k8s-on-prem-installations/blob/main/docs/ha_upgrade.md).
+
+#### Clustered Mode
+
+Starting with chart version 3, `cluster.mode` is a **required** value. There is no default. Every installation must explicitly declare one of the supported modes:
 
 | Mode | Purpose |
 |------|---------|
-| `standalone` | Single controller, no clustering. Equivalent to pre-v4 default behavior. |
+| `standalone` | Single controller, no clustering. Equivalent to pre-v3 default behavior. |
 | `cluster-init` | First (or only) node of a cluster. Permanent mode for the initial node. |
 | `cluster-join` | Additional node joining an existing cluster. Permanent mode for joiners. |
 | `cluster-migrate` | One-time migration of a standalone controller to become the first node in a new cluster. |
 
-#### New Installation: Standalone
+##### New Installation: Standalone
 
 For a single controller with no clustering, explicitly set `cluster.mode=standalone`:
 
@@ -73,7 +105,7 @@ helm upgrade --install ziti-controller1 openziti/ziti-controller \
     --set cluster.mode=standalone
 ```
 
-#### New Installation: First Cluster Node (cluster-init)
+##### New Installation: First Cluster Node (cluster-init)
 
 To create the first node of a new cluster, set `cluster.mode=cluster-init` along with a trust domain and node name:
 
@@ -95,7 +127,7 @@ helm upgrade --install ziti-controller1 openziti/ziti-controller \
     --values controller1-values.yaml
 ```
 
-#### Joining the Cluster (cluster-join)
+##### Joining the Cluster (cluster-join)
 
 Each additional controller node uses `cluster-join`. This requires:
 
@@ -128,9 +160,9 @@ helm upgrade --install ziti-controller2 openziti/ziti-controller \
     --wait
 ```
 
-Repeat for additional nodes (e.g., `ziti-controller3`), changing `nodeName`, `advertisedHost`, and the Helm release name. All controllers must run the same Ziti version -- install the same major version of the controller chart on every node (as of chart v4, chart versions express Ziti version compatibility by pinning the default Ziti version in the chart's `Chart.yaml`).
+Repeat for additional nodes (e.g., `ziti-controller3`), changing `nodeName`, `advertisedHost`, and the Helm release name. All controllers must run the same Ziti version -- install the same major version of the controller chart on every node (as of chart v3, chart versions express Ziti version compatibility by pinning the default Ziti version in the chart's `Chart.yaml`).
 
-#### Migrating from Standalone to Cluster
+##### Migrating from Standalone to Cluster
 
 If you have an existing standalone controller and want to convert it to a cluster, follow this two-step process.
 
@@ -170,7 +202,7 @@ helm upgrade ziti-controller1 openziti/ziti-controller \
 
 You can now add additional nodes using `cluster-join` as described above.
 
-#### Verifying the Cluster
+##### Verifying the Cluster
 
 After all nodes are deployed, verify cluster membership in two steps. First, query any node to find the current leader:
 
@@ -207,41 +239,6 @@ Expected output from the leader shows all nodes with their connection status:
 > to get an accurate view of cluster connectivity.
 
 After all controllers have joined, restart all routers and verify they remain online. Test connectivity of critical services.
-
-### Breaking Change v3: PKI Consolidation
-
-Version 3 of this chart consolidates the PKI architecture into a single root of trust. This is a breaking change that requires a controller restart and retires certain cert-manager resources, but it is expected to work without adjusting chart input values and does not require re-enrolling routers or identities.
-
-**What Changed**
-
-- **Before (v2):** The controller used separate PKI roots for the control plane, web/client APIs, and edge enrollment, with separate intermediate issuers for each PKI.
-- **After (v3):** Only the edge PKI root and intermediate issuers are used. The separate control plane and web root and intermediate issuers are retired. All leaf certificates for the control plane, web/client APIs, and edge enrollments are now issued by the edge signer intermediate issuer, which is itself issued by the edge root issuer (the cluster's shared root of trust).
-
-**Upgrade Process**
-
-1. Back up the controller database before proceeding.
-1. Upgrade the controller's Helm release with a chart version constraint that allows v3, e.g., `^3.0.0`.
-1. Wait for the web identity certificate to be ready:
-
-    ```bash
-    kubectl wait certificate.cert-manager.io ziti-controller-web-identity-cert \
-        --namespace ziti \
-        --for condition=Ready=True \
-        --timeout 120s
-    ```
-
-1. Restart the controller and all routers to pick up the latest certificates:
-
-    ```bash
-    kubectl rollout restart deployment ziti-controller -n ziti
-    kubectl rollout restart deployment ziti-router -n ziti
-    ```
-
-**Alternative Root Issuer**
-
-It is still possible to rebase your edge PKI on an existing, alternative root issuer by configuring `edgeSignerPki.alternativeIssuer`. However, web and control plane identity certificates are always issued by the edge signer intermediate in the v3 chart.
-
-For detailed upgrade instructions, including upgrading to HA, see the [internal documentation](https://github.com/netfoundry/k8s-on-prem-installations/blob/main/docs/ha_upgrade.md).
 
 ### Breaking Change v2: Decoupled Subcharts
 
