@@ -75,6 +75,16 @@ entries:
     version: 1.3.1
   httpbin:
   - apiVersion: v2
+    appVersion: latest
+    created: "2026-03-03T22:07:04.403085519Z"
+    description: Run the Ziti fork of go-httpbin
+    digest: 3ff18e0b488c848835ea1516658b76534030302b93d4286e0bc8c44a5c7db844
+    name: httpbin
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/httpbin-0.3.0/httpbin-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
     appVersion: 2.18.3-ziti
     created: "2025-10-17T18:17:51.66951292Z"
     description: Run the Ziti fork of go-httpbin
@@ -3599,4 +3609,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2026-02-28T00:21:44.348569439Z"
+generated: "2026-03-03T22:07:04.40365195Z"
