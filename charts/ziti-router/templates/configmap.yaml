@@ -49,6 +49,10 @@ data:
       # override the endpoint from the enrollment token (ctrl1.ziti.example.com:6262)
       endpoint:    tls:{{ .Values.ctrl.endpoint }}
     {{- end }}
+    {{- if .Values.ctrl.listeners }}
+      listeners:
+        {{- toYaml .Values.ctrl.listeners | nindent 8 }}
+    {{- end }}
 
     {{- if .Values.proxy }}
     proxy:

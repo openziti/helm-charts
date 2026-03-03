@@ -3,6 +3,10 @@ ctrl:
   # -- optionally override the endpoint(s) from the enrollment token, e.g., ctrl.ziti.example.com:443
   endpoint: ""
   endpointsFile: endpoints.yml
+  # -- optional ctrl channel listeners for controller-to-router connections
+  listeners: []
+  #  - bind: tls://0.0.0.0:6262
+  #    advertise: tls://router.example.com:6262
 
 # -- Explicit proxy setting in the router configuration. Router can be deployed in a site
 # where all egress traffic is forwarded through an explicit proxy.
