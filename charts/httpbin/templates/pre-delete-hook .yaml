@@ -36,7 +36,9 @@ spec:
       containers:
       - name: pre-delete-job
         image: {{ .Values.zitiImage.repository }}
+        {{- if .Values.zitiImage.pullPolicy }}
         imagePullPolicy: {{ .Values.zitiImage.pullPolicy }}
+        {{- end }}
         volumeMounts:
           - name: httpbin-config
             mountPath: /usr/local/bin/{{ .Values.deleteIdentityScriptFile }}
