@@ -291,31 +291,9 @@ stage_zrok() {
 stage_upgrade() {
     log_stage "upgrade (cluster-init via branch charts)"
 
-    # Prefer an explicit MINIZITI_VERSION when provided. Otherwise, pin
-    # upgrades to the currently deployed tags so chart-logic validation is not
-    # coupled to pre-release runtime image regressions.
+    # Only pin image.tag when MINIZITI_VERSION is explicitly set.
     local resolved_controller_tag="${MINIZITI_VERSION:-}"
     local resolved_router_tag="${MINIZITI_VERSION:-}"
-    if [[ -z "${resolved_controller_tag}" ]]; then
-        local current_controller_image=""
-        current_controller_image="$(miniziti kubectl get deployment ziti-controller1 \
-            -n "${ZITI_NAMESPACE}" \
-            -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
-        if [[ "${current_controller_image}" == *":"* && "${current_controller_image}" != *@* ]]; then
-            resolved_controller_tag="${current_controller_image##*:}"
-            log_info "detected controller tag for upgrade phases: ${resolved_controller_tag}"
-        fi
-    fi
-    if [[ -z "${resolved_router_tag}" ]]; then
-        local current_router_image=""
-        current_router_image="$(miniziti kubectl get deployment ziti-router \
-            -n "${ZITI_NAMESPACE}" \
-            -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
-        if [[ "${current_router_image}" == *":"* && "${current_router_image}" != *@* ]]; then
-            resolved_router_tag="${current_router_image##*:}"
-            log_info "detected router tag for upgrade phases: ${resolved_router_tag}"
-        fi
-    fi
 
     # Helper: write a controller values file for cluster-init mode.
     # cluster-init settings are provided by the inner miniziti.bash script,
