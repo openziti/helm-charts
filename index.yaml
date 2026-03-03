@@ -563,15 +563,15 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-controller-3.0.0-pre1/ziti-controller-3.0.0-pre1.tgz
     version: 3.0.0-pre1
   - apiVersion: v2
-    appVersion: 1.8.0-pre5
-    created: "2026-01-15T17:02:45.626377589Z"
+    appVersion: 1.7.2
+    created: "2026-03-03T18:21:12.244095012-05:00"
     description: Host an OpenZiti controller in Kubernetes
-    digest: 9d4b7d788213c44625a6529ad8e887dbecd51ebfee700cc1ac38e0b54144de38
+    digest: 4fb39f679efbd2a8bd9a94d2a3351d62b0867924b39d3b2774933c57751ff6b6
     name: ziti-controller
     type: application
     urls:
-    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-3.0.0-pre1/ziti-controller-3.0.0-pre1.tgz
-    version: 3.0.0-pre1
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-2.1.2/ziti-controller-2.1.2.tgz
+    version: 2.1.2
   - apiVersion: v2
     appVersion: 1.7.2
     created: "2025-12-12T19:44:31.436717727Z"
@@ -3609,4 +3609,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok-0.1.16/zrok-0.1.16.tgz
     version: 0.1.16
-generated: "2026-03-03T22:07:04.40365195Z"
+generated: "2026-03-03T18:21:12.241411668-05:00"
