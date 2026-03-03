@@ -305,7 +305,7 @@ stage_upgrade() {
             echo "image:"
             echo "  additionalArgs:"
             echo "    - --verbose"
-            [[ -n "${resolved_controller_tag}" ]] && printf '  tag: "%s"\n' "${resolved_controller_tag}"
+            [[ -n "${resolved_controller_tag}" ]] && printf '  tag: "%s"\n' "${resolved_controller_tag}" || true
         } > "${file}"
     }
 
@@ -317,7 +317,7 @@ stage_upgrade() {
     local init_dir="/tmp/miniziti-${ZITI_NAMESPACE}/cluster-init"
     _write_controller_values "${init_dir}/ziti-controller.yaml"
     cp "${TESTVALUES_DIR}/ziti-router.yaml" "${init_dir}/ziti-router.yaml"
-    [[ -n "${resolved_router_tag}" ]] && printf '  tag: "%s"\n' "${resolved_router_tag}" >> "${init_dir}/ziti-router.yaml"
+    [[ -n "${resolved_router_tag}" ]] && printf '  tag: "%s"\n' "${resolved_router_tag}" >> "${init_dir}/ziti-router.yaml" || true
     ln -sf "${TESTVALUES_DIR}/httpbin.yaml"       "${init_dir}/httpbin.yaml"
 
     local cert_name="ziti-controller1-web-identity-cert"
