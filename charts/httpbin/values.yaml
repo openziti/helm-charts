@@ -15,14 +15,14 @@ zitiIdentityBase64:
 
 image:
   repository: docker.io/openziti/go-httpbin
-  pullPolicy: IfNotPresent
+  pullPolicy: ""
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
 zitiImage:
   # -- container image for running life cycle hooks to manage the Ziti identity
   repository: docker.io/openziti/ziti-cli
   # -- when to pull the container image
-  pullPolicy: IfNotPresent
+  pullPolicy: ""
 
 imagePullSecrets: []
 nameOverride: ""
