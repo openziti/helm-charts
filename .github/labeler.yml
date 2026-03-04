@@ -1,0 +1,23 @@
+"notes:httpbin":
+  - changed-files:
+      - any-glob-to-any-file: charts/httpbin/**
+
+"notes:ziti-controller":
+  - changed-files:
+      - any-glob-to-any-file: charts/ziti-controller/**
+
+"notes:ziti-edge-tunnel":
+  - changed-files:
+      - any-glob-to-any-file: charts/ziti-edge-tunnel/**
+
+"notes:ziti-host":
+  - changed-files:
+      - any-glob-to-any-file: charts/ziti-host/**
+
+"notes:ziti-router":
+  - changed-files:
+      - any-glob-to-any-file: charts/ziti-router/**
+
+"notes:zrok":
+  - changed-files:
+      - any-glob-to-any-file: charts/zrok/**
