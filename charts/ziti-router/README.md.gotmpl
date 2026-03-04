@@ -14,7 +14,8 @@
 
 {{ template "chart.requirementsSection" . }}
 
-> **Note:** Router chart v3 requires controller chart v3. The underlying Ziti v2 routers only work with Ziti v2 controllers, but v2 controllers remain compatible with older routers. This means you should **upgrade the controller chart first**, then upgrade router charts individually. Older routers will continue to operate normally with the upgraded controller during the transition.
+> [!IMPORTANT]
+> **Compatibility:** As of chart v3, the router and controller chart major versions must match. The chart major version pins a compatible Ziti major version (e.g., chart v3 pins Ziti v2). If you override `image.tag`, the same rule applies at the Ziti level: Ziti v2 routers require a Ziti v2 controller. **Upgrade the controller first** -- older routers continue to work with the upgraded controller.
 
 ## Add the OpenZiti Charts Repo to Helm
 
