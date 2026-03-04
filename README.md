@@ -53,6 +53,28 @@ cr package ./charts/httpbin
 cr index --owner openziti --git-repo helm-charts --index-path .
 ```
 
+### Releasing a Hotfix
+
+To patch an older chart version without affecting the current release on main:
+
+```bash
+# 1. Create a release branch from the prior release tag
+git checkout -b release/ziti-controller-1.2.3 ziti-controller-1.2.2
+
+# 2. Cherry-pick or write fixes
+git cherry-pick <commit>
+
+# 3. Bump the chart version in Chart.yaml
+#    e.g., version: 1.2.2 → version: 1.2.3
+
+# 4. Push the branch to trigger the release workflow
+git push -u origin release/ziti-controller-1.2.3
+```
+
+Pushing a `release/**` branch triggers the **Release Hotfix Charts** workflow, which packages the changed chart, creates a GitHub release (not marked "latest"), and updates the Helm repo index on `gh-pages`.
+
+The branch name must start with `release/` and should include the chart name and target version for clarity.
+
 ## Contribute
 
 1. Clone this repo.
