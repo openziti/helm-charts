@@ -21,7 +21,7 @@ jobs:
       # GitHub's release notes generator uses these lables to select PRs to include
       - name: Label Pull Request by Changed Charts
         id: labeler
-        uses: maxisam/changed-files-labeler@634933edcd8ababfe52f92936142cc22ac488b1b  #v6.0.1
+        uses: maxisam/changed-files-labeler@v6.0.1
         with:
             authToken: ${{ secrets.GITHUB_TOKEN }}
             basePaths: charts
