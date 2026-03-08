@@ -1,0 +1,190 @@
+# Default values for zrok2.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: docker.io/openziti/zrok2
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+# -- default pod security context for all containers
+podSecurityContext:
+  # -- effective UID
+  runAsUser: 2171
+  # -- effective GID
+  runAsGroup: 2171
+  # -- volume mount filesystem group owner
+  fsGroup: 2171
+
+# -- override the default container security context for init and app containers
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+
+controller:
+  service:
+    # -- The service type to use for the zrok2 controller
+    type: ClusterIP
+    # -- The port to advertise for the zrok2 controller service
+    advertisedPort: 80
+    # -- The port to expose on the zrok2 controller container
+    containerPort: 18080
+  ingress:
+    # -- enable the ingress resource for the controller
+    enabled: false
+    # -- URI scheme to advertise for the controller's ingress resource
+    scheme: https
+    # -- The ingress class to use for the zrok2 controller
+    className: ""
+    # -- The annotations to use for the zrok2 controller ingress resource
+    annotations: {}
+    # -- domain names for the zrok2 controller ingress resource
+    hosts: []
+    # -- ingress tls configurations for the zrok2 controller ingress resource
+    tls: []
+  ## Enable persistence using Persistent Volume Claims
+  ## Used for SQLite3 when postgresql.host is empty.
+  persistence:
+    # -- The mount path for the zrok2 controller database
+    mount_dir: /var/lib/zrok2
+    # -- annotations for the PVC
+    annotations: {}
+    # -- If defined, PVC must be created manually before volume will be bound
+    existingClaim: ""
+    # -- Storage class of PV to bind
+    storageClass: ""
+    # -- PVC volume name
+    VolumeName:
+    # -- PVC access mode
+    accessMode: ReadWriteOnce
+    # -- PVC size of zrok2 controller database
+    size: 2Gi
+  # -- append additional controller config
+  extraConfig: {}
+
+frontend:
+  # -- Number of frontend replicas (can scale independently)
+  replicaCount: 1
+  service:
+    # -- The service type to use for the zrok2 frontend
+    type: ClusterIP
+    # -- The port to advertise for the zrok2 frontend service
+    advertisedPort: 80
+    # -- The port to expose on the zrok2 frontend container
+    containerPort: 8080
+  ingress:
+    # -- enable the frontend's ingress resource
+    enabled: false
+    # -- URI scheme to advertise for the frontend's ingress resource
+    scheme: https
+    # -- The ingress class to use for the zrok2 frontend
+    className: ""
+    # -- The annotations to use for the frontend's ingress resource
+    annotations: {}
+    # -- wildcard hostnames for the frontend's ingress resource
+    hosts: []
+    # -- The TLS configuration for the frontend's ingress resource
+    tls: []
+  # -- a read-only mountpoint for the frontend's Ziti identity
+  homeDir: /var/lib/zrok2
+  # -- append additional frontend config
+  extraConfig: {}
+
+# External services — all optional, chart degrades gracefully.
+# See degradation matrix in the README for behavior when values are empty.
+
+# -- PostgreSQL connection settings (empty host = SQLite3 fallback with PVC)
+postgresql:
+  # -- PostgreSQL hostname (empty = use SQLite3 with PVC instead)
+  host: ""
+  # -- PostgreSQL port
+  port: 5432
+  # -- database name
+  database: zrok2
+  # -- database username
+  username: zrok2
+  # -- K8s Secret with key "password" (overrides inline password)
+  existingSecret: ""
+
+# -- RabbitMQ connection settings. Required for named public shares (AMQP-backed
+# dynamic frontend) and metrics pipeline. The Ziti controller must also be
+# configured to publish fabric.usage events to AMQP (see additionalConfigs.events
+# in the ziti-controller chart). Empty url = no named shares, no metrics.
+rabbitmq:
+  # -- AMQP URL (empty = named shares and metrics disabled)
+  url: ""
+  # -- K8s Secret with key "url" (overrides .url)
+  existingSecret: ""
+
+# -- InfluxDB connection settings (only used when rabbitmq.url is set)
+influxdb:
+  # -- InfluxDB URL (empty = no metrics storage)
+  url: ""
+  # -- InfluxDB organization
+  org: zrok2
+  # -- InfluxDB bucket
+  bucket: zrok2
+  # -- K8s Secret with key "token" (overrides inline token)
+  existingSecret: ""
+
+ziti:
+  # -- The Ziti Management API host
+  advertisedHost: ziti-controller.ziti.svc.cluster.local
+  # -- The Ziti Management API port
+  advertisedPort: "1280"
+  # -- Ziti admin login name
+  username: admin
+  # -- Ziti admin login password
+  password: ""
+  # -- name of the configmap containing the Ziti CA certificate trust bundle
+  ca_cert_configmap: ziti-controller-ctrl-plane-cas
+  # -- mountpoint of the Ziti CA certificate trust bundle
+  ca_cert_dir: /etc/ziti
+  # -- key name of trust bundle in configmap and filename to project into mountpoint
+  ca_cert_file: ctrl-plane-cas.crt
+
+# -- The DNS zone with a wildcard * A record to use for the zrok2 public frontend
+dnsZone: "zrok.example.com"
+
+# -- default resource requests/limits for controller and frontend
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+test:
+  # -- run a connectivity test to verify the zrok2 controller is responding
+  enabled: false
+  # -- retry until first success unless backoffLimit is reached
+  backoffLimit: 3

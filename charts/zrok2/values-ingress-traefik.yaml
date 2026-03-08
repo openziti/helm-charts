@@ -1,0 +1,22 @@
+
+# minimal input values for traefik ingress; to enable tls, add cert manager issuer annotation and tls.secretName to each ingress dict
+
+controller:
+  ingress:
+    enabled: true
+    scheme: http
+    className: traefik
+    # annotations:
+    #   cert-manager.io/cluster-issuer: cloudflare-dns-issuer-prod
+    # tls:
+    #   secretName: zrok2-api-tls
+
+frontend:
+  ingress:
+    enabled: true
+    scheme: http
+    className: traefik
+    # annotations:
+    #   cert-manager.io/cluster-issuer: cloudflare-dns-issuer-prod
+    # tls:
+    #   secretName: zrok2-wildcard-tls

@@ -1,0 +1,111 @@
+# Example values for Traefik Gateway API (gateway.networking.k8s.io/v1)
+#
+# Prerequisites:
+#   1. Traefik with Gateway API support enabled
+#   2. A shared Gateway resource (user-managed, not chart-managed)
+#   3. cert-manager for TLS (wildcard certs require DNS01 challenge)
+#
+# This file configures HTTPRoutes for the controller and frontend.
+# The Gateway resource itself is NOT managed by this chart — create it
+# separately and reference it here.
+#
+# TLS with cert-manager + Gateway API:
+#   cert-manager integrates with Gateway API via Certificate resources
+#   or the gateway.networking.k8s.io/v1alpha2 TLSPolicy CRD.  For
+#   wildcard certs (required by the frontend), you MUST use a DNS01
+#   solver — HTTP01 cannot issue wildcards.
+#
+#   Example ClusterIssuer (Cloudflare DNS01):
+#     apiVersion: cert-manager.io/v1
+#     kind: ClusterIssuer
+#     metadata:
+#       name: letsencrypt-prod
+#     spec:
+#       acme:
+#         server: https://acme-v02.api.letsencrypt.org/directory
+#         email: you@example.com
+#         privateKeySecretRef:
+#           name: letsencrypt-prod-account-key
+#         solvers:
+#           - dns01:
+#               cloudflare:
+#                 apiTokenSecretRef:
+#                   name: cloudflare-api-token
+#                   key: api-token
+#
+#   Example Certificate for wildcard:
+#     apiVersion: cert-manager.io/v1
+#     kind: Certificate
+#     metadata:
+#       name: zrok2-wildcard-tls
+#       namespace: zrok2
+#     spec:
+#       secretName: zrok2-wildcard-tls
+#       issuerRef:
+#         name: letsencrypt-prod
+#         kind: ClusterIssuer
+#       dnsNames:
+#         - "*.zrok.example.com"
+#         - "zrok2.zrok.example.com"
+#
+# Adapting for other ingress controllers (nginx, Envoy Gateway, etc.):
+#   Replace the gatewayClassName and parentRefs.name to match your
+#   Gateway resource.  The HTTPRoute spec is controller-agnostic.
+
+# Controller ingress is disabled — use Gateway API HTTPRoute instead.
+# Set controller.ingress.enabled=false (the default) and configure
+# your HTTPRoute separately:
+#
+#   apiVersion: gateway.networking.k8s.io/v1
+#   kind: HTTPRoute
+#   metadata:
+#     name: zrok2-controller
+#     namespace: zrok2
+#   spec:
+#     parentRefs:
+#       - name: traefik-gateway        # your shared Gateway resource
+#         namespace: traefik-system
+#     hostnames:
+#       - "zrok2.zrok.example.com"     # replace with your dnsZone
+#     rules:
+#       - matches:
+#           - path:
+#               type: PathPrefix
+#               value: /
+#         backendRefs:
+#           - name: zrok2
+#             port: 80
+
+# Frontend ingress is disabled — use Gateway API HTTPRoute instead:
+#
+#   apiVersion: gateway.networking.k8s.io/v1
+#   kind: HTTPRoute
+#   metadata:
+#     name: zrok2-frontend
+#     namespace: zrok2
+#   spec:
+#     parentRefs:
+#       - name: traefik-gateway        # your shared Gateway resource
+#         namespace: traefik-system
+#     hostnames:
+#       - "*.zrok.example.com"         # wildcard for public shares
+#     rules:
+#       - matches:
+#           - path:
+#               type: PathPrefix
+#               value: /
+#         backendRefs:
+#           - name: zrok2-frontend
+#             port: 80
+
+# The chart's built-in Ingress resources are disabled when using
+# Gateway API.  Apply the HTTPRoute manifests above separately.
+controller:
+  ingress:
+    enabled: false
+    scheme: https
+
+frontend:
+  ingress:
+    enabled: false
+    scheme: https
