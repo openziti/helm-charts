@@ -13,8 +13,8 @@ CHARTS_DIR="$SCRIPT_DIR/charts"
 
 echo "Using helm-docs version: $(helm-docs --version)"
 
-# Find all ziti-* charts
-for chart in "$CHARTS_DIR"/ziti-* "$CHARTS_DIR"/zrok; do
+# Find all ziti-*, zrok, and zrok2 charts
+for chart in "$CHARTS_DIR"/ziti-* "$CHARTS_DIR"/zrok "$CHARTS_DIR"/zrok2; do
     if [ -d "$chart" ]; then
         chart_name=$(basename "$chart")
         echo "Processing $chart_name..."
@@ -36,4 +36,4 @@ for chart in "$CHARTS_DIR"/ziti-* "$CHARTS_DIR"/zrok; do
     fi
 done
 
-echo "All ziti-* charts processed."
+echo "All charts processed."

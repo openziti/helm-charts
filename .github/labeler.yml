@@ -21,3 +21,7 @@
 "notes:zrok":
   - changed-files:
       - any-glob-to-any-file: charts/zrok/**
+
+"notes:zrok2":
+  - changed-files:
+      - any-glob-to-any-file: charts/zrok2/**

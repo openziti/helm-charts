@@ -1,0 +1,40 @@
+{{ if .Values.test.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: zrok2-test-job
+  namespace: {{ .Release.Namespace }}
+spec:
+  backoffLimit: {{ .Values.test.backoffLimit }}
+  template:
+    spec:
+      containers:
+      - name: zrok2
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        command: ["/bin/bash", "-c", "/zrok2/test.bash"]
+        env:
+        - name: ZROK2_API_ENDPOINT
+          value: http://{{ include "zrok2.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.controller.service.advertisedPort }}
+        - name: HOME
+          value: /tmp
+        - name: ZROK2_ENABLE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "zrok2.fullname" . }}-ziggy-account-token
+              key: token
+        volumeMounts:
+        - name: test-script
+          mountPath: /zrok2/test.bash
+          subPath: test.bash
+          readOnly: true
+      volumes:
+      - name: test-script
+        configMap:
+          name: {{ include "zrok2.fullname" . }}-config
+          defaultMode: 0555
+          items:
+            - key: test.bash
+              path: test.bash
+
+      restartPolicy: Never
+{{- end }}
