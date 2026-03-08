@@ -34,6 +34,7 @@ __snapshot__
 
 # AI configuration - link your agent's config file to GUIDELINES.md to opt-in
 /CLAUDE.md
+/.claude/worktrees/
 /AGENT.md
 /GEMINI.md
 /OPENAI.md

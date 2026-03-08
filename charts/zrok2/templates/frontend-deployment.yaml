@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "zrok2.fullname" . }}-frontend
+  labels:
+    {{- include "zrok2.labelsFrontend" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "zrok2.selectorLabelsFrontend" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "zrok2.selectorLabelsFrontend" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "zrok2.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: {{ .Chart.Name }}-bootstrap-frontend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bootstrap-frontend.bash"]
+          env:
+            - name: ZROK2_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zrok2.fullname" . }}-admin-secret
+                  key: admin-token
+            - name: ZROK2_API_ENDPOINT
+              value: http://{{ include "zrok2.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.controller.service.advertisedPort }}
+            - name: ZITI_MGMT_API
+              value: {{ .Values.ziti.advertisedHost }}:{{ .Values.ziti.advertisedPort }}
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "zrok2.fullname" . }}-ziti-mgmt-secret
+                  key: admin-username
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "zrok2.fullname" . }}-ziti-mgmt-secret
+                  key: admin-password
+            - name: HOME
+              value: /tmp
+          volumeMounts:
+            - name: frontend-config
+              mountPath: /etc/zrok2
+              subPath: frontend.yaml
+              readOnly: true
+            - name: bootstrap-frontend
+              mountPath: /usr/local/bin/bootstrap-frontend.bash
+              readOnly: true
+              subPath: bootstrap-frontend.bash
+            - name: ziti-ctrl-plane-cas
+              mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
+              subPath: {{ .Values.ziti.ca_cert_file }}
+              readOnly: true
+            - name: frontend-config
+              mountPath: /usr/local/bin/zitiLogin
+              subPath: zitiLogin
+      containers:
+        - name: {{ .Chart.Name }}-frontend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["access", "public", "/etc/zrok2/frontend.yaml"]
+          env:
+            - name: ZROK2_API_ENDPOINT
+              value: http://{{ include "zrok2.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.controller.service.advertisedPort }}
+            - name: HOME
+              value: {{ .Values.frontend.homeDir }}
+          volumeMounts:
+            - name: frontend-config
+              mountPath: /etc/zrok2
+              readOnly: true
+            - name: frontend-identity
+              mountPath: {{ .Values.frontend.homeDir }}/.zrok/identities
+              readOnly: true
+            - name: persistence
+              mountPath: /var/lib/zrok2
+              readOnly: false
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.service.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: frontend-config
+          configMap:
+            name: {{ include "zrok2.fullname" . }}-frontend-config
+            defaultMode: 0444
+            items:
+              - key: frontend.yaml
+                path: frontend.yaml
+              - key: zitiLogin
+                path: zitiLogin
+                mode: 0555
+        - name: bootstrap-frontend
+          configMap:
+            name: {{ include "zrok2.fullname" . }}-frontend-config
+            defaultMode: 0555
+            items:
+              - key: bootstrap-frontend.bash
+                path: bootstrap-frontend.bash
+        - name: ziti-ctrl-plane-cas
+          configMap:
+            name: {{ .Values.ziti.caSecretName }}
+            defaultMode: 0444
+            items:
+              - key: {{ .Values.ziti.ca_cert_file }}
+                path: {{ .Values.ziti.ca_cert_file }}
+        - name: frontend-identity
+          secret:
+            secretName: {{ include "zrok2.fullname" . }}-frontend-identity
+            defaultMode: 0444
+            items:
+              - key: public.json
+                path: public.json
+        {{- if .Values.controller.persistence.enabled }}
+        - name: persistence
+          persistentVolumeClaim:
+            claimName: {{ include "zrok2.fullname" . }}-persistence
+        {{- end }}
