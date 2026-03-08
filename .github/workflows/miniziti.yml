@@ -8,7 +8,7 @@ on:
       - charts/ziti-controller/**
       - charts/ziti-router/**
       - charts/httpbin/**
-      - charts/zrok/**
+      - charts/zrok2/**
 
 # cancel older, redundant runs of same workflow on same branch
 concurrency:
@@ -105,7 +105,7 @@ jobs:
           MINIZITI_VERSION: ${{ vars.MINIZITI_VERSION }}
         run: >
           bash run-miniziti.bash
-          testvalues baseline proxy-test zrok upgrade verify proxy-test zrok-test
+          testvalues baseline proxy-test zrok2 upgrade verify proxy-test zrok2-test
 
       - name: Run upgrade-only pipeline
         if: steps.mode.outputs.run_baseline != 'true'
@@ -114,7 +114,7 @@ jobs:
           MINIZITI_VERSION: ${{ vars.MINIZITI_VERSION }}
         run: >
           bash run-miniziti.bash
-          testvalues upgrade verify proxy-test zrok-test
+          testvalues upgrade verify proxy-test zrok2-test
 
       - name: Debug
         if: always()
