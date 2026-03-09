@@ -269,6 +269,7 @@ stage_zrok2() {
         --namespace zrok2 --create-namespace \
         --values "${REPO_ROOT}/charts/zrok2/values-ingress-traefik.yaml" \
         --set "ziti.advertisedHost=${ZITI_NAMESPACE}-controller.${ingress_zone}" \
+        --set "ziti.advertisedPort=443" \
         --set "ziti.password=${ziti_pwd}" \
         --set "ziti.caSecretName=ziti-controller1-ctrl-plane-cas" \
         --set "dnsZone=${ingress_zone}" \
@@ -509,6 +510,7 @@ stage_zrok2_test() {
         --wait --timeout "${MINIZITI_TIMEOUT_SECS}s" \
         --values "${REPO_ROOT}/charts/zrok2/values-ingress-traefik.yaml" \
         --set "ziti.advertisedHost=${ZITI_NAMESPACE}-controller.${ingress_zone}" \
+        --set "ziti.advertisedPort=443" \
         --set "ziti.password=${ziti_pwd}" \
         --set "ziti.caSecretName=ziti-controller1-ctrl-plane-cas" \
         --set "dnsZone=${ingress_zone}" \
