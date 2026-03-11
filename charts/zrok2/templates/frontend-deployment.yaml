@@ -87,7 +87,7 @@ spec:
               mountPath: /etc/zrok2
               readOnly: true
             - name: frontend-identity
-              mountPath: {{ .Values.frontend.homeDir }}/.zrok/identities
+              mountPath: {{ .Values.frontend.homeDir }}/.zrok2/identities
               readOnly: true
             - name: persistence
               mountPath: /var/lib/zrok2
@@ -100,10 +100,12 @@ spec:
             httpGet:
               path: /
               port: http
+            initialDelaySeconds: 10
           readinessProbe:
             httpGet:
               path: /
               port: http
+            initialDelaySeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
