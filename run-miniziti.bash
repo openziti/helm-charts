@@ -38,6 +38,8 @@
 #                           installed binary — useful for local dev to skip the copy step
 #                           (default: empty → uses "command miniziti" from PATH)
 #   MINIZITI_VERSION        if set, pins image.tag in testvalues (controller + router)
+#   ZROK2_IMAGE_REPOSITORY  if set, overrides zrok2 image.repository in stage_zrok2
+#   ZROK2_IMAGE_TAG         if set, overrides zrok2 image.tag in stage_zrok2
 #   KUBERNETES_VERSION      if set, passed as --kubernetes-version to minikube start
 #   SKIP_BASELINE           set 1 to run the upgrade-only pipeline locally
 #   ALWAYS_DEBUG            set 1 to run the debug stage even on success
@@ -54,6 +56,8 @@ MINIZITI_BASH="${MINIZITI_BASH:-}"
 SKIP_BASELINE="${SKIP_BASELINE:-0}"
 ALWAYS_DEBUG="${ALWAYS_DEBUG:-0}"
 KUBERNETES_VERSION="${KUBERNETES_VERSION:-}"
+ZROK2_IMAGE_REPOSITORY="${ZROK2_IMAGE_REPOSITORY:-}"
+ZROK2_IMAGE_TAG="${ZROK2_IMAGE_TAG:-}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # TESTVALUES_DIR can be overridden via environment for parallel/isolated runs
@@ -261,8 +265,18 @@ stage_proxy_test() {
 stage_zrok2() {
     log_stage "zrok2 (local chart, test.enabled=false)"
     local ingress_zone ziti_pwd
+    local -a image_overrides=()
     ingress_zone="$(get_ingress_zone)"
     ziti_pwd="$(get_ziti_pwd)"
+
+    if [[ -n "${ZROK2_IMAGE_REPOSITORY}" ]]; then
+        image_overrides+=(--set-string "image.repository=${ZROK2_IMAGE_REPOSITORY}")
+        log_info "overriding zrok2 image.repository=${ZROK2_IMAGE_REPOSITORY}"
+    fi
+    if [[ -n "${ZROK2_IMAGE_TAG}" ]]; then
+        image_overrides+=(--set-string "image.tag=${ZROK2_IMAGE_TAG}")
+        log_info "overriding zrok2 image.tag=${ZROK2_IMAGE_TAG}"
+    fi
 
     helm upgrade --install \
         --kube-context "${ZITI_NAMESPACE}" \
@@ -275,6 +289,7 @@ stage_zrok2() {
         --set "dnsZone=${ingress_zone}" \
         --set "controller.ingress.hosts[0]=zrok2.${ingress_zone}" \
         --set "test.enabled=false" \
+        "${image_overrides[@]}" \
         zrok2 "${REPO_ROOT}/charts/zrok2"
 
     log_ok "zrok2 installed (test.enabled=false)"
@@ -516,6 +531,8 @@ stage_zrok2_test() {
         --set "dnsZone=${ingress_zone}" \
         --set "controller.ingress.hosts[0]=zrok2.${ingress_zone}" \
         --set "test.enabled=true" \
+        --set "image.repository=kbinghamnetfoundry/zrok2" \
+        --set "image.tag=2.0.0-ec31ad36" \
         zrok2 "${REPO_ROOT}/charts/zrok2"
 
     log_info "waiting for zrok2-test-job (240s)..."

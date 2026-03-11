@@ -4,7 +4,7 @@
 
 
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.0](https://img.shields.io/badge/AppVersion-2.0.0-informational?style=flat-square) 
+![Version: 1.0.0-pre1](https://img.shields.io/badge/Version-1.0.0--pre1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.0-rc7](https://img.shields.io/badge/AppVersion-2.0.0--rc7-informational?style=flat-square) 
 
 Run the zrok2 controller and zrok2 frontend components as a K8s deployment
 
@@ -183,8 +183,8 @@ zrok2   traefik  zrok2.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
 | frontend.service.type | string | `"ClusterIP"` | The service type to use for the zrok2 frontend |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"openziti/zrok2"` |  |
-| image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
+| image.repository | string | `"kbinghamnetfoundry/zrok2"` |  |
+| image.tag | string | `"2.0.0-ec31ad36"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` |  |
 | influxdb | object | `{"bucket":"zrok2","existingSecret":"","org":"zrok2","url":""}` | InfluxDB connection settings (only used when rabbitmq.url is set) |
 | influxdb.bucket | string | `"zrok2"` | InfluxDB bucket |

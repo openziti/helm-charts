@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: openziti/zrok2
+  repository: kbinghamnetfoundry/zrok2
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "2.0.0-ec31ad36"
 
 imagePullSecrets: []
 nameOverride: ""
