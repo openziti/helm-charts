@@ -10,6 +10,6 @@ type: application
 version: 1.0.0-pre1
 
 # This is the version number of the application being deployed.
-appVersion: 2.0.0-rc7
+appVersion: 2.0.0-rc8
 
 dependencies: []

@@ -516,8 +516,18 @@ stage_verify() {
 stage_zrok2_test() {
     log_stage "zrok2-test (local chart, test.enabled=true)"
     local ingress_zone ziti_pwd
+    local -a image_overrides=()
     ingress_zone="$(get_ingress_zone)"
     ziti_pwd="$(get_ziti_pwd)"
+
+    if [[ -n "${ZROK2_IMAGE_REPOSITORY}" ]]; then
+        image_overrides+=(--set-string "image.repository=${ZROK2_IMAGE_REPOSITORY}")
+        log_info "overriding zrok2 image.repository=${ZROK2_IMAGE_REPOSITORY}"
+    fi
+    if [[ -n "${ZROK2_IMAGE_TAG}" ]]; then
+        image_overrides+=(--set-string "image.tag=${ZROK2_IMAGE_TAG}")
+        log_info "overriding zrok2 image.tag=${ZROK2_IMAGE_TAG}"
+    fi
 
     helm upgrade --install \
         --kube-context "${ZITI_NAMESPACE}" \
@@ -531,8 +541,7 @@ stage_zrok2_test() {
         --set "dnsZone=${ingress_zone}" \
         --set "controller.ingress.hosts[0]=zrok2.${ingress_zone}" \
         --set "test.enabled=true" \
-        --set "image.repository=kbinghamnetfoundry/zrok2" \
-        --set "image.tag=2.0.0-ec31ad36" \
+        "${image_overrides[@]}" \
         zrok2 "${REPO_ROOT}/charts/zrok2"
 
     log_info "waiting for zrok2-test-job (240s)..."
