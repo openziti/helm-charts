@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "zrok2.fullname" . }}
+  labels:
+    {{- include "zrok2.labelsController" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "zrok2.selectorLabelsController" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "zrok2.selectorLabelsController" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "zrok2.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: {{ .Chart.Name }}-bootstrap
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bootstrap-ziti.bash"]
+          env:
+            - name: HOME
+              value: {{ .Values.controller.persistence.mount_dir }}
+          volumeMounts:
+            - name: zrok2-controller-config
+              mountPath: /etc/zrok2
+              readOnly: true
+            - name: bootstrap-ziti
+              mountPath: /usr/local/bin/bootstrap-ziti.bash
+              subPath: bootstrap-ziti.bash
+              readOnly: true
+            - name: persistence
+              mountPath: {{ .Values.controller.persistence.mount_dir }}
+              readOnly: false
+            - name: ziti-ctrl-plane-cas
+              mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
+              subPath: {{ .Values.ziti.ca_cert_file }}
+              readOnly: true
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["controller", "/etc/zrok2/ctrl.yaml"]
+          env:
+            - name: ZROK2_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zrok2.fullname" . }}-admin-secret
+                  key: admin-token
+            - name: ZROK2_API_ENDPOINT
+              value: http://127.0.0.1:{{ .Values.controller.service.containerPort }}
+            - name: HOME
+              value: {{ .Values.controller.persistence.mount_dir }}
+          volumeMounts:
+            - name: zrok2-controller-config
+              mountPath: /etc/zrok2
+              readOnly: true
+            - name: persistence
+              mountPath: {{ .Values.controller.persistence.mount_dir }}
+              readOnly: false
+          ports:
+            - name: http
+              containerPort: {{ .Values.controller.service.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: zrok2-controller-config
+          configMap:
+            name: {{ include "zrok2.fullname" . }}-config
+            defaultMode: 0444
+            items:
+              - key: ctrl.yaml
+                path: ctrl.yaml
+        - name: bootstrap-ziti
+          configMap:
+            name: {{ include "zrok2.fullname" . }}-config
+            defaultMode: 0555
+            items:
+              - key: bootstrap-ziti.bash
+                path: bootstrap-ziti.bash
+        - name: ziti-ctrl-plane-cas
+          configMap:
+            name: {{ .Values.ziti.caSecretName }}
+            defaultMode: 0444
+            items:
+              - key: {{ .Values.ziti.ca_cert_file }}
+                path: {{ .Values.ziti.ca_cert_file }}
+        {{- if .Values.controller.persistence.enabled }}
+        - name: persistence
+          persistentVolumeClaim:
+            claimName: {{ include "zrok2.fullname" . }}-persistence
+        {{- end }}

@@ -6,13 +6,14 @@
 # Also runnable standalone for local reproduction.
 #
 # Workflow usage:
-#   bash run-miniziti.bash testvalues baseline proxy-test zrok upgrade verify proxy-test zrok-test
-#   bash run-miniziti.bash testvalues upgrade verify proxy-test zrok-test  # SKIP_BASELINE path
+#   bash run-miniziti.bash testvalues baseline proxy-test zrok2 upgrade verify proxy-test zrok2-test
+#   bash run-miniziti.bash testvalues upgrade verify proxy-test zrok2-test  # SKIP_BASELINE path
 #   bash run-miniziti.bash debug                                           # always / on failure
 #
 # Local usage:
 #   MINIZITI_REF=main ALWAYS_DEBUG=1 bash -x ./run-miniziti.bash
-#   SKIP_BASELINE=1 ./run-miniziti.bash          # upgrade-only (skips baseline + zrok stages)
+#   SKIP_BASELINE=1 ./run-miniziti.bash          # upgrade-only (skips baseline + zrok2 stages)
+#   ./run-miniziti.bash --no-destroy             # keep cluster after test
 #   ./run-miniziti.bash clean minikube prereqs testvalues upgrade debug
 #
 # Stages:
@@ -22,12 +23,12 @@
 #   testvalues   write helm override YAML files to ./testvalues/
 #   baseline     miniziti start with latest stable release charts
 #   proxy-test   exec ziti ops verify traffic inside the controller container
-#   zrok         install zrok from latest release (test.enabled=false)
+#   zrok2        install zrok2 from local chart (test.enabled=false)
 #   upgrade        standalone → clustered migration (cluster-migrate + cluster-init)
 #   verify         curl-check the ZAC console is accessible
 #   restart-ctrl   rollout restart ziti-controller + wait for ready
 #   restart-router rollout restart ziti-router + wait for ready
-#   zrok-test      upgrade zrok (test.enabled=true) and wait for the test job
+#   zrok2-test     upgrade zrok2 (test.enabled=true) and wait for the test job
 #   debug          dump pod/log/service/network state (best-effort)
 #
 # Environment variables:
@@ -38,6 +39,8 @@
 #                           installed binary — useful for local dev to skip the copy step
 #                           (default: empty → uses "command miniziti" from PATH)
 #   MINIZITI_VERSION        if set, pins image.tag in testvalues (controller + router)
+#   ZROK2_IMAGE_REPOSITORY  if set, overrides zrok2 image.repository in stage_zrok2
+#   ZROK2_IMAGE_TAG         if set, overrides zrok2 image.tag in stage_zrok2
 #   KUBERNETES_VERSION      if set, passed as --kubernetes-version to minikube start
 #   SKIP_BASELINE           set 1 to run the upgrade-only pipeline locally
 #   ALWAYS_DEBUG            set 1 to run the debug stage even on success
@@ -53,7 +56,10 @@ MINIZITI_REF="${MINIZITI_REF:-main}"
 MINIZITI_BASH="${MINIZITI_BASH:-}"
 SKIP_BASELINE="${SKIP_BASELINE:-0}"
 ALWAYS_DEBUG="${ALWAYS_DEBUG:-0}"
+NO_DESTROY="${NO_DESTROY:-0}"
 KUBERNETES_VERSION="${KUBERNETES_VERSION:-}"
+ZROK2_IMAGE_REPOSITORY="${ZROK2_IMAGE_REPOSITORY:-}"
+ZROK2_IMAGE_TAG="${ZROK2_IMAGE_TAG:-}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # TESTVALUES_DIR can be overridden via environment for parallel/isolated runs
@@ -257,26 +263,38 @@ stage_proxy_test() {
     return 1
 }
 
-# ── stage: zrok ───────────────────────────────────────────────────────────────
-stage_zrok() {
-    log_stage "zrok (latest release, test.enabled=false)"
+# ── stage: zrok2 ──────────────────────────────────────────────────────────────
+stage_zrok2() {
+    log_stage "zrok2 (local chart, test.enabled=false)"
     local ingress_zone ziti_pwd
+    local -a image_overrides=()
     ingress_zone="$(get_ingress_zone)"
     ziti_pwd="$(get_ziti_pwd)"
 
+    if [[ -n "${ZROK2_IMAGE_REPOSITORY}" ]]; then
+        image_overrides+=(--set-string "image.repository=${ZROK2_IMAGE_REPOSITORY}")
+        log_info "overriding zrok2 image.repository=${ZROK2_IMAGE_REPOSITORY}"
+    fi
+    if [[ -n "${ZROK2_IMAGE_TAG}" ]]; then
+        image_overrides+=(--set-string "image.tag=${ZROK2_IMAGE_TAG}")
+        log_info "overriding zrok2 image.tag=${ZROK2_IMAGE_TAG}"
+    fi
+
     helm upgrade --install \
         --kube-context "${ZITI_NAMESPACE}" \
-        --namespace zrok --create-namespace \
-        --values "${REPO_ROOT}/charts/zrok/values-ingress-traefik.yaml" \
+        --namespace zrok2 --create-namespace \
+        --values "${REPO_ROOT}/charts/zrok2/values-ingress-traefik.yaml" \
         --set "ziti.advertisedHost=${ZITI_NAMESPACE}-controller.${ingress_zone}" \
+        --set "ziti.advertisedPort=443" \
         --set "ziti.password=${ziti_pwd}" \
-        --set "ziti.ca_cert_configmap=ziti-controller1-ctrl-plane-cas" \
+        --set "ziti.caSecretName=ziti-controller1-ctrl-plane-cas" \
         --set "dnsZone=${ingress_zone}" \
-        --set "controller.ingress.hosts[0]=zrok.${ingress_zone}" \
+        --set "controller.ingress.hosts[0]=zrok2.${ingress_zone}" \
         --set "test.enabled=false" \
-        zrok openziti/zrok
+        "${image_overrides[@]}" \
+        zrok2 "${REPO_ROOT}/charts/zrok2"
 
-    log_ok "zrok installed (test.enabled=false)"
+    log_ok "zrok2 installed (test.enabled=false)"
 }
 
 # ── stage: upgrade ────────────────────────────────────────────────────────────
@@ -496,32 +514,44 @@ stage_verify() {
     exit 1
 }
 
-# ── stage: zrok-test ──────────────────────────────────────────────────────────
-stage_zrok_test() {
-    log_stage "zrok-test (branch chart, test.enabled=true)"
+# ── stage: zrok2-test ─────────────────────────────────────────────────────────
+stage_zrok2_test() {
+    log_stage "zrok2-test (local chart, test.enabled=true)"
     local ingress_zone ziti_pwd
+    local -a image_overrides=()
     ingress_zone="$(get_ingress_zone)"
     ziti_pwd="$(get_ziti_pwd)"
 
+    if [[ -n "${ZROK2_IMAGE_REPOSITORY}" ]]; then
+        image_overrides+=(--set-string "image.repository=${ZROK2_IMAGE_REPOSITORY}")
+        log_info "overriding zrok2 image.repository=${ZROK2_IMAGE_REPOSITORY}"
+    fi
+    if [[ -n "${ZROK2_IMAGE_TAG}" ]]; then
+        image_overrides+=(--set-string "image.tag=${ZROK2_IMAGE_TAG}")
+        log_info "overriding zrok2 image.tag=${ZROK2_IMAGE_TAG}"
+    fi
+
     helm upgrade --install \
         --kube-context "${ZITI_NAMESPACE}" \
-        --namespace zrok --create-namespace \
+        --namespace zrok2 --create-namespace \
         --wait --timeout "${MINIZITI_TIMEOUT_SECS}s" \
-        --values "${REPO_ROOT}/charts/zrok/values-ingress-traefik.yaml" \
+        --values "${REPO_ROOT}/charts/zrok2/values-ingress-traefik.yaml" \
         --set "ziti.advertisedHost=${ZITI_NAMESPACE}-controller.${ingress_zone}" \
+        --set "ziti.advertisedPort=443" \
         --set "ziti.password=${ziti_pwd}" \
-        --set "ziti.ca_cert_configmap=ziti-controller1-ctrl-plane-cas" \
+        --set "ziti.caSecretName=ziti-controller1-ctrl-plane-cas" \
         --set "dnsZone=${ingress_zone}" \
-        --set "controller.ingress.hosts[0]=zrok.${ingress_zone}" \
+        --set "controller.ingress.hosts[0]=zrok2.${ingress_zone}" \
         --set "test.enabled=true" \
-        zrok "${REPO_ROOT}/charts/zrok"
+        "${image_overrides[@]}" \
+        zrok2 "${REPO_ROOT}/charts/zrok2"
 
-    log_info "waiting for zrok-test-job (240s)..."
-    miniziti kubectl -n zrok wait \
+    log_info "waiting for zrok2-test-job (240s)..."
+    miniziti kubectl -n zrok2 wait \
         --for=condition=complete \
         --timeout=240s \
-        job/zrok-test-job
-    log_ok "zrok-test-job passed"
+        job/zrok2-test-job
+    log_ok "zrok2-test-job passed"
 }
 
 # ── stage: debug ──────────────────────────────────────────────────────────────
@@ -552,28 +582,28 @@ stage_debug() {
         --selector app.kubernetes.io/component=ziti-router \
         -n "${ZITI_NAMESPACE}" --tail=100
 
-    echo "--- zrok controller bootstrap logs ---"
+    echo "--- zrok2 controller bootstrap logs ---"
     miniziti kubectl logs \
-        --selector app.kubernetes.io/name=zrok-controller \
-        -n zrok -c zrok-bootstrap --tail=-1 || true
+        --selector app.kubernetes.io/name=zrok2-controller \
+        -n zrok2 -c zrok2-bootstrap --tail=-1 || true
 
-    echo "--- zrok controller logs ---"
+    echo "--- zrok2 controller logs ---"
     miniziti kubectl logs \
-        --selector app.kubernetes.io/name=zrok-controller \
-        -n zrok -c zrok --tail=-1 || true
+        --selector app.kubernetes.io/name=zrok2-controller \
+        -n zrok2 -c zrok2 --tail=-1 || true
 
-    echo "--- zrok frontend bootstrap logs ---"
+    echo "--- zrok2 frontend bootstrap logs ---"
     miniziti kubectl logs \
-        --selector app.kubernetes.io/name=zrok-frontend \
-        -n zrok -c zrok-bootstrap-frontend --tail=-1 || true
+        --selector app.kubernetes.io/name=zrok2-frontend \
+        -n zrok2 -c zrok2-bootstrap-frontend --tail=-1 || true
 
-    echo "--- zrok frontend logs ---"
+    echo "--- zrok2 frontend logs ---"
     miniziti kubectl logs \
-        --selector app.kubernetes.io/name=zrok-frontend \
-        -n zrok -c zrok-frontend --tail=-1 || true
+        --selector app.kubernetes.io/name=zrok2-frontend \
+        -n zrok2 -c zrok2-frontend --tail=-1 || true
 
-    echo "--- zrok-test-job logs ---"
-    miniziti kubectl -n zrok logs job/zrok-test-job || true
+    echo "--- zrok2-test-job logs ---"
+    miniziti kubectl -n zrok2 logs job/zrok2-test-job || true
 
     echo "--- httpbin logs (full) ---"
     miniziti kubectl logs \
@@ -601,12 +631,12 @@ run_stage() {
         testvalues)  stage_testvalues ;;
         baseline)    stage_baseline ;;
         proxy-test)  stage_proxy_test ;;
-        zrok)        stage_zrok ;;
+        zrok2)       stage_zrok2 ;;
         upgrade)     stage_upgrade ;;
         verify)         stage_verify ;;
         restart-ctrl)   stage_restart_ctrl ;;
         restart-router) stage_restart_router ;;
-        zrok-test)      stage_zrok_test ;;
+        zrok2-test)     stage_zrok2_test ;;
         debug)          stage_debug ;;
         *) printf 'ERROR: unknown stage "%s"\n' "$1" >&2; exit 1 ;;
     esac
@@ -614,10 +644,13 @@ run_stage() {
 
 usage() {
     cat <<'USAGE'
-Usage: run-miniziti.bash [STAGE ...]
+Usage: run-miniziti.bash [--no-destroy] [STAGE ...]
 
 Run the miniziti integration-test pipeline.  When no stages are given the full
 pipeline is executed (or the upgrade-only subset when SKIP_BASELINE=1).
+
+Options:
+  --no-destroy    skip final cleanup (keep cluster for post-mortem inspection)
 
 Stages:
   clean           (local) delete the minikube profile and miniziti state dir
@@ -626,12 +659,12 @@ Stages:
   testvalues      write helm override YAML files to ./testvalues/
   baseline        miniziti start with latest stable release charts
   proxy-test      verify traffic inside the controller container
-  zrok            install zrok from latest release (test.enabled=false)
+  zrok2           install zrok2 from local chart (test.enabled=false)
   upgrade         standalone → clustered migration
   verify          curl-check the ZAC console is accessible
   restart-ctrl    rollout restart ziti-controller + wait for ready
   restart-router  rollout restart ziti-router + wait for ready
-  zrok-test       upgrade zrok (test.enabled=true) and wait for test job
+  zrok2-test      upgrade zrok2 (test.enabled=true) and wait for test job
   debug           dump pod/log/service/network state (best-effort)
 
 Environment variables:
@@ -653,18 +686,25 @@ USAGE
 }
 
 main() {
-    if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-        usage
-        exit 0
-    fi
+    while [[ "${1:-}" == --* ]]; do
+        case "$1" in
+            --no-destroy) NO_DESTROY=1; shift ;;
+            --help|-h)    usage; exit 0 ;;
+            *) printf 'ERROR: unknown option "%s"\n' "$1" >&2; exit 1 ;;
+        esac
+    done
 
     local -a stages=("$@")
 
     if [[ ${#stages[@]} -eq 0 ]]; then
         if [[ "${SKIP_BASELINE}" == "1" ]]; then
-            stages=(clean minikube prereqs testvalues upgrade verify proxy-test zrok-test)
+            stages=(clean minikube prereqs testvalues upgrade verify proxy-test zrok2-test)
         else
-            stages=(clean minikube prereqs testvalues baseline proxy-test zrok upgrade verify proxy-test zrok-test)
+            stages=(clean minikube prereqs testvalues baseline proxy-test zrok2 upgrade verify proxy-test zrok2-test)
+        fi
+        # Tear down the cluster on success unless --no-destroy
+        if ! (( NO_DESTROY )); then
+            stages+=(clean)
         fi
     fi
 
