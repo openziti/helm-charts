@@ -13,6 +13,7 @@
 # Local usage:
 #   MINIZITI_REF=main ALWAYS_DEBUG=1 bash -x ./run-miniziti.bash
 #   SKIP_BASELINE=1 ./run-miniziti.bash          # upgrade-only (skips baseline + zrok2 stages)
+#   ./run-miniziti.bash --no-destroy             # keep cluster after test
 #   ./run-miniziti.bash clean minikube prereqs testvalues upgrade debug
 #
 # Stages:
@@ -55,6 +56,7 @@ MINIZITI_REF="${MINIZITI_REF:-main}"
 MINIZITI_BASH="${MINIZITI_BASH:-}"
 SKIP_BASELINE="${SKIP_BASELINE:-0}"
 ALWAYS_DEBUG="${ALWAYS_DEBUG:-0}"
+NO_DESTROY="${NO_DESTROY:-0}"
 KUBERNETES_VERSION="${KUBERNETES_VERSION:-}"
 ZROK2_IMAGE_REPOSITORY="${ZROK2_IMAGE_REPOSITORY:-}"
 ZROK2_IMAGE_TAG="${ZROK2_IMAGE_TAG:-}"
@@ -642,10 +644,13 @@ run_stage() {
 
 usage() {
     cat <<'USAGE'
-Usage: run-miniziti.bash [STAGE ...]
+Usage: run-miniziti.bash [--no-destroy] [STAGE ...]
 
 Run the miniziti integration-test pipeline.  When no stages are given the full
 pipeline is executed (or the upgrade-only subset when SKIP_BASELINE=1).
+
+Options:
+  --no-destroy    skip final cleanup (keep cluster for post-mortem inspection)
 
 Stages:
   clean           (local) delete the minikube profile and miniziti state dir
@@ -681,10 +686,13 @@ USAGE
 }
 
 main() {
-    if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-        usage
-        exit 0
-    fi
+    while [[ "${1:-}" == --* ]]; do
+        case "$1" in
+            --no-destroy) NO_DESTROY=1; shift ;;
+            --help|-h)    usage; exit 0 ;;
+            *) printf 'ERROR: unknown option "%s"\n' "$1" >&2; exit 1 ;;
+        esac
+    done
 
     local -a stages=("$@")
 
@@ -693,6 +701,10 @@ main() {
             stages=(clean minikube prereqs testvalues upgrade verify proxy-test zrok2-test)
         else
             stages=(clean minikube prereqs testvalues baseline proxy-test zrok2 upgrade verify proxy-test zrok2-test)
+        fi
+        # Tear down the cluster on success unless --no-destroy
+        if ! (( NO_DESTROY )); then
+            stages+=(clean)
         fi
     fi
 
