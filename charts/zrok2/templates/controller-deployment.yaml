@@ -129,5 +129,5 @@ spec:
         {{- if .Values.controller.persistence.enabled }}
         - name: persistence
           persistentVolumeClaim:
-            claimName: {{ include "zrok2.fullname" . }}-persistence
+            claimName: {{ default (printf "%s-persistence" (include "zrok2.fullname" .)) .Values.controller.persistence.existingClaim }}
         {{- end }}
