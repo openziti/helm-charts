@@ -152,8 +152,10 @@ spec:
             items:
               - key: public.json
                 path: public.json
-        {{- if .Values.controller.persistence.enabled }}
         - name: persistence
+          {{- if .Values.controller.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ include "zrok2.fullname" . }}-persistence
-        {{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
