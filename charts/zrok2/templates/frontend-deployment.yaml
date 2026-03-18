@@ -140,7 +140,7 @@ spec:
                 path: bootstrap-frontend.bash
         - name: ziti-ctrl-plane-cas
           configMap:
-            name: {{ .Values.ziti.caSecretName }}
+            name: {{ .Values.ziti.ca_cert_configmap }}
             defaultMode: 0444
             items:
               - key: {{ .Values.ziti.ca_cert_file }}

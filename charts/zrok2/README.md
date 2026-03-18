@@ -73,7 +73,7 @@ helm upgrade \
     --values https://raw.githubusercontent.com/openziti/helm-charts/main/charts/zrok2/values-ingress-traefik.yaml \
     --set "ziti.advertisedHost=${ZITI_MGMT_API_HOST}" \
     --set "ziti.password=${ZITI_PWD}" \
-    --set "ziti.caSecretName=ziti-controller1-ctrl-plane-cas" \
+    --set "ziti.ca_cert_configmap=ziti-controller1-ctrl-plane-cas" \
     --set "dnsZone=${ZROK2_DNS_ZONE}" \
     --set "controller.ingress.hosts[0]=zrok2.${ZROK2_DNS_ZONE}" \
     zrok2 openziti/zrok2
@@ -217,9 +217,9 @@ zrok2   traefik  zrok2.zrok.192.168.49.2.sslip.io   192.168.49.2   80      8m41s
 | tolerations | list | `[]` |  |
 | ziti.advertisedHost | string | `"ziti-controller.ziti.svc.cluster.local"` | The Ziti Management API host |
 | ziti.advertisedPort | string | `"1280"` | The Ziti Management API port |
-| ziti.caSecretName | string | `"ziti-controller-ctrl-plane-cas"` | name of the secret containing the Ziti CA certificate trust bundle |
+| ziti.ca_cert_configmap | string | `"ziti-controller-ctrl-plane-cas"` | name of the configmap containing the Ziti CA certificate trust bundle |
 | ziti.ca_cert_dir | string | `"/etc/ziti"` | mountpoint of the Ziti CA certificate trust bundle |
-| ziti.ca_cert_file | string | `"ctrl-plane-cas.crt"` | key name of trust bundle in secret and filename to project into mountpoint |
+| ziti.ca_cert_file | string | `"ctrl-plane-cas.crt"` | key name of trust bundle in configmap and filename to project into mountpoint |
 | ziti.password | string | `""` | Ziti admin login password |
 | ziti.username | string | `"admin"` | Ziti admin login name |
 

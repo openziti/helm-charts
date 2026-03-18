@@ -149,11 +149,11 @@ ziti:
   username: admin
   # -- Ziti admin login password
   password: ""
-  # -- name of the secret containing the Ziti CA certificate trust bundle
-  caSecretName: ziti-controller-ctrl-plane-cas
+  # -- name of the configmap containing the Ziti CA certificate trust bundle
+  ca_cert_configmap: ziti-controller-ctrl-plane-cas
   # -- mountpoint of the Ziti CA certificate trust bundle
   ca_cert_dir: /etc/ziti
-  # -- key name of trust bundle in secret and filename to project into mountpoint
+  # -- key name of trust bundle in configmap and filename to project into mountpoint
   ca_cert_file: ctrl-plane-cas.crt
 
 # -- The DNS zone with a wildcard * A record to use for the zrok2 public frontend
