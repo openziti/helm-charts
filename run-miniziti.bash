@@ -348,7 +348,7 @@ stage_zrok2() {
     # publishes events to the same RabbitMQ queue that the zrok2 controller's
     # amqpSource reads from.
     log_info "configuring Ziti controller AMQP events handler"
-    miniziti helm upgrade ziti-controller \
+    helm upgrade ziti-controller1 \
         --kube-context "${ZITI_NAMESPACE}" \
         --namespace "${ZITI_NAMESPACE}" \
         --reuse-values \
