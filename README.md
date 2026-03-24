@@ -77,6 +77,10 @@ The branch name must start with `release/` and should include the chart name and
 
 ## Contribute
 
+Before opening a PR, review the contributor guide in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+If you use an agent file (for example `CLAUDE.md`, `GEMINI.md`, or similar), include a reference to
+`CONTRIBUTING.md` so automated contributors follow this project's contribution and chart documentation workflow.
+
 1. Clone this repo.
 1. Optionally, to customize the auto-generated `README.md` file, add a helm-docs template named `README.md.gotmpl` in the chart directory.
 1. Wait for GitHub bot to generate Helm docs in your branch, or run `helm-docs --chart-search-root ./charts/my-new-chart/` locally

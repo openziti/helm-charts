@@ -2,9 +2,16 @@
 
 # zrok
 
+> **:exclamation: This Helm Chart is deprecated!**
+
 ![Version: 1.2.2](https://img.shields.io/badge/Version-1.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.11](https://img.shields.io/badge/AppVersion-1.1.11-informational?style=flat-square)
 
 Run the zrok controller and zrok frontend components as a K8s deployment
+
+> **DEPRECATED** -- This chart deploys zrok v1. For new installations,
+> use the [`zrok2` chart](../zrok2/) instead. See the
+> [Kubernetes self-hosting guide](https://docs.zrok.io/docs/self-hosting/kubernetes/)
+> for migration instructions.
 
 ## Overview
 

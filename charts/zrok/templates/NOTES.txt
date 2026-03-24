@@ -1,3 +1,12 @@
+************************************************************
+*  WARNING: This chart (zrok v1) is DEPRECATED.            *
+*                                                          *
+*  For new installations, use the "zrok2" chart instead:   *
+*    helm install zrok2 openziti/zrok2                      *
+*                                                          *
+*  See: https://docs.zrok.io/docs/self-hosting/kubernetes/ *
+************************************************************
+
 {{ if .Release.IsUpgrade }}
 Your release {{ .Release.Name }} was upgraded.
 {{ else if .Release.IsInstall }}

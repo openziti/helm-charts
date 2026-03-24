@@ -1,0 +1,95 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pre-delete-job
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  completions: 1
+  template:
+    metadata:
+      name: {{ .Release.Name }}
+      labels:
+        {{- include "zrok2.labelsFrontend" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "zrok2.serviceAccountName" . }}
+      containers:
+        - name: pre-install-job
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: ZITI_MGMT_API
+              value: {{ .Values.ziti.advertisedHost }}:{{ .Values.ziti.advertisedPort }}
+            - name: ZITI_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "zrok2.fullname" . }}-ziti-mgmt-secret
+                  key: admin-username
+            - name: ZITI_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ include "zrok2.fullname" . }}-ziti-mgmt-secret
+                  key: admin-password
+            - name: HOME
+              value: /tmp
+          volumeMounts:
+            - name: zrok2-frontend-config
+              mountPath: /usr/local/bin/unbootstrap.bash
+              subPath: unbootstrap.bash
+            - name: zrok2-controller-config
+              mountPath: /etc/zrok2
+              readOnly: true
+            - name: ziti-ctrl-plane-cas
+              mountPath: {{ .Values.ziti.ca_cert_dir }}/{{ .Values.ziti.ca_cert_file }}
+              subPath: {{ .Values.ziti.ca_cert_file }}
+              readOnly: true
+            - mountPath: /usr/local/bin/zitiLogin
+              name: zrok2-frontend-config
+              subPath: zitiLogin
+          command: ["unbootstrap.bash"]
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: zrok2-frontend-config
+          configMap:
+            name: {{ include "zrok2.fullname" . }}-frontend-config
+            items:
+              - key: unbootstrap.bash
+                path: unbootstrap.bash
+                mode: 0555
+              - key: zitiLogin
+                path: zitiLogin
+                mode: 0555
+        - name: zrok2-controller-config
+          configMap:
+            name: {{ include "zrok2.fullname" . }}-config
+            defaultMode: 0444
+            items:
+              - key: ctrl.yaml
+                path: ctrl.yaml
+        - name: ziti-ctrl-plane-cas
+          configMap:
+            name: {{ .Values.ziti.ca_cert_configmap }}
+            defaultMode: 0444
+            items:
+              - key: {{ .Values.ziti.ca_cert_file }}
+                path: {{ .Values.ziti.ca_cert_file }}
