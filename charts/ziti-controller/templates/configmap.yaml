@@ -171,7 +171,7 @@ data:
     {{- if .Values.ctrlPlane.service.enabled }}
     PORT_CTRL="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.containerPort "context" .) }}"
     HOST_CTRL="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) }}"
-    if ! echo | openssl s_client -connect "127.0.0.1:${PORT_CTRL}" -servername "${HOST_CTRL}" -alpn ziti-ctrl -ign_eof >/dev/null 2>&1; then
+    if ! echo | openssl s_client -connect "127.0.0.1:${PORT_CTRL}" -servername "${HOST_CTRL}" -alpn ziti-ctrl -cert {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.crt -key {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.key -ign_eof >/dev/null 2>&1; then
       echo "not ready: ctrl plane TLS handshake failed on 127.0.0.1:${PORT_CTRL}" >&2
       exit 1
     fi
