@@ -422,8 +422,8 @@ data:
           alt_server_certs:
           {{ range .Values.webBindingPki.altServerCerts }}
             {{- if eq .mode "localFile" }}
-            - cert: {{ .serverCert | quote }}
-              key: {{ .serverKey | quote }}
+            - server_cert: {{ .serverCert | quote }}
+              server_key: {{ .serverKey | quote }}
             {{- else if eq .mode "secret" }}
             {{- $matchingVolumeMountPath := include "ziti-controller.lookupVolumeMountPath" (dict "secretName" .secretName "additionalVolumes" $.Values.additionalVolumes) }}
             - cert: {{ printf "%s/tls.crt" $matchingVolumeMountPath | quote }}
