@@ -6,6 +6,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-controller.labels" . | nindent 4 }}
   {{- with .Values.ctrlPlane.service.labels }}
@@ -71,6 +72,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-client
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-controller.labels" . | nindent 4 }}
   {{- with .Values.clientApi.service.labels }}
@@ -133,6 +135,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-mgmt
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-controller.labels" . | nindent 4 }}
   {{- with .Values.managementApi.service.labels }}
@@ -195,6 +198,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-prometheus
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-controller.labels" . | nindent 4 }}
   {{- with .Values.prometheus.service.labels }}

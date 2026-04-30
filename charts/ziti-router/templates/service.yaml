@@ -4,6 +4,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-router.fullname" . }}-edge
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-router.labels" . | nindent 4 }}
   {{- with .Values.edge.service.labels }}
@@ -65,6 +66,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-router.fullname" . }}-transport
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-router.labels" . | nindent 4 }}
   {{- with .Values.linkListeners.transport.service.labels }}
@@ -128,6 +130,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-router.fullname" $ }}-{{ $listener.name }}
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-router.labels" $ | nindent 4 }}
   {{- with $listener.service.labels }}
@@ -194,6 +197,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-router.fullname" $root }}-listener-{{ .name }}
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-router.labels" $root | nindent 4 }}
   {{- with .service.labels }}
@@ -256,6 +260,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-router.fullname" . }}-proxy-default
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "ziti-router.labels" . | nindent 4 }}
     {{- with .Values.tunnel.proxyDefaultK8sService.labels }}
@@ -284,6 +289,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-router.fullname" . }}-proxy-default
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-router.labels" . | nindent 4 }}
   {{- with .Values.tunnel.proxyDefaultK8sService.labels }}
@@ -351,6 +357,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "ziti-router.fullname" $root }}-proxy-{{ .name }}
+  namespace: {{ .Release.Namespace }}
   labels:
   {{- include "ziti-router.labels" $root | nindent 4 }}
   {{- with .labels }}

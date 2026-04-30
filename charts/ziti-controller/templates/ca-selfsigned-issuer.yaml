@@ -5,6 +5,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
