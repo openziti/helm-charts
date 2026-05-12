@@ -66,19 +66,33 @@ jobs:
         run: |
           echo "kubernetes_version=$(curl -fsSL https://dl.k8s.io/release/stable-${{ matrix.kubernetes_minor }}.txt)" >> "$GITHUB_OUTPUT"
 
+      - name: Compute version-specific minikube start-args
+        id: mk_args
+        shell: bash
+        run: |
+          set -euo pipefail
+          # ExtendWebSocketsToKubelet was introduced directly at Beta in K8s
+          # 1.36 (no alpha stage). It causes the apiserver to proxy kubectl
+          # exec streams directly to the kubelet over TLS, which on minikube
+          # dials containerd's plain-HTTP CRI streaming endpoint and produces
+          # "http: server gave HTTP response to HTTPS client". Disable it
+          # only on 1.36+; passing the flag on older apiservers makes them
+          # reject startup with "unknown feature gate".
+          minor="${{ matrix.kubernetes_minor }}"
+          minor_num="${minor#*.}"
+          if [[ "${minor_num}" -ge 36 ]]; then
+            echo "extra=--extra-config=apiserver.feature-gates=ExtendWebSocketsToKubelet=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "extra=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Start minikube
         uses: medyagh/setup-minikube@v0.0.21
         with:
-          # Disable ExtendWebSocketsToKubelet (beta/on in K8s 1.36): apiserver
-          # otherwise proxies exec streams directly to the kubelet over TLS, which
-          # ends up dialing containerd's plain-HTTP CRI streaming endpoint on
-          # minikube (TLS bootstrap, enable_tls_streaming=false). See KEP-4006 /
-          # kubernetes#136256. Remove when minikube ships containerd with
-          # enable_tls_streaming=true by default.
           start-args: >-
             --profile ${{ env.ZITI_NAMESPACE }}
             --kubernetes-version=${{ steps.resolve_k8s.outputs.kubernetes_version }}
-            --extra-config=apiserver.feature-gates=ExtendWebSocketsToKubelet=false
+            ${{ steps.mk_args.outputs.extra }}
 
       - name: Install ziti CLI
         uses: supplypike/setup-bin@v5
