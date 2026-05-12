@@ -45,7 +45,7 @@ jobs:
     name: deploy to minikube ${{ matrix.kubernetes_minor }}
     runs-on: ubuntu-24.04
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.compute-k8s-matrix.outputs.matrix) }}
     env:
       ZITI_NAMESPACE: miniziti
