@@ -67,7 +67,7 @@ jobs:
           echo "kubernetes_version=$(curl -fsSL https://dl.k8s.io/release/stable-${{ matrix.kubernetes_minor }}.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Start minikube
-        uses: medyagh/setup-minikube@v0.0.20
+        uses: medyagh/setup-minikube@v0.0.21
         with:
           start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ steps.resolve_k8s.outputs.kubernetes_version }}
 
