@@ -69,7 +69,16 @@ jobs:
       - name: Start minikube
         uses: medyagh/setup-minikube@v0.0.21
         with:
-          start-args: --profile ${{ env.ZITI_NAMESPACE }} --kubernetes-version=${{ steps.resolve_k8s.outputs.kubernetes_version }}
+          # Disable ExtendWebSocketsToKubelet (beta/on in K8s 1.36): apiserver
+          # otherwise proxies exec streams directly to the kubelet over TLS, which
+          # ends up dialing containerd's plain-HTTP CRI streaming endpoint on
+          # minikube (TLS bootstrap, enable_tls_streaming=false). See KEP-4006 /
+          # kubernetes#136256. Remove when minikube ships containerd with
+          # enable_tls_streaming=true by default.
+          start-args: >-
+            --profile ${{ env.ZITI_NAMESPACE }}
+            --kubernetes-version=${{ steps.resolve_k8s.outputs.kubernetes_version }}
+            --extra-config=apiserver.feature-gates=ExtendWebSocketsToKubelet=false
 
       - name: Install ziti CLI
         uses: supplypike/setup-bin@v5
