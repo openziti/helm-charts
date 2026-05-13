@@ -493,6 +493,16 @@ entries:
     version: 0.1.1
   ziti-controller:
   - apiVersion: v2
+    appVersion: 2.0.0-pre14
+    created: "2026-05-13T12:47:20.136842775Z"
+    description: Host an OpenZiti controller in Kubernetes
+    digest: f027f5110a3c910d7378ef276a1246779c199d9dea746e5ba79d8681fecfc9cf
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-3.2.0-pre7/ziti-controller-3.2.0-pre7.tgz
+    version: 3.2.0-pre7
+  - apiVersion: v2
     appVersion: 2.0.0-pre10
     created: "2026-03-31T14:46:37.917195238Z"
     description: Host an OpenZiti controller in Kubernetes
@@ -2868,6 +2878,16 @@ entries:
     version: 0.3.5
   ziti-router:
   - apiVersion: v2
+    appVersion: 2.0.0-pre14
+    created: "2026-05-13T12:47:20.306525409Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 3915fb4850f59104aad3f0528d039d5743543a4da4d61487b9a0a23a38f3d5b6
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-3.0.0-pre6/ziti-router-3.0.0-pre6.tgz
+    version: 3.0.0-pre6
+  - apiVersion: v2
     appVersion: 2.0.0-pre10
     created: "2026-03-31T14:46:38.580534521Z"
     description: Host an OpenZiti router in Kubernetes
@@ -3749,4 +3769,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok2-1.0.0/zrok2-1.0.0.tgz
     version: 1.0.0
-generated: "2026-04-17T14:44:59.585299765Z"
+generated: "2026-05-13T12:47:20.307163849Z"
