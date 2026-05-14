@@ -435,6 +435,22 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+# readinessProbe applies to the controller container when running in cluster-init
+# or cluster-migrate mode (other modes have no readiness probe).
+readinessProbe:
+  # -- probe timeout in seconds. The probe runs a TLS handshake against each
+  # enabled listener; bump this if your environment is slow to handshake or
+  # the CLI agent check is slow under load.
+  timeoutSeconds: 5
+  # -- delay between container start and the first probe, in seconds.
+  initialDelaySeconds: 2
+  # -- how often, in seconds, the probe runs.
+  periodSeconds: 5
+  # -- consecutive successes required to mark the container Ready.
+  successThreshold: 2
+  # -- consecutive failures before the container is marked Not Ready.
+  failureThreshold: 12
+
 # -- deployment template spec node selector
 nodeSelector: {}
 #  kubernetes.io/role: master

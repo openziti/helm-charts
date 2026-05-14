@@ -134,16 +134,18 @@ spec:
             containerPort: {{ .Values.prometheus.containerPort }}
           {{- end }}
           {{- if or (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") (eq (include "ziti-controller.clusterMode" .) "cluster-init") }}
+          {{- $rp := .Values.readinessProbe | default dict }}
           readinessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - {{ include "execMountDir" . }}/ziti-ready.bash
-            initialDelaySeconds: 2
-            periodSeconds: 5
-            successThreshold: 2
-            failureThreshold: 12
+            timeoutSeconds: {{ $rp.timeoutSeconds | default 5 }}
+            initialDelaySeconds: {{ $rp.initialDelaySeconds | default 2 }}
+            periodSeconds: {{ $rp.periodSeconds | default 5 }}
+            successThreshold: {{ $rp.successThreshold | default 2 }}
+            failureThreshold: {{ $rp.failureThreshold | default 12 }}
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
