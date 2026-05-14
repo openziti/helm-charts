@@ -639,6 +639,11 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | prometheus.serviceMonitor.targetLabels | list | `[]` | ServiceMonitor will add labels from the service to the Prometheus metric ([reference](https://prometheus.io/docs/prometheus/latest/configuration/configuration)) |
 | prometheus.serviceMonitor.tlsConfig | object | `{"insecureSkipVerify":true}` | ServiceMonitor will use these tlsConfig settings to make the health check requests |
 | prometheus.serviceMonitor.tlsConfig.insecureSkipVerify | bool | `true` | set TLS skip verify, because the SAN will not match with the pod IP |
+| readinessProbe.failureThreshold | int | `12` | consecutive failures before the container is marked Not Ready. |
+| readinessProbe.initialDelaySeconds | int | `2` | delay between container start and the first probe, in seconds. |
+| readinessProbe.periodSeconds | int | `5` | how often, in seconds, the probe runs. |
+| readinessProbe.successThreshold | int | `2` | consecutive successes required to mark the container Ready. |
+| readinessProbe.timeoutSeconds | int | `5` | probe timeout in seconds. The probe runs a TLS handshake against each enabled listener; bump this if your environment is slow to handshake or the CLI agent check is slow under load. |
 | resources | object | `{}` | deployment container resources |
 | securityContext | object | `{}` | deployment container security context |
 | spireAgent.enabled | bool | `false` | if you are running a container with the spire-agent binary installed then this will allow you to add the hostpath necessary for connecting to the spire socket |
