@@ -4,9 +4,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "ziti-controller.fullname" $ }}
-  {{- with .serviceMonitor.namespace }}
-  namespace: {{ . }}
-  {{- end }}
+  namespace: {{ .serviceMonitor.namespace | default $.Release.Namespace }}
   {{- with .serviceMonitor.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}

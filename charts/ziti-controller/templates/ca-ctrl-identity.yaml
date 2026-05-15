@@ -14,6 +14,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-cert
+  namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/resource-policy": keep
     "openziti.io/deprecated": "true"
@@ -43,6 +44,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-root-issuer
+  namespace: {{ .Release.Namespace }}
   annotations: {}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
@@ -56,6 +58,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-identity
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
@@ -140,6 +143,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-client-identity
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:

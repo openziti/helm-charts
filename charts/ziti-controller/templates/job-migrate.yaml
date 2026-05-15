@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "ziti-controller.fullname" . }}-migrate
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
