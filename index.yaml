@@ -321,6 +321,17 @@ entries:
   ziti-browzer-bootstrapper:
   - apiVersion: v2
     appVersion: 0.76.0
+    created: "2026-05-26T20:43:28.882553628Z"
+    deprecated: true
+    description: Deploy OpenZiti BrowZer Bootstrapper as Kubernetes Service
+    digest: 89ac3ffba1f8a411704a398f8dcee48c3e788c364a049a19d33094c243730882
+    name: ziti-browzer-bootstrapper
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-browzer-bootstrapper-0.1.2/ziti-browzer-bootstrapper-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 0.76.0
     created: "2024-10-30T16:36:24.36533797Z"
     description: Deploy OpenZiti BrowZer Bootstrapper as Kubernetes Service
     digest: b8c71e3f2e45a6755a08e6e7d890cdbcef167ff1483e1379b0719e79adcb09db
@@ -492,6 +503,16 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-console-0.1.1/ziti-console-0.1.1.tgz
     version: 0.1.1
   ziti-controller:
+  - apiVersion: v2
+    appVersion: 2.0.0
+    created: "2026-05-26T20:43:29.087079887Z"
+    description: Host an OpenZiti controller in Kubernetes
+    digest: b07a3dcec19eadcb17d831e9ab6bc8151017c53f0d5afb7c0ba994997d066aae
+    name: ziti-controller
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-controller-3.2.0/ziti-controller-3.2.0.tgz
+    version: 3.2.0
   - apiVersion: v2
     appVersion: 2.0.0-pre14
     created: "2026-05-14T16:37:03.258287231Z"
@@ -2275,6 +2296,24 @@ entries:
     version: 0.1.2
   ziti-edge-tunnel:
   - apiVersion: v2
+    appVersion: 1.15.1
+    created: "2026-05-26T20:43:29.318484319Z"
+    description: Dial OpenZiti services with a tunneler daemonset
+    digest: 1e51e67aa1db825160d58a3d385a81d5ab3c46f349f592c5342d686e82f55195
+    icon: https://openziti.io/img/ziti-logo-dark.svg
+    keywords:
+    - openziti
+    - coredns
+    - node-local-dns
+    kubeVersion: '>= 1.20.0-0'
+    name: ziti-edge-tunnel
+    sources:
+    - https://github.com/openziti/ziti-tunnel-sdk-c
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-edge-tunnel-1.5.0/ziti-edge-tunnel-1.5.0.tgz
+    version: 1.5.0
+  - apiVersion: v2
     appVersion: 1.12.0
     created: "2026-03-31T14:46:38.1354561Z"
     description: Dial OpenZiti services with a tunneler daemonset
@@ -2655,6 +2694,17 @@ entries:
     version: 0.0.2
   ziti-host:
   - apiVersion: v2
+    appVersion: 1.15.1
+    created: "2026-05-26T20:43:29.542426963Z"
+    description: Reverse proxy cluster services with an OpenZiti tunneler pod
+    digest: 72ed13972b46d21541e18dd728601de9539b0ddd53678a6992b0fc1be9b044fc
+    kubeVersion: '>= 1.20.0-0'
+    name: ziti-host
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-host-1.4.0/ziti-host-1.4.0.tgz
+    version: 1.4.0
+  - apiVersion: v2
     appVersion: 1.12.0
     created: "2026-03-31T14:46:38.329569945Z"
     description: Reverse proxy cluster services with an OpenZiti tunneler pod
@@ -2897,6 +2947,16 @@ entries:
     - https://github.com/openziti/helm-charts/releases/download/ziti-host-0.3.5/ziti-host-0.3.5.tgz
     version: 0.3.5
   ziti-router:
+  - apiVersion: v2
+    appVersion: 2.0.0
+    created: "2026-05-26T20:43:29.773712713Z"
+    description: Host an OpenZiti router in Kubernetes
+    digest: 4a88c21120dfa6940e3ff15e2e2587032885aa708325eccd9205b861d1265f0c
+    name: ziti-router
+    type: application
+    urls:
+    - https://github.com/openziti/helm-charts/releases/download/ziti-router-3.0.0/ziti-router-3.0.0.tgz
+    version: 3.0.0
   - apiVersion: v2
     appVersion: 2.0.0-pre14
     created: "2026-05-13T12:47:20.306525409Z"
@@ -3789,4 +3849,4 @@ entries:
     urls:
     - https://github.com/openziti/helm-charts/releases/download/zrok2-1.0.0/zrok2-1.0.0.tgz
     version: 1.0.0
-generated: "2026-05-15T17:15:53.573259388Z"
+generated: "2026-05-26T20:43:29.77452422Z"
