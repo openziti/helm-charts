@@ -3,4 +3,5 @@ appVersion: 0.76.0
 description: Deploy OpenZiti BrowZer Bootstrapper as Kubernetes Service
 name: ziti-browzer-bootstrapper
 type: application
-version: 0.1.1
+version: 0.1.2
+deprecated: true
