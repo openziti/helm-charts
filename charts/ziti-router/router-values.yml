@@ -1,0 +1,31 @@
+
+ctrl:
+  # DNS name:port of the Ziti "ctrl" server, i.e., the router control plane
+  endpoint:  ziti-controller-1-ctrl:443
+
+#
+## services and ingresses
+#
+
+edge:
+  # DNS name edge clients and other routers will use to reach this router
+  advertisedHost:  router-1-edge.sandbox.netfoundry.io
+  # TCP port to pair with advertisedHost
+  advertisedPort: 443
+  service:
+    enabled: true
+    type: LoadBalancer
+linkListeners:
+  transport:
+    advertisedHost:  router-1-link.sandbox.netfoundry.io
+    advertisedPort: 443
+    service:
+      enabled: true
+      type: LoadBalancer
+tunnel:
+  mode: host
+
+image:
+  additionalArgs:
+    - --log-formatter
+    - json

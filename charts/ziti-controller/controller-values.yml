@@ -1,0 +1,83 @@
+clientApi:
+  advertisedHost: ziti-clients.sandbox.netfoundry.io
+  dnsNames: ["ziti-clients.sandbox.netfoundry.io", "ziti-ctrl.sandbox.netfoundry.io"]
+  advertisedPort: 443
+  service:
+    type: LoadBalancer
+    enabled: true
+
+ctrlPlane:
+  advertisedHost: ziti-ctrl.sandbox.netfoundry.io
+  dnsNames: ["ziti-ctrl.sandbox.netfoundry.io"]
+  advertisedPort: 443
+  service:
+    enabled: true
+    type: LoadBalancer
+
+trust-manager:
+  enabled: true
+  app:
+    trust:
+      namespace: ziti
+
+cert-manager:
+  enabled: true
+
+image:
+  additionalArgs:
+    - --log-formatter
+    - json
+
+additionalConfigs:
+  healthChecks:
+    boltCheck:
+      # How often to try entering a bolt read tx. Defaults to 30 seconds
+      interval: 10s
+      # When to time out the check. Defaults to 20 seconds
+      timeout: 10s
+      # How long to wait before starting the check. Defaults to 30 seconds
+      initialDelay: 10s
+  events:
+    ampqLoggerFabric:
+      subscriptions:
+        - type: fabric.circuits
+        - type: fabric.links
+        - type: fabric.routers
+        - type: fabric.terminators
+        - type: fabric.usage
+          version: 3
+      handler:
+        type: amqp
+        format: json
+        url: "amqp://admin:admin@rabbitmq.support.svc.cluster.local:5672"
+        queue: fabric
+        # buffer size is how many events can be shipped per interval, larger networks need a larger buffer
+        bufferSize: 5000
+    ampqLoggerEdge:
+      subscriptions:
+        - type: edge.sessions
+        - type: edge.apiSessions
+        - type: edge.entityCounts
+      handler:
+        type: amqp
+        format: json
+        url: "amqp://admin:admin@rabbitmq.support.svc.cluster.local:5672"
+        queue: edge
+        # buffer size is how many events can be shipped per interval, larger networks need a larger buffer
+        bufferSize: 1000
+    ampqLoggerMetrics:
+      subscriptions:
+        - type: metrics
+          sourceFilter: .*
+          metricFilter: .*
+        - type: services
+      handler:
+        type: amqp
+        format: json
+        url: "amqp://admin:admin@rabbitmq.support.svc.cluster.local:5672"
+        queue: metrics
+        # buffer size is how many events can be shipped per interval, larger networks need a larger buffer
+        bufferSize: 1000
+
+
+
