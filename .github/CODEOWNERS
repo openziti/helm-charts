@@ -1,0 +1,6 @@
+# CODEOWNERS for openziti/helm-charts
+# https://docs.github.com/articles/about-code-owners
+#
+# These owners are requested for review on every pull request.
+
+* @openziti/maintainers @openziti/k8s-related
