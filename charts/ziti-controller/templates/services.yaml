@@ -47,7 +47,10 @@ spec:
   {{- end }}
   {{- if hasKey .Values.ctrlPlane.service "publishNotReadyAddresses" }}
   publishNotReadyAddresses: {{ .Values.ctrlPlane.service.publishNotReadyAddresses }}
-  {{- else if or (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
+  {{- else if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
+  {{- /* Cluster members must stay in Service endpoints while NotReady. A joining node is
+         NotReady until its join completes, but the join requires peers to reach it at its
+         advertised address -- withholding endpoints would deadlock the join. */}}
   publishNotReadyAddresses: true
   {{- end }}
   ports:
@@ -112,7 +115,10 @@ spec:
   {{- end }}
   {{- if hasKey .Values.clientApi.service "publishNotReadyAddresses" }}
   publishNotReadyAddresses: {{ .Values.clientApi.service.publishNotReadyAddresses }}
-  {{- else if or (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
+  {{- else if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
+  {{- /* Cluster members must stay in Service endpoints while NotReady. A joining node is
+         NotReady until its join completes, but the join requires peers to reach it at its
+         advertised address -- withholding endpoints would deadlock the join. */}}
   publishNotReadyAddresses: true
   {{- end }}
   ports:
@@ -174,7 +180,10 @@ spec:
   {{- end }}
   {{- if hasKey .Values.managementApi.service "publishNotReadyAddresses" }}
   publishNotReadyAddresses: {{ .Values.managementApi.service.publishNotReadyAddresses }}
-  {{- else if or (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") }}
+  {{- else if hasPrefix "cluster" (include "ziti-controller.clusterMode" .) }}
+  {{- /* Cluster members must stay in Service endpoints while NotReady. A joining node is
+         NotReady until its join completes, but the join requires peers to reach it at its
+         advertised address -- withholding endpoints would deadlock the join. */}}
   publishNotReadyAddresses: true
   {{- end }}
   ports:

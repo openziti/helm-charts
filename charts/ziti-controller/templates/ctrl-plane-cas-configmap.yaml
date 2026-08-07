@@ -1,0 +1,20 @@
+{{- /*
+  Render the ctrl plane trust bundle directly from a supplied PEM instead of having
+  trust-manager build it. This lets a controller join a cluster whose other members live
+  in a different Kubernetes cluster: the trust anchor is the shared edge-root certificate,
+  which cannot be sourced from a local Secret that does not exist yet.
+
+  With this set, trust-manager is not required on this cluster at all.
+*/ -}}
+{{- if and .Values.ctrlPlaneCasBundle.caCert (not .Values.ctrlPlaneCasBundle.configMapName) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
+  labels:
+    {{- include "ziti-controller.labels" . | nindent 4 }}
+data:
+  {{ include "ziti-controller.ctrlPlaneCasFile" . }}: |
+    {{- .Values.ctrlPlaneCasBundle.caCert | nindent 4 }}
+{{- end }}

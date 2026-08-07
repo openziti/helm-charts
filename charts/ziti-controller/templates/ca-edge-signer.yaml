@@ -6,8 +6,15 @@
 # certificate must be appended to the trust bundle that is configured for the
 # router control plane's identity in .identity.ca
 ######
+{{- if and (ne (len .Values.edgeSignerPki.alternativeIssuer) 0) .Values.edgeSignerPki.rootCaSecretName -}}
+  {{- fail "Set only one of edgeSignerPki.alternativeIssuer (point at an existing Issuer) or edgeSignerPki.rootCaSecretName (have the chart create the Issuer from a root CA Secret)." -}}
+{{- end -}}
 {{- if eq (len .Values.edgeSignerPki.alternativeIssuer) 0 }}
+{{- if not .Values.edgeSignerPki.rootCaSecretName }}
 ---
+# Self-signed edge root. Skipped when rootCaSecretName supplies an existing root
+# keypair -- e.g. a root shared across clusters so their controllers can form one
+# raft cluster, or an enterprise CA provisioned out of band.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -31,6 +38,7 @@ spec:
   issuerRef:
     kind: Issuer
     name: {{ include "ziti-controller.fullname" . }}-selfsigned-ca-issuer
+{{- end }}
 
 ---
 apiVersion: cert-manager.io/v1
@@ -41,7 +49,7 @@ metadata:
     {{- include "ziti-controller.labels" . | nindent 4 }}
 spec:
   ca:
-    secretName: {{ include "ziti-controller.fullname" . }}-edge-root-secret
+    secretName: {{ .Values.edgeSignerPki.rootCaSecretName | default (printf "%s-edge-root-secret" (include "ziti-controller.fullname" .)) }}
 {{- end }}
 
 ---

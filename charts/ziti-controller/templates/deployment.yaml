@@ -133,7 +133,7 @@ spec:
           - name: prometheus
             containerPort: {{ .Values.prometheus.containerPort }}
           {{- end }}
-          {{- if or (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") (eq (include "ziti-controller.clusterMode" .) "cluster-init") }}
+          {{- if or (eq (include "ziti-controller.clusterMode" .) "cluster-migrate") (eq (include "ziti-controller.clusterMode" .) "cluster-init") (eq (include "ziti-controller.clusterMode" .) "cluster-join") }}
           readinessProbe:
             exec:
               command:
@@ -344,7 +344,7 @@ spec:
           command: ["/bin/bash","-c"]
           args:
             - |
-              {{ include "execMountDir" . }}/ziti-cluster-join.bash; sleep infinity
+              {{ include "execMountDir" . }}/ziti-cluster-join.bash && sleep infinity
           env:
             - name: HOME
               value: {{ .Values.image.homeDir }}
