@@ -188,8 +188,8 @@ cluster-migrate
     {{- if or (eq $trustDomain "") (eq .Values.cluster.nodeName "") -}}
       {{- fail "cluster-join requires .Values.cluster.trustDomain and .Values.cluster.nodeName to be set" -}}
     {{- end -}}
-    {{- if and (eq (len .Values.edgeSignerPki.alternativeIssuer) 0) (not .Values.edgeSignerPki.rootCaSecretName) -}}
-      {{- fail "cluster-join requires the joining node to chain to the cluster's shared edge root. Set either .Values.edgeSignerPki.alternativeIssuer (an existing Issuer in this namespace, e.g. the first node's edge root issuer) or .Values.edgeSignerPki.rootCaSecretName (a Secret holding the shared root keypair, for joining across Kubernetes clusters)." -}}
+    {{- if and (eq (len .Values.edgeSignerPki.alternativeIssuer) 0) (not .Values.edgeSignerPki.caSecretName) -}}
+      {{- fail "cluster-join requires the joining node to chain to the cluster's shared edge root. Set either .Values.edgeSignerPki.alternativeIssuer (an existing Issuer in this namespace, e.g. the first node's edge root issuer) or .Values.edgeSignerPki.caSecretName (a Secret holding a CA keypair that chains to the cluster's edge root -- a per-cluster intermediate is preferred over the root itself -- for joining across Kubernetes clusters)." -}}
     {{- end -}}
     {{- if eq (len .Values.cluster.endpoint) 0 -}}
       {{- fail "cluster-join requires .Values.cluster.endpoint to be set to a reachable ctrl plane endpoint address of an existing node (example: ctrl1.ziti.example.com:443 or ziti-ctrl1-controller-ctrl:1280)" -}}

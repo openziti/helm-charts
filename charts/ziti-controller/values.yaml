@@ -310,13 +310,32 @@ edgeSignerPki:
   # kind:
   # -- metadata name of the alternative issuer
   # name:
-  # -- name of an existing Secret (kubernetes.io/tls) holding a root CA keypair to issue the
-  # edge signer intermediate from. The chart creates the CA Issuer for you, so unlike
-  # alternativeIssuer no Issuer has to exist beforehand. Use this to join a cluster whose
-  # other members are in a DIFFERENT Kubernetes cluster: copy the first node's
-  # <release>-edge-root-secret into this namespace and name it here. Mutually exclusive
-  # with alternativeIssuer.
-  rootCaSecretName: ""
+  # -- name of an existing Secret (kubernetes.io/tls) holding the CA keypair that issues this
+  # controller's edge signer. The chart builds the CA Issuer from it, so unlike
+  # alternativeIssuer no Issuer has to exist beforehand. Mutually exclusive with
+  # alternativeIssuer. Use this to run ONE Ziti cluster across MULTIPLE Kubernetes clusters,
+  # where members cannot share a namespaced Issuer.
+  #
+  # PREFER AN INTERMEDIATE, NOT THE ROOT. Whatever key you put here can mint any identity in
+  # the Ziti network, and it lives in this cluster. Give each cluster its own intermediate
+  # signed by the network root, keep the ROOT key offline (HSM/Vault/air-gapped), and set
+  # ctrlPlaneCasBundle.caCert to the root CERTIFICATE (public, no key):
+  #
+  #   root (offline) -> intermediate (here, per cluster) -> edge signer (chart) -> leaf
+  #
+  # Then compromising one cluster exposes only that cluster's intermediate, and the root --
+  # with it the ability to re-establish trust -- is never exposed.
+  #
+  # Set tls.crt to the intermediate PLUS the root ("chained"). Leaf certificates then carry
+  # leaf + edge-signer + intermediate on the wire, so peers that trust only the root can build
+  # a path; and cert-manager sets ca.crt to the root, so on clusters running trust-manager the
+  # chart's own trust bundle resolves to the root and ctrlPlaneCasBundle.caCert is unnecessary.
+  # An unchained intermediate also works for the handshake, but then ca.crt is the
+  # intermediate, so you must set ctrlPlaneCasBundle.caCert to the root explicitly.
+  #
+  # Supplying the root keypair here also works and is simpler, but then every participating
+  # cluster holds the network's root key. Avoid that outside of labs.
+  caSecretName: ""
   admin_client_cert:
     # -- create a client certificate for the admin user
     enabled: false
