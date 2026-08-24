@@ -1,5 +1,9 @@
-{{- /* Only render the Bundle if configMapName is empty (we're creating our own, not using an external one) */ -}}
-{{- if not .Values.ctrlPlaneCasBundle.configMapName }}
+{{- if and .Values.ctrlPlaneCasBundle.configMapName .Values.ctrlPlaneCasBundle.caCert -}}
+  {{- fail "Set only one of ctrlPlaneCasBundle.configMapName (use an existing ConfigMap) or ctrlPlaneCasBundle.caCert (render one from a PEM)." -}}
+{{- end -}}
+{{- /* Render the trust-manager Bundle only when neither an external ConfigMap nor an
+       inline PEM was supplied. */ -}}
+{{- if and (not .Values.ctrlPlaneCasBundle.configMapName) (not .Values.ctrlPlaneCasBundle.caCert) }}
 ---
 # Trust bundle containing all CA certificates needed for the Ziti network.
 # With the unified PKI, all certificates chain to the edge-root CA via the edge-signer intermediate.
@@ -10,7 +14,10 @@ metadata:
   name: {{ include "ziti-controller.fullname" . }}-ctrl-plane-cas
 spec:
   sources:
-    # Edge signer intermediate CA - issues all certificates in the unified PKI
+    # NOTE: cert-manager sets a CA-issued Secret's ca.crt to the ROOT-most certificate of
+    # the chain, so this resolves to the edge-root CA, not the edge-signer intermediate.
+    # Peers validate a member's leaf using this root plus the intermediate that the member
+    # presents on the wire (its tls.crt is leaf + its own edge-signer).
     - secret:
         name: {{ include "ziti-controller.fullname" . }}-edge-signer-secret
         key: ca.crt

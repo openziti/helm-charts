@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 3.2.1](https://img.shields.io/badge/Version-3.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.1](https://img.shields.io/badge/AppVersion-2.0.1-informational?style=flat-square)
+![Version: 3.3.0](https://img.shields.io/badge/Version-3.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.2](https://img.shields.io/badge/AppVersion-2.0.2-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -486,7 +486,8 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| additionalConfigs | object | `{"ctrl":{},"events":{},"healthChecks":{},"network":{},"web":{}}` | Append additional config blocks in specific top-level keys: edge, web, network, ctrl. If events are defined here, they replace the default events section entirely. |
+| additionalConfigs | object | `{"cluster":{},"ctrl":{},"events":{},"healthChecks":{},"network":{},"web":{}}` | Append additional config blocks in specific top-level keys: edge, web, network, ctrl. If events are defined here, they replace the default events section entirely. |
+| additionalConfigs.cluster | object | `{}` | additional keys merged into the controller's `cluster:` config stanza (cluster modes only; ignored in standalone). Use for raft/write-path tuning that the chart does not expose directly, e.g. commandHandler.maxQueueSize, rateLimiter, snapshotThreshold, trailingLogs, electionTimeout, preferredLeader. `dataDir` is set by the chart and must not be overridden here. |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
@@ -515,9 +516,12 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | clientApi.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
 | cluster.agentAppAddr | string | `"tcp:127.0.0.1:10001"` | TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose) |
 | cluster.endpoint | string | `""` | required only when joining a cluster: reachable ctrl plane endpoint address of an existing node. The ctrl plane API is bound to the same TCP port as the client API in the default configuration (example: ziti-controller1.ziti.example.com:443 or ziti-controller1-ctrl:1280) |
+| cluster.joinRetries | int | `5` | cluster-join only: how many times to attempt the join before failing the container. A failed join exits non-zero so Kubernetes restarts it and tries again. |
+| cluster.joinRetryDelaySeconds | int | `10` | cluster-join only: seconds to wait between join attempts |
 | cluster.mode | required | `""` | the cluster mode; options: standalone, cluster-init, cluster-join, cluster-migrate. See the README for usage of each mode. |
 | cluster.nodeName | string | `""` | the node name part of the SPIFFE ID (required for cluster modes) |
 | cluster.trustDomain | string | `""` | the trust domain part of the SPIFFE ID (required for cluster modes) |
+| cluster.voter | bool | `true` | cluster-join only: join as a voting member. Voting members participate in write quorum and leader election; non-voters receive full log replication and serve reads locally without slowing writes, which suits distant or read-scale sites. An odd number of voters is required for fault tolerance. NOTE: this applies only on the FIRST join -- once the node has joined, changing this value and re-running `helm upgrade` has no effect, and promotion/demotion must be done with `ziti agent cluster`. Ignored in cluster-init (the first node is always a voter). |
 | console.altIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console, i.e. `{"host": "console.ziti.example.com", "port": 443}` |
 | console.enabled | bool | `true` | enable the Ziti Admin Console (ZAC) at URL path "/zac" on the same port as the management API (default: true) |
 | ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
@@ -539,15 +543,16 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | ctrlPlane.traefikTcpRoute.enabled | bool | `false` | enable Traefik IngressRouteTCP |
 | ctrlPlane.traefikTcpRoute.entryPoints | list | `["websecure"]` | IngressRouteTCP entrypoints |
 | ctrlPlane.traefikTcpRoute.labels | object | `{}` | IngressRouteTCP labels |
+| ctrlPlaneCasBundle.caCert | string | `""` | PEM of the cluster's ctrl plane trust anchor (the shared edge-root certificate). When set, the chart renders the trust bundle ConfigMap itself and trust-manager is NOT required on this cluster. Use this to join a cluster whose other members are in a DIFFERENT Kubernetes cluster, where the first node's ConfigMap cannot be referenced. Obtain it by base64-decoding the `tls.crt` key of the first node's edge-root Secret (named `RELEASE-edge-root-secret`). Mutually exclusive with configMapName. NOTE: fresh installs only. On a release whose ConfigMap was previously created by trust-manager, Helm rejects the takeover with "invalid ownership metadata" -- delete the existing ConfigMap first. |
 | ctrlPlaneCasBundle.configMapName | string | `""` | name of the ConfigMap managed by the trust-manager Bundle resource. For cluster-join nodes, set this to the first node's ConfigMap name (e.g., "ziti-ctrl1-controller-ctrl-plane-cas") so all nodes share the same trust bundle. For solo nodes, leave empty to use the default name based on this release. If subsequent nodes are added without this value, a harmless, redundant Bundle and ConfigMap resource will be created. |
 | ctrlPlaneCasBundle.namespaceSelector | object | `{}` | namespaces where trust-manager will create the Bundle resource containing Ziti's trusted CA certs (default: empty means all namespaces) |
 | customAdminSecretName | string | `""` | set the admin user and password from a custom secret The custom admin secret must be of the following format: apiVersion: v1 kind: Secret metadata:   name: myCustomAdminSecret type: Opaque data:   admin-user:   admin-password: |
 | dbFile | string | `"ctrl.db"` | name of the BoltDB file |
-| edgeSignerPki.admin_client_cert | object | `{"duration":"8760h","enabled":false,"renewBefore":"720h"}` | metadata name of the alternative issuer name: |
 | edgeSignerPki.admin_client_cert.duration | string | `"8760h"` | admin client certificate duration as Go time.Duration |
 | edgeSignerPki.admin_client_cert.enabled | bool | `false` | create a client certificate for the admin user |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.alternativeIssuer | object | `{}` | obtain the edge signer intermediate CA from an existing issuer instead of generating a new PKI - used when joining a cluster |
+| edgeSignerPki.caSecretName | string | `""` | name of an existing Secret (kubernetes.io/tls) holding the CA keypair that issues this controller's edge signer. The chart builds the CA Issuer from it, so unlike alternativeIssuer no Issuer has to exist beforehand. Mutually exclusive with alternativeIssuer. Use this to run ONE Ziti cluster across MULTIPLE Kubernetes clusters, where members cannot share a namespaced Issuer.  PREFER AN INTERMEDIATE, NOT THE ROOT. Whatever key you put here can mint any identity in the Ziti network, and it lives in this cluster. Give each cluster its own intermediate signed by the network root, keep the ROOT key offline (HSM/Vault/air-gapped), and set ctrlPlaneCasBundle.caCert to the root CERTIFICATE (public, no key):    root (offline) -> intermediate (here, per cluster) -> edge signer (chart) -> leaf  Then compromising one cluster exposes only that cluster's intermediate, and the root -- with it the ability to re-establish trust -- is never exposed.  Set tls.crt to the intermediate PLUS the root ("chained"). Leaf certificates then carry leaf + edge-signer + intermediate on the wire, so peers that trust only the root can build a path; and cert-manager sets ca.crt to the root, so on clusters running trust-manager the chart's own trust bundle resolves to the root and ctrlPlaneCasBundle.caCert is unnecessary. An unchained intermediate also works for the handshake, but then ca.crt is the intermediate, so you must set ctrlPlaneCasBundle.caCert to the root explicitly.  Supplying the root keypair here also works and is simpler, but then every participating cluster holds the network's root key. Avoid that outside of labs. |
 | edgeSignerPki.enabled | bool | `true` | deprecated - this can not be disabled - generate the PKI root of trust for the Ziti network (edge-root CA) and issue the edge-signer intermediate |
 | env | object | `{}` | set name to value in containers' environment |
 | envSecrets | object | `{}` | set secrets as environment variables in the container |

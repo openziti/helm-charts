@@ -101,22 +101,49 @@ data:
     AGENT_ADDR="{{ .Values.cluster.agentAppAddr }}"
 
     echo "INFO: waiting for controller agent at ${AGENT_ADDR} to respond..."
+    AGENT_READY=false
     for i in $(seq 1 120); do
       if ziti agent cluster list --app-addr "${AGENT_ADDR}" >/dev/null 2>&1; then
         echo "INFO: CLI agent is responsive"
+        AGENT_READY=true
         break
       fi
       sleep 2
     done
+    if [[ "${AGENT_READY}" != "true" ]]; then
+      echo "ERROR: controller agent at ${AGENT_ADDR} did not respond within 240s" >&2
+      exit 1
+    fi
 
     # Determine endpoint to join: prefer explicit cluster.endpoint, else fall back to ctrlPlane advertise
     ENDPOINT="{{ .Values.cluster.endpoint }}"
-    echo "INFO: running: ziti agent cluster add --app-addr ${AGENT_ADDR} tls:${ENDPOINT}"
-    ziti agent cluster add --app-addr "${AGENT_ADDR}" "tls:${ENDPOINT}"
+    {{- if not .Values.cluster.voter }}
+    VOTER_ARG="--voter=false"
+    {{- else }}
+    VOTER_ARG="--voter=true"
+    {{- end }}
 
-    # Mark as joined
-    touch "${MARKER}"
-    echo "INFO: Ziti cluster join completed"
+    # Retry the join. The seed may not yet have this node's certificates trusted, the
+    # seed's ctrl plane may be briefly unreachable, or a leader election may be in
+    # flight. Exiting non-zero on exhaustion lets Kubernetes restart this container
+    # and try again rather than parking in a permanently unjoined state.
+    JOIN_ATTEMPTS={{ .Values.cluster.joinRetries }}
+    JOIN_DELAY={{ .Values.cluster.joinRetryDelaySeconds }}
+    for attempt in $(seq 1 "${JOIN_ATTEMPTS}"); do
+      echo "INFO: join attempt ${attempt}/${JOIN_ATTEMPTS}: ziti agent cluster add --app-addr ${AGENT_ADDR} ${VOTER_ARG} tls:${ENDPOINT}"
+      if ziti agent cluster add --app-addr "${AGENT_ADDR}" "${VOTER_ARG}" "tls:${ENDPOINT}"; then
+        touch "${MARKER}"
+        echo "INFO: Ziti cluster join completed"
+        exit 0
+      fi
+      if [[ "${attempt}" -lt "${JOIN_ATTEMPTS}" ]]; then
+        echo "WARN: join attempt ${attempt} failed; retrying in ${JOIN_DELAY}s" >&2
+        sleep "${JOIN_DELAY}"
+      fi
+    done
+
+    echo "ERROR: failed to join cluster at ${ENDPOINT} after ${JOIN_ATTEMPTS} attempts" >&2
+    exit 1
 
   zitiLogin: |-
     #!/usr/bin/env bash
@@ -135,7 +162,7 @@ data:
     CONFIG_DIR="{{ include "configMountDir" . }}"
 
     # 1) For cluster modes, ensure the cluster marker exists
-    if [[ "${MODE}" =~ cluster-(migrate|init) ]]; then
+    if [[ "${MODE}" =~ cluster-(migrate|init|join) ]]; then
       MARKER="{{ include "ziti-controller.clusterMarkerFile" . }}"
       if [[ ! -f "${MARKER}" ]]; then
         echo "not ready: cluster marker missing: ${MARKER}" >&2
@@ -202,6 +229,9 @@ data:
     {{- if hasPrefix "cluster" $mode }}
     cluster:
       dataDir:              {{ include "dataMountDir" . }}/raft
+    {{- if .Values.additionalConfigs.cluster }}
+    {{- .Values.additionalConfigs.cluster | toYaml | nindent 6 }}
+    {{- end }}
     {{- if eq $mode "cluster-migrate" }}
     db:                     {{ include "dataMountDir" . }}/{{ .Values.dbFile }}
     {{- end }}

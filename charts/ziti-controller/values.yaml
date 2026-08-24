@@ -13,6 +13,19 @@ cluster:
   endpoint: ""
   # -- TCP listen address and port for the controller CLI agent when running in clustered mode (do not expose)
   agentAppAddr: "tcp:127.0.0.1:10001"
+  # -- cluster-join only: join as a voting member. Voting members participate in write
+  # quorum and leader election; non-voters receive full log replication and serve reads
+  # locally without slowing writes, which suits distant or read-scale sites. An odd number
+  # of voters is required for fault tolerance. NOTE: this applies only on the FIRST join --
+  # once the node has joined, changing this value and re-running `helm upgrade` has no
+  # effect, and promotion/demotion must be done with `ziti agent cluster`. Ignored in
+  # cluster-init (the first node is always a voter).
+  voter: true
+  # -- cluster-join only: how many times to attempt the join before failing the container.
+  # A failed join exits non-zero so Kubernetes restarts it and tries again.
+  joinRetries: 5
+  # -- cluster-join only: seconds to wait between join attempts
+  joinRetryDelaySeconds: 10
 
 clientApi:
   # -- cluster service target port on the container
@@ -297,6 +310,32 @@ edgeSignerPki:
   # kind:
   # -- metadata name of the alternative issuer
   # name:
+  # -- name of an existing Secret (kubernetes.io/tls) holding the CA keypair that issues this
+  # controller's edge signer. The chart builds the CA Issuer from it, so unlike
+  # alternativeIssuer no Issuer has to exist beforehand. Mutually exclusive with
+  # alternativeIssuer. Use this to run ONE Ziti cluster across MULTIPLE Kubernetes clusters,
+  # where members cannot share a namespaced Issuer.
+  #
+  # PREFER AN INTERMEDIATE, NOT THE ROOT. Whatever key you put here can mint any identity in
+  # the Ziti network, and it lives in this cluster. Give each cluster its own intermediate
+  # signed by the network root, keep the ROOT key offline (HSM/Vault/air-gapped), and set
+  # ctrlPlaneCasBundle.caCert to the root CERTIFICATE (public, no key):
+  #
+  #   root (offline) -> intermediate (here, per cluster) -> edge signer (chart) -> leaf
+  #
+  # Then compromising one cluster exposes only that cluster's intermediate, and the root --
+  # with it the ability to re-establish trust -- is never exposed.
+  #
+  # Set tls.crt to the intermediate PLUS the root ("chained"). Leaf certificates then carry
+  # leaf + edge-signer + intermediate on the wire, so peers that trust only the root can build
+  # a path; and cert-manager sets ca.crt to the root, so on clusters running trust-manager the
+  # chart's own trust bundle resolves to the root and ctrlPlaneCasBundle.caCert is unnecessary.
+  # An unchained intermediate also works for the handshake, but then ca.crt is the
+  # intermediate, so you must set ctrlPlaneCasBundle.caCert to the root explicitly.
+  #
+  # Supplying the root keypair here also works and is simpler, but then every participating
+  # cluster holds the network's root key. Avoid that outside of labs.
+  caSecretName: ""
   admin_client_cert:
     # -- create a client certificate for the admin user
     enabled: false
@@ -393,6 +432,16 @@ ctrlPlaneCasBundle:
   # solo nodes, leave empty to use the default name based on this release. If subsequent nodes are added without this
   # value, a harmless, redundant Bundle and ConfigMap resource will be created.
   configMapName: ""
+  # -- PEM of the cluster's ctrl plane trust anchor (the shared edge-root certificate). When
+  # set, the chart renders the trust bundle ConfigMap itself and trust-manager is NOT
+  # required on this cluster. Use this to join a cluster whose other members are in a
+  # DIFFERENT Kubernetes cluster, where the first node's ConfigMap cannot be referenced.
+  # Obtain it by base64-decoding the `tls.crt` key of the first node's edge-root Secret
+  # (named `RELEASE-edge-root-secret`). Mutually exclusive with configMapName.
+  # NOTE: fresh installs only. On a release whose ConfigMap was previously created by
+  # trust-manager, Helm rejects the takeover with "invalid ownership metadata" -- delete the
+  # existing ConfigMap first.
+  caCert: ""
 
 # -- additional volumes to mount to ziti-controller container
 additionalVolumes: []
@@ -556,6 +605,17 @@ additionalConfigs:
   network: {}
   healthChecks: {}
   web: {}
+  # -- additional keys merged into the controller's `cluster:` config stanza (cluster modes
+  # only; ignored in standalone). Use for raft/write-path tuning that the chart does not
+  # expose directly, e.g. commandHandler.maxQueueSize, rateLimiter, snapshotThreshold,
+  # trailingLogs, electionTimeout, preferredLeader. `dataDir` is set by the chart and
+  # must not be overridden here.
+  cluster: {}
+  #    commandHandler:
+  #      maxQueueSize: 1000
+  #    rateLimiter:
+  #      enabled: true
+  #      maxQueued: 100
   events: {}
   #    ampqLogger:
   #      subscriptions:
