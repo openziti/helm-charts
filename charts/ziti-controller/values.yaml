@@ -436,9 +436,8 @@ ctrlPlaneCasBundle:
   # set, the chart renders the trust bundle ConfigMap itself and trust-manager is NOT
   # required on this cluster. Use this to join a cluster whose other members are in a
   # DIFFERENT Kubernetes cluster, where the first node's ConfigMap cannot be referenced.
-  # Obtain it from the first node with:
-  #   kubectl -n ziti get secret <release>-edge-root-secret -o jsonpath='{.data.tls\.crt}' | base64 -d
-  # Mutually exclusive with configMapName.
+  # Obtain it by base64-decoding the `tls.crt` key of the first node's edge-root Secret
+  # (named `RELEASE-edge-root-secret`). Mutually exclusive with configMapName.
   # NOTE: fresh installs only. On a release whose ConfigMap was previously created by
   # trust-manager, Helm rejects the takeover with "invalid ownership metadata" -- delete the
   # existing ConfigMap first.
