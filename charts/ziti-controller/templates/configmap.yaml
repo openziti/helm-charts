@@ -189,7 +189,7 @@ data:
     # 3a) Client API
     HOST_CLIENT="{{ required "You must set .Values.clientApi.advertisedHost" .Values.clientApi.advertisedHost }}"
     PORT_CLIENT="{{ .Values.clientApi.containerPort }}"
-    if ! echo | openssl s_client -connect "127.0.0.1:${PORT_CLIENT}" -servername "${HOST_CLIENT}" -alpn http/1.1 -ign_eof >/dev/null 2>&1; then
+    if ! timeout 5 openssl s_client -connect "127.0.0.1:${PORT_CLIENT}" -servername "${HOST_CLIENT}" -alpn http/1.1 </dev/null >/dev/null 2>&1; then
       echo "not ready: client API TLS handshake failed on 127.0.0.1:${PORT_CLIENT}" >&2
       exit 1
     fi
@@ -198,7 +198,7 @@ data:
     {{- if .Values.ctrlPlane.service.enabled }}
     PORT_CTRL="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.containerPort "context" .) }}"
     HOST_CTRL="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.ctrlPlane.advertisedHost "context" .) }}"
-    if ! openssl s_client -connect "127.0.0.1:${PORT_CTRL}" -servername "${HOST_CTRL}" -alpn ziti-ctrl -cert {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.crt -key {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.key </dev/null >/dev/null 2>&1; then
+    if ! timeout 5 openssl s_client -connect "127.0.0.1:${PORT_CTRL}" -servername "${HOST_CTRL}" -alpn ziti-ctrl -cert {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.crt -key {{ include "configMountDir" . }}/ctrl-plane-client-identity/tls.key </dev/null >/dev/null 2>&1; then
       echo "not ready: ctrl plane TLS handshake failed on 127.0.0.1:${PORT_CTRL}" >&2
       exit 1
     fi
@@ -208,7 +208,7 @@ data:
     {{- if .Values.managementApi.service.enabled }}
     PORT_MGMT="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.containerPort "context" .) }}"
     HOST_MGMT="{{ include "ziti-controller.tplOrLiteral" (dict "value" .Values.managementApi.advertisedHost "context" .) | default (printf "%s-mgmt.%s.svc.%s" .Release.Name .Release.Namespace .Values.ca.clusterDomain) }}"
-    if ! echo | openssl s_client -connect "127.0.0.1:${PORT_MGMT}" -servername "${HOST_MGMT}" -alpn http/1.1 -ign_eof >/dev/null 2>&1; then
+    if ! timeout 5 openssl s_client -connect "127.0.0.1:${PORT_MGMT}" -servername "${HOST_MGMT}" -alpn http/1.1 </dev/null >/dev/null 2>&1; then
       echo "not ready: mgmt API TLS handshake failed on 127.0.0.1:${PORT_MGMT}" >&2
       exit 1
     fi
