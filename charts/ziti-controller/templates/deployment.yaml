@@ -142,6 +142,7 @@ spec:
                 - {{ include "execMountDir" . }}/ziti-ready.bash
             initialDelaySeconds: 2
             periodSeconds: 5
+            timeoutSeconds: 3
             successThreshold: 2
             failureThreshold: 12
           {{- end }}
