@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "ziti-router.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "ziti-router.labels" . | nindent 4 }}
     app.kubernetes.io/component: "ziti-router"
