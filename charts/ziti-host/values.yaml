@@ -25,6 +25,10 @@ nameOverride: ""
 # -- override full name for the Helm Release
 fullnameOverride: ""
 
+identityMigrate:
+  # -- image for the identity migration initContainer; needs kubectl and bash
+  image: portainer/kubectl-shell
+
 serviceAccount:
   # -- Specifies whether a service account should be created
   create: true

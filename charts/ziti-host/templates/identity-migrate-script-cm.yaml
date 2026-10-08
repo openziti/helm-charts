@@ -1,3 +1,4 @@
+{{- if not .Values.secret.existingSecretName }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -27,3 +28,4 @@ data:
     else
       echo "Secret $SECRET_NAME not found, nothing to migrate."
     fi
+{{- end }}
