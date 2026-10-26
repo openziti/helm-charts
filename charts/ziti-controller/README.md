@@ -2,7 +2,7 @@
 
 # ziti-controller
 
-![Version: 3.3.3](https://img.shields.io/badge/Version-3.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.6](https://img.shields.io/badge/AppVersion-2.0.6-informational?style=flat-square)
+![Version: 3.4.0](https://img.shields.io/badge/Version-3.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.6](https://img.shields.io/badge/AppVersion-2.0.6-informational?style=flat-square)
 
 Host an OpenZiti controller in Kubernetes
 
@@ -161,6 +161,43 @@ helm upgrade --install ziti-controller2 openziti/ziti-controller \
 ```
 
 Repeat for additional nodes (e.g., `ziti-controller3`), changing `nodeName`, `advertisedHost`, and the Helm release name. All controllers must run the same Ziti version -- install the same major version of the controller chart on every node (as of chart v3, chart versions express Ziti version compatibility by pinning the default Ziti version in the chart's `Chart.yaml`).
+
+##### Joining from Another Kubernetes Cluster
+
+A controller in a different Kubernetes cluster, such as one at a remote site, cannot reference the first node's Issuer or trust bundle. Give it its own intermediate CA under the cluster's edge root instead, and the edge root certificate (no key). The root key stays in the cluster that owns it, and trust-manager is not needed on the joining cluster.
+
+1. On the cluster that owns the edge root, add an intermediate for the site to that release's values and upgrade it:
+
+    ```yaml
+    edgeSignerPki:
+      remoteIntermediates:
+        - name: site1
+    ```
+
+    This renders a cert-manager Certificate whose Secret is `ziti-controller1-site1-intermediate-secret` (for release `ziti-controller1`). Its key does not rotate, because a copy leaves the cluster.
+
+1. Copy that Secret as-is to the joining cluster, keeping `tls.crt`, `tls.key` and `ca.crt`. You do not need to chain the certificates by hand: cert-manager's CA issuer appends `ca.crt` (the root) to the chain. Also save the root certificate for the next step.
+
+    ```bash
+    kubectl --context central -n ziti get secret ziti-controller1-site1-intermediate-secret -o json \
+      | jq '{apiVersion, kind, type, data, metadata: {name: .metadata.name, namespace: "ziti"}}' \
+      | kubectl --context site1 apply -f -
+    kubectl --context central -n ziti get secret ziti-controller1-site1-intermediate-secret \
+      -o jsonpath='{.data.ca\.crt}' | base64 -d > edge-root.pem
+    ```
+
+1. Install the joining controller with `edgeSignerPki.caSecretName` set to the copied Secret and `ctrlPlaneCasBundle.caCert` set to the root. [`values-remote-nonvoter-join.yaml`](./values-remote-nonvoter-join.yaml) is a starting point for a read-only (`cluster.voter: false`) member:
+
+    ```bash
+    helm upgrade --install ziti-controller openziti/ziti-controller \
+        --kube-context site1 --namespace ziti \
+        --values values-remote-nonvoter-join.yaml \
+        --set-file ctrlPlaneCasBundle.caCert=edge-root.pem
+    ```
+
+The members must reach each other's `clientApi.advertisedHost:advertisedPort` in both directions, and every member must run the same Ziti version.
+
+While a non-voting member is cut off from the leader, it keeps serving reads, logins and new circuits on its local routers. Anything that changes the model fails with `503 CLUSTER_NO_LEADER` and is not retried later. That includes enrollment, admin changes, and creating terminators, so a hosting tunneler or router that restarts or reconnects during the outage cannot host its services until the leader is back. Some SDKs, including ziti-edge-tunnel 1.15, refresh their OIDC token only at the controller that issued it, so they stay authenticated for at most `oidc.accessTokenDuration` (default 30m) after losing that controller.
 
 ##### Migrating from Standalone to Cluster
 
@@ -552,8 +589,9 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | edgeSignerPki.admin_client_cert.enabled | bool | `false` | create a client certificate for the admin user |
 | edgeSignerPki.admin_client_cert.renewBefore | string | `"720h"` | renew admin client certificate before expiry as Go time.Duration |
 | edgeSignerPki.alternativeIssuer | object | `{}` | obtain the edge signer intermediate CA from an existing issuer instead of generating a new PKI - used when joining a cluster |
-| edgeSignerPki.caSecretName | string | `""` | name of an existing Secret (kubernetes.io/tls) holding the CA keypair that issues this controller's edge signer. The chart builds the CA Issuer from it, so unlike alternativeIssuer no Issuer has to exist beforehand. Mutually exclusive with alternativeIssuer. Use this to run ONE Ziti cluster across MULTIPLE Kubernetes clusters, where members cannot share a namespaced Issuer.  PREFER AN INTERMEDIATE, NOT THE ROOT. Whatever key you put here can mint any identity in the Ziti network, and it lives in this cluster. Give each cluster its own intermediate signed by the network root, keep the ROOT key offline (HSM/Vault/air-gapped), and set ctrlPlaneCasBundle.caCert to the root CERTIFICATE (public, no key):    root (offline) -> intermediate (here, per cluster) -> edge signer (chart) -> leaf  Then compromising one cluster exposes only that cluster's intermediate, and the root -- with it the ability to re-establish trust -- is never exposed.  Set tls.crt to the intermediate PLUS the root ("chained"). Leaf certificates then carry leaf + edge-signer + intermediate on the wire, so peers that trust only the root can build a path; and cert-manager sets ca.crt to the root, so on clusters running trust-manager the chart's own trust bundle resolves to the root and ctrlPlaneCasBundle.caCert is unnecessary. An unchained intermediate also works for the handshake, but then ca.crt is the intermediate, so you must set ctrlPlaneCasBundle.caCert to the root explicitly.  Supplying the root keypair here also works and is simpler, but then every participating cluster holds the network's root key. Avoid that outside of labs. |
+| edgeSignerPki.caSecretName | string | `""` | name of an existing Secret (kubernetes.io/tls) holding the CA keypair that issues this controller's edge signer. The chart builds the CA Issuer from it, so unlike alternativeIssuer no Issuer has to exist beforehand. Mutually exclusive with alternativeIssuer. Use this to run ONE Ziti cluster across MULTIPLE Kubernetes clusters, where members cannot share a namespaced Issuer.  PREFER AN INTERMEDIATE, NOT THE ROOT. Whatever key you put here can mint any identity in the Ziti network, and it lives in this cluster. Give each cluster its own intermediate signed by the network root, keep the ROOT key offline (HSM/Vault/air-gapped), and set ctrlPlaneCasBundle.caCert to the root CERTIFICATE (public, no key):    root (offline) -> intermediate (here, per cluster) -> edge signer (chart) -> leaf  Then compromising one cluster exposes only that cluster's intermediate, and the root -- with it the ability to re-establish trust -- is never exposed.  Copy the Secret that cert-manager minted for the intermediate as-is, keeping all three keys: tls.crt (the intermediate), tls.key, and ca.crt (the root). cert-manager's CA issuer appends the Secret's ca.crt to the chain it signs with, so every certificate issued here gets ca.crt = root, and you do not need to chain tls.crt by hand. If the Secret has no ca.crt, set tls.crt to the intermediate PLUS the root instead. edgeSignerPki.remoteIntermediates mints such a Secret on the cluster that owns the root.  Supplying the root keypair here also works and is simpler, but then every participating cluster holds the network's root key. Avoid that outside of labs. |
 | edgeSignerPki.enabled | bool | `true` | deprecated - this can not be disabled - generate the PKI root of trust for the Ziti network (edge-root CA) and issue the edge-signer intermediate |
+| edgeSignerPki.remoteIntermediates | list | `[]` | mint one intermediate CA per remote controller site, for controllers that join this cluster from another Kubernetes cluster. Each entry renders a cert-manager Certificate issued by this release's edge-root-issuer, with key rotation disabled because the key is copied off-cluster. The Secret is named `FULLNAME-NAME-intermediate-secret`; copy it as-is to the remote cluster and set the remote release's edgeSignerPki.caSecretName to it. Requires edgeSignerPki.alternativeIssuer to be empty. Entry keys: name (required), duration and renewBefore (default ca.duration and ca.renewBefore). Example: `[{name: plant1}]` |
 | env | object | `{}` | set name to value in containers' environment |
 | envSecrets | object | `{}` | set secrets as environment variables in the container |
 | fabric.events.enabled | bool | `false` | enable fabric event logger and file handler |
@@ -612,6 +650,9 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | network.smart.rerouteCap | int | `4` | Defines the hard upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteCap` is set to `1`, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 1. |
 | network.smart.rerouteFraction | float | `0.02` | Defines the fractional upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 2 (2% of 100). |
 | nodeSelector | object | `{}` | deployment template spec node selector |
+| oidc.accessTokenDuration | string | `""` | OIDC access token lifetime as a Go duration (controller default 30m, minimum 1m). Some SDKs, including ziti-edge-tunnel 1.15, refresh only at the controller that issued the token, so this bounds how long they stay authenticated while that controller is unreachable. Longer lifetimes widen the replay window of a leaked token. |
+| oidc.idTokenDuration | string | `""` | OIDC ID token lifetime as a Go duration (controller default 30m, minimum 1m) |
+| oidc.refreshTokenDuration | string | `""` | OIDC refresh token lifetime as a Go duration (controller default 24h). Must exceed accessTokenDuration by more than 1m, or the controller raises it. |
 | persistence.VolumeName | string | `""` | PVC volume name |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |
