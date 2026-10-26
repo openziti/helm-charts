@@ -597,6 +597,20 @@ network:
     # `cycleSeconds` period will be limited to 1.
     rerouteCap: 4
 
+# Lifetimes of the OIDC tokens this controller issues (Ziti config edge.oidc). Empty values are
+# not rendered, so the controller defaults apply. Set the same values on every cluster member.
+oidc:
+  # -- OIDC access token lifetime as a Go duration (controller default 30m, minimum 1m). Some
+  # SDKs, including ziti-edge-tunnel 1.15, refresh only at the controller that issued the token,
+  # so this bounds how long they stay authenticated while that controller is unreachable. Longer
+  # lifetimes widen the replay window of a leaked token.
+  accessTokenDuration: ""
+  # -- OIDC refresh token lifetime as a Go duration (controller default 24h). Must exceed
+  # accessTokenDuration by more than 1m, or the controller raises it.
+  refreshTokenDuration: ""
+  # -- OIDC ID token lifetime as a Go duration (controller default 30m, minimum 1m)
+  idTokenDuration: ""
+
 # -- Append additional config blocks in specific top-level keys: edge,
 # web, network, ctrl. If events are defined here, they replace the default
 # events section entirely.
