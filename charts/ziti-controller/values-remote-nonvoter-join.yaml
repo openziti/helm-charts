@@ -1,0 +1,37 @@
+# Example: join an existing cluster from another Kubernetes cluster as a read-only (non-voting)
+# member, e.g. a controller at a remote site. See "Joining from Another Kubernetes Cluster" in
+# the README. Replace every example.com value. Supply the edge root certificate at install time:
+#
+#   helm upgrade --install ziti-controller openziti/ziti-controller \
+#     --namespace ziti --values values-remote-nonvoter-join.yaml \
+#     --set-file ctrlPlaneCasBundle.caCert=edge-root.pem
+#
+# The image tag (or chart version) must match the existing members exactly; a version mismatch
+# makes the whole cluster read-only.
+
+cluster:
+  mode: cluster-join
+  # read-only member: replicates the full model and serves reads, logins and circuits, but never
+  # votes or leads, so losing the link to it never costs the existing members their quorum
+  voter: false
+  # unique in the cluster; becomes the CN and SPIFFE ID of this node
+  nodeName: ziti-controller-site1
+  # same trust domain as the existing members
+  trustDomain: ziti.example.com
+  # ctrl plane address of an existing member, reachable from this cluster
+  endpoint: ziti-controller1.ziti.example.com:443
+
+clientApi:
+  # must resolve to this site from local routers and clients, and from the existing members
+  advertisedHost: ziti-controller-site1.ziti.example.com
+  advertisedPort: 443
+
+edgeSignerPki:
+  # the intermediate Secret copied as-is from the cluster that owns the edge root, e.g. minted there
+  # with edgeSignerPki.remoteIntermediates
+  caSecretName: ziti-controller-site1-intermediate-secret
+
+# Uncomment to let SDKs stay authenticated longer while the controller that issued their token is
+# unreachable. Set the same value on every member, see oidc.accessTokenDuration.
+# oidc:
+#   accessTokenDuration: 4h
