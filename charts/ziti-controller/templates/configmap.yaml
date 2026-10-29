@@ -307,23 +307,6 @@ data:
         edgeRouter:
           duration: 180m
 
-    {{- $oidc := .Values.oidc | default dict }}
-    {{- if or $oidc.accessTokenDuration $oidc.refreshTokenDuration $oidc.idTokenDuration }}
-    {{- if and .Values.additionalConfigs.edge (hasKey .Values.additionalConfigs.edge "oidc") }}
-    {{- fail "Set the edge.oidc config in one place: either oidc.* or additionalConfigs.edge.oidc, not both." }}
-    {{- end }}
-      oidc:
-      {{- with $oidc.accessTokenDuration }}
-        accessTokenDuration: {{ . | quote }}
-      {{- end }}
-      {{- with $oidc.refreshTokenDuration }}
-        refreshTokenDuration: {{ . | quote }}
-      {{- end }}
-      {{- with $oidc.idTokenDuration }}
-        idTokenDuration: {{ . | quote }}
-      {{- end }}
-    {{- end }}
-
     {{- if .Values.additionalConfigs.edge }}
     {{- .Values.additionalConfigs.edge | toYaml | nindent 6 }}
     {{- end }}

@@ -32,6 +32,8 @@ edgeSignerPki:
   caSecretName: ziti-controller1-site1-intermediate-secret
 
 # Uncomment to let SDKs stay authenticated longer while the controller that issued their token is
-# unreachable. Set the same value on every member, see oidc.accessTokenDuration.
-# oidc:
-#   accessTokenDuration: 4h
+# unreachable (controller default 30m). Set the same value on every member.
+# additionalConfigs:
+#   edge:
+#     oidc:
+#       accessTokenDuration: 4h

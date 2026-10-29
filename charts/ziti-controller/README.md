@@ -197,7 +197,21 @@ A controller in a different Kubernetes cluster, such as one at a remote site, ca
 
 The members must reach each other's `clientApi.advertisedHost:advertisedPort` in both directions, and every member must run the same Ziti version.
 
-While a non-voting member is cut off from the leader, it keeps serving reads, logins and new circuits on its local routers. Anything that changes the model fails with `503 CLUSTER_NO_LEADER` and is not retried later. That includes enrollment, admin changes, and creating terminators, so a hosting tunneler or router that restarts or reconnects during the outage cannot host its services until the leader is back. Some SDKs, including ziti-edge-tunnel 1.15, refresh their OIDC token only at the controller that issued it, so they stay authenticated for at most `oidc.accessTokenDuration` (default 30m) after losing that controller.
+While a non-voting member is cut off from the leader, it keeps serving reads, logins and new circuits on its local routers. Anything that changes the model fails with `503 CLUSTER_NO_LEADER` and is not retried later. That includes enrollment, admin changes, and creating terminators, so a hosting tunneler or router that restarts or reconnects during the outage cannot host its services until the leader is back. Some SDKs, including ziti-edge-tunnel 1.15, refresh their OIDC token only at the controller that issued it, so they stay authenticated for at most `additionalConfigs.edge.oidc.accessTokenDuration` (default 30m) after losing that controller.
+
+##### Changing a Member's Voting Status
+
+`cluster.voter` takes effect only when the member first joins. Changing it on a joined release and upgrading does nothing, and the chart prints a warning. To change it, remove the member and join it again:
+
+1. Remove the member from another member of the cluster, using its `cluster.nodeName`:
+
+    ```bash
+    kubectl exec -n ziti deployments/ziti-controller1 -c ziti-controller -- \
+        ziti agent cluster remove --app-addr=127.0.0.1:10001 ziti-controller-site1
+    ```
+
+1. Uninstall the member's release. This deletes its PVC, which holds the cluster data and the join marker. If you set `persistence.existingClaim`, empty that volume yourself. A copied intermediate Secret is not managed by Helm and stays in place.
+1. Install the release again with the new `cluster.voter` value. The member joins again and replicates the model from the cluster.
 
 ##### Migrating from Standalone to Cluster
 
@@ -523,8 +537,9 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| additionalConfigs | object | `{"cluster":{},"ctrl":{},"events":{},"healthChecks":{},"network":{},"web":{}}` | Append additional config blocks in specific top-level keys: edge, web, network, ctrl. If events are defined here, they replace the default events section entirely. |
+| additionalConfigs | object | `{"cluster":{},"ctrl":{},"edge":{},"events":{},"healthChecks":{},"network":{},"web":{}}` | Append additional config blocks in specific top-level keys: edge, web, network, ctrl. If events are defined here, they replace the default events section entirely. |
 | additionalConfigs.cluster | object | `{}` | additional keys merged into the controller's `cluster:` config stanza (cluster modes only; ignored in standalone). Use for raft/write-path tuning that the chart does not expose directly, e.g. commandHandler.maxQueueSize, rateLimiter, snapshotThreshold, trailingLogs, electionTimeout, preferredLeader. `dataDir` is set by the chart and must not be overridden here. |
+| additionalConfigs.edge | object | `{}` | additional keys merged into the controller's `edge:` config stanza, e.g. OIDC token lifetimes under `oidc` (accessTokenDuration, refreshTokenDuration, idTokenDuration) |
 | additionalVolumes | list | `[]` | additional volumes to mount to ziti-controller container |
 | affinity | object | `{}` | deployment template spec affinity |
 | ca.clusterDomain | string | `"cluster.local"` | Set a custom cluster domain if other than cluster.local |
@@ -558,7 +573,7 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | cluster.mode | required | `""` | the cluster mode; options: standalone, cluster-init, cluster-join, cluster-migrate. See the README for usage of each mode. |
 | cluster.nodeName | string | `""` | the node name part of the SPIFFE ID (required for cluster modes) |
 | cluster.trustDomain | string | `""` | the trust domain part of the SPIFFE ID (required for cluster modes) |
-| cluster.voter | bool | `true` | cluster-join only: join as a voting member. Voting members participate in write quorum and leader election; non-voters receive full log replication and serve reads locally without slowing writes, which suits distant or read-scale sites. An odd number of voters is required for fault tolerance. NOTE: this applies only on the FIRST join -- once the node has joined, changing this value and re-running `helm upgrade` has no effect, and promotion/demotion must be done with `ziti agent cluster`. Ignored in cluster-init (the first node is always a voter). |
+| cluster.voter | bool | `true` | cluster-join only: join as a voting member. Voting members participate in write quorum and leader election; non-voters receive full log replication and serve reads locally without slowing writes, which suits distant or read-scale sites. An odd number of voters is required for fault tolerance. NOTE: this applies only on the FIRST join -- once the node has joined, changing this value and re-running `helm upgrade` has no effect; to change it, remove the member and join it again (see the README). Ignored in cluster-init (the first node is always a voter). |
 | console.altIngress | object | `{}` | override the address printed in Helm release notes if you configured an alternative DNS SAN for the console, i.e. `{"host": "console.ziti.example.com", "port": 443}` |
 | console.enabled | bool | `true` | enable the Ziti Admin Console (ZAC) at URL path "/zac" on the same port as the management API (default: true) |
 | ctrlPlane.advertisedHost | string | `"{{ .Values.clientApi.advertisedHost }}"` | global DNS name by which routers can resolve a reachable IP for this service: default is cluster service DNS name which assumes all routers are inside the same cluster |
@@ -650,9 +665,6 @@ For more information, please check [here](https://openziti.io/docs/learn/core-co
 | network.smart.rerouteCap | int | `4` | Defines the hard upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteCap` is set to `1`, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 1. |
 | network.smart.rerouteFraction | float | `0.02` | Defines the fractional upper limit of underperforming circuits that are candidates to be re-routed. If smart routing detects 100 circuits that are underperforming, and `smart.rerouteFraction` is set to `0.02`, then the upper limit of circuits that will be re-routed in this `cycleSeconds` period will be limited to 2 (2% of 100). |
 | nodeSelector | object | `{}` | deployment template spec node selector |
-| oidc.accessTokenDuration | string | `""` | OIDC access token lifetime as a Go duration (controller default 30m, minimum 1m). Some SDKs, including ziti-edge-tunnel 1.15, refresh only at the controller that issued the token, so this bounds how long they stay authenticated while that controller is unreachable. Longer lifetimes widen the replay window of a leaked token. |
-| oidc.idTokenDuration | string | `""` | OIDC ID token lifetime as a Go duration (controller default 30m, minimum 1m) |
-| oidc.refreshTokenDuration | string | `""` | OIDC refresh token lifetime as a Go duration (controller default 24h). Must exceed accessTokenDuration by more than 1m, or the controller raises it. |
 | persistence.VolumeName | string | `""` | PVC volume name |
 | persistence.accessMode | string | `"ReadWriteOnce"` | PVC access mode: ReadWriteOnce (concurrent mounts not allowed), ReadWriteMany (concurrent allowed) |
 | persistence.annotations | object | `{}` | annotations for the PVC |

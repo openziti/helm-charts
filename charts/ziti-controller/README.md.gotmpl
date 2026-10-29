@@ -206,7 +206,21 @@ A controller in a different Kubernetes cluster, such as one at a remote site, ca
 
 The members must reach each other's `clientApi.advertisedHost:advertisedPort` in both directions, and every member must run the same Ziti version.
 
-While a non-voting member is cut off from the leader, it keeps serving reads, logins and new circuits on its local routers. Anything that changes the model fails with `503 CLUSTER_NO_LEADER` and is not retried later. That includes enrollment, admin changes, and creating terminators, so a hosting tunneler or router that restarts or reconnects during the outage cannot host its services until the leader is back. Some SDKs, including ziti-edge-tunnel 1.15, refresh their OIDC token only at the controller that issued it, so they stay authenticated for at most `oidc.accessTokenDuration` (default 30m) after losing that controller.
+While a non-voting member is cut off from the leader, it keeps serving reads, logins and new circuits on its local routers. Anything that changes the model fails with `503 CLUSTER_NO_LEADER` and is not retried later. That includes enrollment, admin changes, and creating terminators, so a hosting tunneler or router that restarts or reconnects during the outage cannot host its services until the leader is back. Some SDKs, including ziti-edge-tunnel 1.15, refresh their OIDC token only at the controller that issued it, so they stay authenticated for at most `additionalConfigs.edge.oidc.accessTokenDuration` (default 30m) after losing that controller.
+
+##### Changing a Member's Voting Status
+
+`cluster.voter` takes effect only when the member first joins. Changing it on a joined release and upgrading does nothing, and the chart prints a warning. To change it, remove the member and join it again:
+
+1. Remove the member from another member of the cluster, using its `cluster.nodeName`:
+
+    ```bash
+    kubectl exec -n ziti deployments/ziti-controller1 -c ziti-controller -- \
+        ziti agent cluster remove --app-addr=127.0.0.1:10001 ziti-controller-site1
+    ```
+
+1. Uninstall the member's release. This deletes its PVC, which holds the cluster data and the join marker. If you set `persistence.existingClaim`, empty that volume yourself. A copied intermediate Secret is not managed by Helm and stays in place.
+1. Install the release again with the new `cluster.voter` value. The member joins again and replicates the model from the cluster.
 
 ##### Migrating from Standalone to Cluster
 

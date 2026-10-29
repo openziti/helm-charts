@@ -18,7 +18,7 @@ cluster:
   # locally without slowing writes, which suits distant or read-scale sites. An odd number
   # of voters is required for fault tolerance. NOTE: this applies only on the FIRST join --
   # once the node has joined, changing this value and re-running `helm upgrade` has no
-  # effect, and promotion/demotion must be done with `ziti agent cluster`. Ignored in
+  # effect; to change it, remove the member and join it again (see the README). Ignored in
   # cluster-init (the first node is always a voter).
   voter: true
   # -- cluster-join only: how many times to attempt the join before failing the container.
@@ -605,20 +605,6 @@ network:
     # `cycleSeconds` period will be limited to 1.
     rerouteCap: 4
 
-# Lifetimes of the OIDC tokens this controller issues (Ziti config edge.oidc). Empty values are
-# not rendered, so the controller defaults apply. Set the same values on every cluster member.
-oidc:
-  # -- OIDC access token lifetime as a Go duration (controller default 30m, minimum 1m). Some
-  # SDKs, including ziti-edge-tunnel 1.15, refresh only at the controller that issued the token,
-  # so this bounds how long they stay authenticated while that controller is unreachable. Longer
-  # lifetimes widen the replay window of a leaked token.
-  accessTokenDuration: ""
-  # -- OIDC refresh token lifetime as a Go duration (controller default 24h). Must exceed
-  # accessTokenDuration by more than 1m, or the controller raises it.
-  refreshTokenDuration: ""
-  # -- OIDC ID token lifetime as a Go duration (controller default 30m, minimum 1m)
-  idTokenDuration: ""
-
 # -- Append additional config blocks in specific top-level keys: edge,
 # web, network, ctrl. If events are defined here, they replace the default
 # events section entirely.
@@ -626,6 +612,11 @@ additionalConfigs:
   ctrl: {}
   network: {}
   healthChecks: {}
+  # -- additional keys merged into the controller's `edge:` config stanza, e.g. OIDC token
+  # lifetimes under `oidc` (accessTokenDuration, refreshTokenDuration, idTokenDuration)
+  edge: {}
+  #    oidc:
+  #      accessTokenDuration: 4h
   web: {}
   # -- additional keys merged into the controller's `cluster:` config stanza (cluster modes
   # only; ignored in standalone). Use for raft/write-path tuning that the chart does not
