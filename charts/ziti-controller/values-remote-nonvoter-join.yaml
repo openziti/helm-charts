@@ -29,7 +29,7 @@ clientApi:
 edgeSignerPki:
   # the intermediate Secret copied as-is from the cluster that owns the edge root, e.g. minted there
   # with edgeSignerPki.remoteIntermediates
-  caSecretName: ziti-controller-site1-intermediate-secret
+  caSecretName: ziti-controller1-site1-intermediate-secret
 
 # Uncomment to let SDKs stay authenticated longer while the controller that issued their token is
 # unreachable. Set the same value on every member, see oidc.accessTokenDuration.
