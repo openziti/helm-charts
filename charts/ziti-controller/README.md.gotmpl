@@ -171,6 +171,57 @@ helm upgrade --install ziti-controller2 openziti/ziti-controller \
 
 Repeat for additional nodes (e.g., `ziti-controller3`), changing `nodeName`, `advertisedHost`, and the Helm release name. All controllers must run the same Ziti version -- install the same major version of the controller chart on every node (as of chart v3, chart versions express Ziti version compatibility by pinning the default Ziti version in the chart's `Chart.yaml`).
 
+##### Joining from Another Kubernetes Cluster
+
+A controller in a different Kubernetes cluster, such as one at a remote site, cannot reference the first node's Issuer or trust bundle. Give it its own intermediate CA under the cluster's edge root instead, and the edge root certificate (no key). The root key stays in the cluster that owns it, and trust-manager is not needed on the joining cluster.
+
+1. On the cluster that owns the edge root, add an intermediate for the site to that release's values and upgrade it:
+
+    ```yaml
+    edgeSignerPki:
+      remoteIntermediates:
+        - name: site1
+    ```
+
+    This renders a cert-manager Certificate whose Secret is `ziti-controller1-site1-intermediate-secret` (for release `ziti-controller1`). Its key does not rotate, because a copy leaves the cluster.
+
+1. Copy that Secret as-is to the joining cluster, keeping `tls.crt`, `tls.key` and `ca.crt`. You do not need to chain the certificates by hand: cert-manager's CA issuer appends `ca.crt` (the root) to the chain. Also save the root certificate for the next step.
+
+    ```bash
+    kubectl --context central -n ziti get secret ziti-controller1-site1-intermediate-secret -o json \
+      | jq '{apiVersion, kind, type, data, metadata: {name: .metadata.name, namespace: "ziti"}}' \
+      | kubectl --context site1 apply -f -
+    kubectl --context central -n ziti get secret ziti-controller1-site1-intermediate-secret \
+      -o jsonpath='{.data.ca\.crt}' | base64 -d > edge-root.pem
+    ```
+
+1. Install the joining controller with `edgeSignerPki.caSecretName` set to the copied Secret and `ctrlPlaneCasBundle.caCert` set to the root. [`values-remote-nonvoter-join.yaml`](./values-remote-nonvoter-join.yaml) is a starting point for a read-only (`cluster.voter: false`) member:
+
+    ```bash
+    helm upgrade --install ziti-controller openziti/ziti-controller \
+        --kube-context site1 --namespace ziti \
+        --values values-remote-nonvoter-join.yaml \
+        --set-file ctrlPlaneCasBundle.caCert=edge-root.pem
+    ```
+
+The members must reach each other's `clientApi.advertisedHost:advertisedPort` in both directions, and every member must run the same Ziti version.
+
+While a non-voting member is cut off from the leader, it keeps serving reads, logins and new circuits on its local routers. Anything that changes the model fails with `503 CLUSTER_NO_LEADER` and is not retried later. That includes enrollment, admin changes, and creating terminators, so a hosting tunneler or router that restarts or reconnects during the outage cannot host its services until the leader is back. Some SDKs, including ziti-edge-tunnel 1.15, refresh their OIDC token only at the controller that issued it, so they stay authenticated for at most `additionalConfigs.edge.oidc.accessTokenDuration` (default 30m) after losing that controller.
+
+##### Changing a Member's Voting Status
+
+`cluster.voter` takes effect only when the member first joins. Changing it on a joined release and upgrading does nothing, and the chart prints a warning. To change it, remove the member and join it again:
+
+1. Remove the member from another member of the cluster, using its `cluster.nodeName`:
+
+    ```bash
+    kubectl exec -n ziti deployments/ziti-controller1 -c ziti-controller -- \
+        ziti agent cluster remove --app-addr=127.0.0.1:10001 ziti-controller-site1
+    ```
+
+1. Uninstall the member's release. This deletes its PVC, which holds the cluster data and the join marker. If you set `persistence.existingClaim`, empty that volume yourself. A copied intermediate Secret is not managed by Helm and stays in place.
+1. Install the release again with the new `cluster.voter` value. The member joins again and replicates the model from the cluster.
+
 ##### Migrating from Standalone to Cluster
 
 If you have an existing standalone controller and want to convert it to a cluster, follow this two-step process.

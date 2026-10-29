@@ -18,7 +18,7 @@ cluster:
   # locally without slowing writes, which suits distant or read-scale sites. An odd number
   # of voters is required for fault tolerance. NOTE: this applies only on the FIRST join --
   # once the node has joined, changing this value and re-running `helm upgrade` has no
-  # effect, and promotion/demotion must be done with `ziti agent cluster`. Ignored in
+  # effect; to change it, remove the member and join it again (see the README). Ignored in
   # cluster-init (the first node is always a voter).
   voter: true
   # -- cluster-join only: how many times to attempt the join before failing the container.
@@ -326,16 +326,24 @@ edgeSignerPki:
   # Then compromising one cluster exposes only that cluster's intermediate, and the root --
   # with it the ability to re-establish trust -- is never exposed.
   #
-  # Set tls.crt to the intermediate PLUS the root ("chained"). Leaf certificates then carry
-  # leaf + edge-signer + intermediate on the wire, so peers that trust only the root can build
-  # a path; and cert-manager sets ca.crt to the root, so on clusters running trust-manager the
-  # chart's own trust bundle resolves to the root and ctrlPlaneCasBundle.caCert is unnecessary.
-  # An unchained intermediate also works for the handshake, but then ca.crt is the
-  # intermediate, so you must set ctrlPlaneCasBundle.caCert to the root explicitly.
+  # Copy the Secret that cert-manager minted for the intermediate as-is, keeping all three
+  # keys: tls.crt (the intermediate), tls.key, and ca.crt (the root). cert-manager's CA
+  # issuer appends the Secret's ca.crt to the chain it signs with, so every certificate issued
+  # here gets ca.crt = root, and you do not need to chain tls.crt by hand. If the Secret has no
+  # ca.crt, set tls.crt to the intermediate PLUS the root instead. edgeSignerPki.remoteIntermediates
+  # mints such a Secret on the cluster that owns the root.
   #
   # Supplying the root keypair here also works and is simpler, but then every participating
   # cluster holds the network's root key. Avoid that outside of labs.
   caSecretName: ""
+  # -- mint one intermediate CA per remote controller site, for controllers that join this
+  # cluster from another Kubernetes cluster. Each entry renders a cert-manager Certificate
+  # issued by this release's edge-root-issuer, with key rotation disabled because the key is
+  # copied off-cluster. The Secret is named `FULLNAME-NAME-intermediate-secret`; copy it as-is to the
+  # remote cluster and set the remote release's edgeSignerPki.caSecretName to it. Requires
+  # edgeSignerPki.alternativeIssuer to be empty. Entry keys: name (required), duration and
+  # renewBefore (default ca.duration and ca.renewBefore). Example: `[{name: plant1}]`
+  remoteIntermediates: []
   admin_client_cert:
     # -- create a client certificate for the admin user
     enabled: false
@@ -604,6 +612,11 @@ additionalConfigs:
   ctrl: {}
   network: {}
   healthChecks: {}
+  # -- additional keys merged into the controller's `edge:` config stanza, e.g. OIDC token
+  # lifetimes under `oidc` (accessTokenDuration, refreshTokenDuration, idTokenDuration)
+  edge: {}
+  #    oidc:
+  #      accessTokenDuration: 4h
   web: {}
   # -- additional keys merged into the controller's `cluster:` config stanza (cluster modes
   # only; ignored in standalone). Use for raft/write-path tuning that the chart does not

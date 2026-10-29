@@ -52,6 +52,40 @@ spec:
     secretName: {{ .Values.edgeSignerPki.caSecretName | default (printf "%s-edge-root-secret" (include "ziti-controller.fullname" .)) }}
 {{- end }}
 
+{{- if .Values.edgeSignerPki.remoteIntermediates }}
+{{- if ne (len .Values.edgeSignerPki.alternativeIssuer) 0 }}
+  {{- fail "edgeSignerPki.remoteIntermediates needs this release's edge-root-issuer, which is not rendered when edgeSignerPki.alternativeIssuer is set." -}}
+{{- end }}
+{{- range .Values.edgeSignerPki.remoteIntermediates }}
+{{- $name := printf "%s-%s-intermediate" (include "ziti-controller.fullname" $) (required "edgeSignerPki.remoteIntermediates[].name is required" .name) }}
+---
+# Intermediate CA for a controller in another Kubernetes cluster; its key is copied off-cluster, so it never rotates.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $name }}-cert
+  labels:
+    {{- include "ziti-controller.labels" $ | nindent 4 }}
+spec:
+  commonName: {{ $name }}
+  secretName: {{ $name }}-secret
+  isCA: true
+  duration: {{ .duration | default $.Values.ca.duration }}
+  renewBefore: {{ .renewBefore | default $.Values.ca.renewBefore }}
+  usages:
+    - digital signature
+    - cert sign
+    - crl sign
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Never
+  issuerRef:
+    kind: Issuer
+    name: {{ include "ziti-controller.fullname" $ }}-edge-root-issuer
+{{- end }}
+{{- end }}
+
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate

@@ -5,6 +5,17 @@ This is the first install of release {{ .Release.Name }}.
 {{ else }}
 {{ .Chart.Name }} was neither installed nor upgraded.
 {{ end }}
+{{- if and .Release.IsUpgrade (eq (include "ziti-controller.clusterMode" .) "cluster-join") }}
+{{- $liveCm := lookup "v1" "ConfigMap" .Release.Namespace (printf "%s-config" (include "ziti-controller.fullname" .)) }}
+{{- $liveJoin := dig "data" "ziti-cluster-join.bash" "" ($liveCm | default dict) }}
+{{- $wasVoter := not (contains "VOTER_ARG=\"--voter=false\"" $liveJoin) }}
+{{- if and $liveJoin (ne $wasVoter (.Values.cluster.voter | toString | eq "true")) }}
+
+WARNING: cluster.voter changed to {{ .Values.cluster.voter }}, but it applies only when a member
+first joins. If this member already joined, its voting status is unchanged. To change it, remove
+the member and join it again: see "Changing a Member's Voting Status" in the chart README.
+{{- end }}
+{{- end }}
 
 ================================================================================
                            PKI DEPRECATION NOTICE
