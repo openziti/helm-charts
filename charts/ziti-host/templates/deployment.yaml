@@ -39,6 +39,24 @@ spec:
           volumeMounts:
             - name: persisted-identity
               mountPath: {{ include "ziti-host.identityMountPath" . }}
+        # Runs here, not as a post-install Job, because the identity PVC is
+        # ReadWriteOnce: a separate Job cannot mount it while this Deployment's pod
+        # holds it, so the hook blocked until the Deployment was scaled to 0 by hand.
+        # As an initContainer it shares the pod that already owns the volume, so there
+        # is no contention and the ordering guarantee is stronger (it completes before
+        # ziti-host starts, rather than racing it as a post-install hook did).
+        - name: migrate-identity
+          image: {{ .Values.identityMigrate.image }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash", "/scripts/migrate.sh"]
+          securityContext:
+            runAsUser: {{ .Values.podSecurityContext.runAsUser }}
+            runAsGroup: {{ .Values.podSecurityContext.runAsGroup }}
+          volumeMounts:
+            - name: persisted-identity
+              mountPath: {{ include "ziti-host.identityMountPath" . }}
+            - name: migrate-script
+              mountPath: /scripts
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -107,6 +125,10 @@ spec:
         - name: persisted-identity
           persistentVolumeClaim:
             claimName: {{ include "ziti-host.fullname" . }}-identity-pvc
+        - name: migrate-script
+          configMap:
+            name: {{ include "ziti-host.fullname" . }}-identity-migrate
+            defaultMode: 0755
         {{- end }}
         {{- if .Values.spireAgent.enabled }}
         - name: spire-agent-socket

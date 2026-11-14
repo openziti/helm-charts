@@ -1,12 +1,17 @@
+{{- if not .Values.secret.existingSecretName }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ include "ziti-host.fullname" . }}-identity-migrate
 subjects:
+  # The migration now runs as an initContainer in the Deployment, so it authenticates
+  # as the chart's ServiceAccount. Binding `default` only worked for the old Job and
+  # broke outright on clusters that restrict the default ServiceAccount.
   - kind: ServiceAccount
-    name: default
+    name: {{ include "ziti-host.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
   name: {{ include "ziti-host.fullname" . }}-identity-migrate
   apiGroup: rbac.authorization.k8s.io
+{{- end }}

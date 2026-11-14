@@ -1,3 +1,4 @@
+{{- if not .Values.secret.existingSecretName }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -6,3 +7,4 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "delete"]
+{{- end }}
