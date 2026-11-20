@@ -29,8 +29,8 @@ spec:
       {{- if not .Values.secret.existingSecretName }}
       initContainers:
         - name: chown-identity-dir
-          image: busybox
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: {{ .Values.busyboxImage.repository }}
+          imagePullPolicy: {{ .Values.busyboxImage.pullPolicy }}
           securityContext:
             runAsUser: 0
             runAsGroup: 0

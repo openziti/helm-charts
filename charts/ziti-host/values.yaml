@@ -10,6 +10,11 @@ image:
 #   command: ["sh", "-c", "while true; do sleep 11; done"]
   # -- additional container command arguments, e.g., ["--verbose"]
   args: []
+  # -- image used for the init container that sets the correct permissions on the identity volume
+
+busyboxImage:
+  repository: busybox
+  pullPolicy: IfNotPresent
 
 dnsPolicy: ClusterFirstWithHostNet
 
