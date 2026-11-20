@@ -62,10 +62,15 @@ spec:
             - name: ZITI_IDENTITY_JSON
               value: {{ .Values.zitiIdentity | quote }}
             {{- end }}
-            {{- if .Values.zitiEnrollToken }}
             - name: ZITI_ENROLL_TOKEN
-              value: {{ .Values.zitiEnrollToken }}
-            {{- end }}
+              {{- if .Values.enrollmentJwtFromSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required (printf "You must set an enrollmentJwtSecretName, when using enrollmentJwtFromSecret. Try setting --set enrollmentJwtSecretName=myEnrollmentJwtSecret") .Values.enrollmentJwtSecretName }}
+                  key: enrollmentJwt
+              {{- else }}
+              value: {{ .Values.bootstrapEnv.ZITI_ENROLL_TOKEN | default .Values.enrollmentJwt | quote }}
+              {{- end }}
           volumeMounts:
             - mountPath: {{ include "ziti-host.identityMountPath" . }}
               name: persisted-identity
